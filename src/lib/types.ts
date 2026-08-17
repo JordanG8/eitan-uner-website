@@ -6,7 +6,7 @@
  * and fills in fields — he never positions anything. That is deliberate: it is
  * what makes it impossible for him to produce a broken page.
  *
- * The Sanity schemas in src/sanity/schemas mirror these one-for-one.
+ * The Puck config in src/puck/config.tsx mirrors these one-for-one.
  */
 
 export type CtaTone = "solid" | "outline" | "solidWhite" | "outlineWhite";

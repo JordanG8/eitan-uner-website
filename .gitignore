@@ -44,3 +44,7 @@ next-env.d.ts
 
 # Puck spike local store
 puck-data.json
+
+# Uploaded media is user data, not source
+/public/uploads/*
+!/public/uploads/.gitkeep

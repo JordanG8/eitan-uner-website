@@ -1,7 +1,8 @@
 # פוטודוקותרפיה איתן אונר — eitanuner.co.il
 
 Replacement for Eitan Uner's site123 site. Next.js 16 (App Router) + Tailwind 4,
-with an optional Sanity Studio embedded at `/studio`. Hebrew, RTL throughout.
+with a self-hosted [Puck](https://puckeditor.com) visual editor at `/editor`.
+Hebrew, RTL throughout. No third-party CMS.
 
 ## Why it is built this way
 
@@ -15,13 +16,10 @@ He picks blocks and fills in fields — he never positions or styles anything.
 There is deliberately no spacing, colour or font control in the CMS, because the
 polish is the product and a freeform canvas is exactly what would destroy it.
 
-**Content lives in two places, on purpose.** `src/lib/content.ts` holds every
-piece of copy transcribed from the original site. `src/lib/fetch.ts` tries Sanity
-first and falls back to that file. So:
-
-- with no Sanity project configured, the site is fully working and static;
-- once configured, Sanity wins and `content.ts` becomes the safety net;
-- a Sanity outage freezes the site at the last deploy rather than breaking it.
+**Nobody else holds the content.** `src/lib/content.ts` in this repo is the
+system of record. Puck is an MIT-licensed React component embedded in this app —
+not a service — and it emits plain JSON we store ourselves. There is no vendor to
+rate-limit us, take the content down, or start charging per seat.
 
 ## Running locally
 
@@ -30,31 +28,69 @@ npm install
 npm run dev
 ```
 
-Node 20+ required (built against 24). No env vars needed to run.
+Node 20+ required (built against 24). The public site needs no env vars; `/editor`
+requires the two auth values below.
 
-## Connecting Sanity
+## The editor
 
-1. Create a project at [sanity.io/manage](https://sanity.io/manage) (free tier is
-   enough) and note the **project id**.
-2. Copy `.env.example` to `.env.local` and fill in
-   `NEXT_PUBLIC_SANITY_PROJECT_ID`.
-3. Add the same variables in Vercel → Project → Settings → Environment Variables.
-4. Add the deployment URL to the project's CORS origins in sanity.io/manage.
-5. Visit `/studio`, log in, and create the documents. Schemas live in
-   `src/sanity/schemas/`.
+`/editor` is the Puck canvas: drag-and-drop composition, a Hebrew component
+palette, an outline of the page, per-block fields, viewport previews, and undo.
 
-Until step 2 is done, `/studio` shows a short Hebrew notice instead of the editor
-and the public site is unaffected.
+The key property is in `src/puck/config.tsx`: each component's `render`
+delegates to the **same** component the live site uses. There is no parallel
+"editor version" of a section that can drift from production — what Eitan drags
+around is literally the page.
 
-### What Eitan sees
+Field sets are deliberately narrow. Puck can expose arbitrary style controls; we
+expose none, so a broken layout is not reachable.
 
-Every field label, description and option in the Studio is written in Hebrew,
-addressed to him — that text *is* his interface. Sanity's own chrome
-("Publish", "Documents") stays English; that was the known trade-off in choosing
-Sanity, and it is the one thing to watch when he first uses it.
+### Auth
 
-`presentationTool` gives him side-by-side live preview: he edits on the left and
-watches the real page update on the right.
+`/editor` and the editing APIs are gated by `src/middleware.ts`.
+
+```bash
+npx tsx scripts/set-password.mts "a-long-password"
+```
+
+That prints `AUTH_SECRET` and `EDITOR_PASSWORD_HASH` for `.env.local` and for
+Vercel. The password is never stored — only a PBKDF2 hash. Sessions are
+HMAC-signed HttpOnly cookies with a 12-hour expiry and no server-side session
+table; rotating `AUTH_SECRET` signs everyone out at once.
+
+**It fails closed.** With those vars missing, `/editor` returns 503 rather than
+being left open.
+
+Note the hash is colon-separated, not the conventional `$`-separated: Next.js
+performs `$VAR` expansion when parsing `.env` files, which silently mangles a
+`$`-delimited hash and presents as "correct password rejected".
+
+### Media
+
+The picker (`src/puck/MediaField.tsx`) is a thumbnail grid with upload, and it
+owns the `{src, alt}` pair together so an image without alt text is awkward to
+create. `/api/media` validates MIME type and a 25MB ceiling, and sniffs PNG /
+JPEG / WebP dimensions on upload — the gallery lays out with CSS columns using
+each image's intrinsic ratio, so unknown dimensions would visibly break it.
+
+`src/lib/storage.ts` has one seam, `putObject`. The local driver writes to
+`public/uploads` and works in development and on any server with a disk.
+
+## Open decision: production storage
+
+Both publishing and uploads currently work **locally only**, and refuse with a
+clear Hebrew error in production rather than pretending to succeed. Vercel's
+runtime filesystem is read-only, so one of these has to happen:
+
+| | Publish latency | Media | Notes |
+| --- | --- | --- | --- |
+| Commit to this repo via GitHub API | ~40s rebuild | needs object storage anyway | free version history and rollback through git |
+| Postgres you control + Cloudflare R2 | instant | 10GB free, S3-compatible | behaves like a real CMS |
+| A server with a disk (VPS/Hostinger) | instant | local driver already works | you run the box |
+
+Recommended for a photographer: Postgres + R2.
+
+Also still to do: the editor composes one page; extending it to all 18 is
+straightforward once there is somewhere to save.
 
 ## Deploying
 
@@ -77,7 +113,7 @@ Vercel occasionally updates its target addresses.
 Slugs reuse the original Hebrew URLs from site123 (`/אודות`, `/קהילת-אור`,
 `/פסטיבל-הצילום-הבינלאומי` …) so existing inbound links and Google's index keep
 resolving after the cutover. **Changing a slug breaks links that already exist in
-the wild** — the Studio says so in Hebrew on the slug field.
+the wild**.
 
 ## Assets
 

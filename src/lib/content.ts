@@ -1,12 +1,10 @@
 import type { Page, SiteSettings, Story } from "./types";
 
 /**
- * Seed content, transcribed from the original site123 screenshots.
+ * Site content, transcribed from the original site123 screenshots.
  *
- * This is the fallback layer: the site renders entirely from here when Sanity
- * is not configured, so it can go live before any content is migrated. Once
- * SANITY_PROJECT_ID is set, published Sanity documents take precedence and
- * this file becomes the safety net (see src/lib/fetch.ts).
+ * This file is the system of record — no external CMS holds it. The Puck editor
+ * at /editor composes pages from the same block types defined in types.ts.
  *
  * Slugs intentionally reuse the original Hebrew URLs so existing inbound links
  * and Google's index keep resolving after the DNS cutover.

@@ -34,10 +34,11 @@ function toPuckProps(block: Block): Record<string, unknown> {
 
   // Images collapse to the {src, alt} pair the editor's select field expects.
   if (b.image) props.image = { src: b.image.src, alt: b.image.alt };
+  // Gallery/logo arrays wrap each entry so the media picker owns {src, alt}.
   if (Array.isArray(b.images))
-    props.images = b.images.map((i: any) => ({ src: i.src, alt: i.alt }));
+    props.images = b.images.map((i: any) => ({ image: { src: i.src, alt: i.alt } }));
   if (Array.isArray(b.logos))
-    props.logos = b.logos.map((i: any) => ({ src: i.src, alt: i.alt }));
+    props.logos = b.logos.map((i: any) => ({ image: { src: i.src, alt: i.alt } }));
   if (Array.isArray(b.cards))
     props.cards = b.cards.map((c: any) => ({
       ...c,

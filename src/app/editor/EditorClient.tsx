@@ -2,6 +2,7 @@
 
 import { Puck, type Data } from "@measured/puck";
 import "@measured/puck/puck.css";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import config from "@/puck/config";
 
@@ -13,7 +14,14 @@ import config from "@/puck/config";
  * site's own `dir="rtl"`, which is the combination that actually reads correctly.
  */
 export function EditorClient({ data }: { data: Data }) {
+  const router = useRouter();
   const [status, setStatus] = useState<string | null>(null);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/");
+    router.refresh();
+  }
 
   async function publish(next: Data) {
     setStatus("שומר…");
@@ -40,6 +48,15 @@ export function EditorClient({ data }: { data: Data }) {
           {status}
         </div>
       )}
+      <button
+        type="button"
+        onClick={logout}
+        dir="rtl"
+        className="fixed bottom-4 right-4 z-[9999] rounded border border-hairline bg-white px-3 py-1.5 text-xs text-ink-soft shadow-sm hover:text-ink"
+      >
+        יציאה
+      </button>
+
       <Puck
         config={config}
         data={data}

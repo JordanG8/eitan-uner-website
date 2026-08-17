@@ -11,7 +11,8 @@ import {
   Video,
 } from "@/components/blocks";
 import { Testimonials } from "@/components/Testimonials";
-import { CLIENT_LOGOS, IMAGE_OPTIONS } from "./assets";
+import { CLIENT_LOGOS } from "./assets";
+import { MediaField } from "./MediaField";
 
 /**
  * Puck configuration.
@@ -27,18 +28,14 @@ import { CLIENT_LOGOS, IMAGE_OPTIONS } from "./assets";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+/** Thumbnail-grid picker with upload, managing {src, alt} together. */
 const imageField = (label: string) =>
   ({
-    type: "object",
+    type: "custom",
     label,
-    objectFields: {
-      src: {
-        type: "select",
-        label: "תמונה",
-        options: IMAGE_OPTIONS,
-      },
-      alt: { type: "text", label: "תיאור התמונה (לגוגל ולקוראי מסך)" },
-    },
+    render: ({ value, onChange }: any) => (
+      <MediaField value={value} onChange={onChange} />
+    ),
   }) as any;
 
 const ctasField = {
@@ -238,23 +235,30 @@ export const config: Config = {
         images: {
           type: "array",
           label: "תמונות",
-          getItemSummary: (item: any) => item?.alt || "תמונה",
+          getItemSummary: (item: any) => item?.image?.alt || "תמונה",
           arrayFields: {
-            src: { type: "select", label: "תמונה", options: IMAGE_OPTIONS },
-            alt: { type: "text", label: "תיאור" },
+            image: imageField("תמונה"),
           },
         } as any,
         background: bgField(false),
       },
       defaultProps: {
         images: [
-          { src: "/images/gallery-sunflower.webp", alt: "חמנייה" },
-          { src: "/images/gallery-iris.webp", alt: "אירוס" },
-          { src: "/images/gallery-poppies.webp", alt: "כלניות" },
+          { image: { src: "/images/gallery-sunflower.webp", alt: "חמנייה" } },
+          { image: { src: "/images/gallery-iris.webp", alt: "אירוס" } },
+          { image: { src: "/images/gallery-poppies.webp", alt: "כלניות" } },
         ],
         background: "white",
       } as any,
-      render: (props: any) => <Gallery block={{ _type: "gallery", ...props }} />,
+      render: ({ images, ...props }: any) => (
+        <Gallery
+          block={{
+            _type: "gallery",
+            ...props,
+            images: (images ?? []).map((r: any) => r?.image).filter((i: any) => i?.src),
+          }}
+        />
+      ),
     },
 
     /* ------------------------------------------------------------------ */
@@ -291,18 +295,25 @@ export const config: Config = {
         logos: {
           type: "array",
           label: "לוגואים",
-          getItemSummary: (item: any) => item?.alt || "לוגו",
+          getItemSummary: (item: any) => item?.image?.alt || "לוגו",
           arrayFields: {
-            src: { type: "select", label: "לוגו", options: CLIENT_LOGOS },
-            alt: { type: "text", label: "שם הארגון" },
+            image: imageField("לוגו"),
           },
         } as any,
       },
       defaultProps: {
         title: "לקוחות",
-        logos: CLIENT_LOGOS.slice(0, 5).map((l) => ({ src: l.value, alt: l.label })),
+        logos: CLIENT_LOGOS.slice(0, 5).map((l) => ({ image: { src: l.value, alt: l.label } })),
       } as any,
-      render: (props: any) => <Logos block={{ _type: "logos", ...props }} />,
+      render: ({ logos, ...props }: any) => (
+        <Logos
+          block={{
+            _type: "logos",
+            ...props,
+            logos: (logos ?? []).map((r: any) => r?.image).filter((i: any) => i?.src),
+          }}
+        />
+      ),
     },
 
     /* ------------------------------------------------------------------ */
