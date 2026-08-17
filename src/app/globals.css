@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Eitan Uner — Photodocutherapy
+   Palette sampled directly from the original site123 screenshots.
+   --------------------------------------------------------------- */
+@theme {
+  /* Signature turquoise — sampled #14888D from section fills & buttons */
+  --color-brand-50: #eef7f7;
+  --color-brand-100: #d3e9ea;
+  --color-brand-200: #a7d3d5;
+  --color-brand-300: #6bb4b7;
+  --color-brand-400: #44a0a4;
+  --color-brand-500: #14888d;
+  --color-brand-600: #0c898e;
+  --color-brand-700: #0d7378;
+  --color-brand-800: #0a5c60;
+  --color-brand-900: #084a4d;
+
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #4a4a4a;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eff3f6;
+  --color-hairline: #e2e8ec;
+
+  --font-sans: var(--font-assistant), system-ui, sans-serif;
+
+  --container-content: 1200px;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.75;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hebrew headings read better slightly tighter than the Latin default */
+h1, h2, h3, h4 {
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Keep long Hebrew words and URLs from forcing horizontal scroll */
+a, p, li, h1, h2, h3 {
+  overflow-wrap: break-word;
+}
+
+/* Visible focus for keyboard users — the original had none */
+:focus-visible {
+  outline: 3px solid var(--color-brand-500);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Rich-text defaults */
+.prose-he > * + * { margin-top: 1.15rem; }
+.prose-he strong { font-weight: 700; }
+.prose-he a {
+  color: var(--color-brand-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-he a:hover { color: var(--color-brand-800); }
+.prose-he ul { padding-inline-start: 1.4rem; list-style: disc; }
+.prose-he ol { padding-inline-start: 1.4rem; list-style: decimal; }
+.prose-he li + li { margin-top: 0.35rem; }
