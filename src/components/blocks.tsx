@@ -373,7 +373,8 @@ function Contact({ block }: { block: ContactBlock }) {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="overflow-hidden border border-hairline bg-white">
+        {/* Map sits on the left, details on the right — as in the original. */}
+        <div className="overflow-hidden border border-hairline bg-white lg:order-last">
           <iframe
             title="מפה — תל יוסף"
             src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
