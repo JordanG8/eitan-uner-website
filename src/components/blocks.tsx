@@ -19,7 +19,7 @@ import { Testimonials } from "./Testimonials";
 
 /* -------------------------------------------------------------------- hero */
 
-function Hero({ block }: { block: HeroBlock }) {
+export function Hero({ block }: { block: HeroBlock }) {
   const onBrand = (block.background ?? "brand") === "brand";
   // "end" puts the photo on the inline-end side — the left, in RTL. That is
   // where every photo sat on the original site.
@@ -66,7 +66,7 @@ function Hero({ block }: { block: HeroBlock }) {
 
 /* --------------------------------------------------------------- textImage */
 
-function TextImage({ block }: { block: TextImageBlock }) {
+export function TextImage({ block }: { block: TextImageBlock }) {
   const bg = block.background ?? "white";
   const onBrand = bg === "brand";
   return (
@@ -118,7 +118,7 @@ function TextImage({ block }: { block: TextImageBlock }) {
 
 /* ---------------------------------------------------------------- richText */
 
-function RichText({ block }: { block: RichTextBlock }) {
+export function RichText({ block }: { block: RichTextBlock }) {
   const bg = block.background ?? "white";
   const onBrand = bg === "brand";
   return (
@@ -147,7 +147,7 @@ function RichText({ block }: { block: RichTextBlock }) {
 
 /* ---------------------------------------------------------------- cardGrid */
 
-function CardGrid({ block }: { block: CardGridBlock }) {
+export function CardGrid({ block }: { block: CardGridBlock }) {
   const bg = block.background ?? "white";
   const onBrand = bg === "brand";
   const cols =
@@ -240,7 +240,7 @@ function CardGrid({ block }: { block: CardGridBlock }) {
 
 /* ----------------------------------------------------------------- gallery */
 
-function Gallery({ block }: { block: GalleryBlock }) {
+export function Gallery({ block }: { block: GalleryBlock }) {
   return (
     <Section background={block.background ?? "white"}>
       {block.title && (
@@ -269,7 +269,7 @@ function Gallery({ block }: { block: GalleryBlock }) {
 
 /* ------------------------------------------------------------------- logos */
 
-function Logos({ block }: { block: LogosBlock }) {
+export function Logos({ block }: { block: LogosBlock }) {
   return (
     <Section background="white">
       {block.title && (
@@ -300,7 +300,7 @@ function Logos({ block }: { block: LogosBlock }) {
 
 /* ------------------------------------------------------------------- quote */
 
-function Quote({ block }: { block: QuoteBlock }) {
+export function Quote({ block }: { block: QuoteBlock }) {
   return (
     <Section background="brand">
       <div className="mx-auto max-w-4xl text-center">
@@ -318,7 +318,7 @@ function Quote({ block }: { block: QuoteBlock }) {
 
 /* ------------------------------------------------------------------- video */
 
-function Video({ block }: { block: VideoBlock }) {
+export function Video({ block }: { block: VideoBlock }) {
   const id = extractYouTubeId(block.youtubeUrl);
   const onBrand = (block.background ?? "white") === "brand";
   return (
@@ -364,7 +364,7 @@ function extractYouTubeId(url: string): string | null {
 
 /* ----------------------------------------------------------------- contact */
 
-function Contact({ block }: { block: ContactBlock }) {
+export function Contact({ block }: { block: ContactBlock }) {
   const mapQuery = encodeURIComponent("תל יוסף, ישראל");
   return (
     <Section background="alt" id="צרו-קשר">

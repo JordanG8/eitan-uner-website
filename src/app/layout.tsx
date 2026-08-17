@@ -5,6 +5,7 @@ import { site } from "@/lib/content";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
+import { ChromeGate } from "@/components/ChromeGate";
 
 /**
  * Assistant — a Hebrew-first family, and the closest good match to the original
@@ -52,14 +53,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           דילוג לתוכן הראשי
         </a>
 
-        <Header site={site} />
+        <ChromeGate>
+          <Header site={site} />
+        </ChromeGate>
 
         <main id="main" className="flex-1">
           {children}
         </main>
 
-        <Footer site={site} />
-        <WhatsAppFab url={site.whatsappUrl} />
+        <ChromeGate>
+          <Footer site={site} />
+          <WhatsAppFab url={site.whatsappUrl} />
+        </ChromeGate>
 
         <script
           type="application/ld+json"

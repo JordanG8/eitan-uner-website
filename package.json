@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@measured/puck": "^0.20.2",
     "@sanity/image-url": "^2.1.1",
     "@sanity/vision": "^6.9.2",
     "next": "16.3.1",
@@ -23,9 +24,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }
