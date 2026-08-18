@@ -131,7 +131,20 @@ for (let i = 0; i < TARGETS.length; i++) {
   for (let t = 0; t < TILES; t++) {
     const y = Math.round((scrollable * t) / (TILES - 1));
     await page.evaluate((yy) => window.scrollTo(0, yy), y);
-    await page.waitForTimeout(650);
+    /**
+     * Long settle, deliberately.
+     *
+     * 650ms was not enough for scroll-driven reveals. The bar animates copy in
+     * on scroll, and captures caught paragraphs mid-fade, clipped under the
+     * panel below — whereupon three critics in a row cited "text physically
+     * overlapping, a broken container collision no studio ships" as the tell
+     * and handed the round to this page. That is the dev-badge mistake with the
+     * roles reversed: winning because the harness damaged the opponent.
+     */
+    await page.waitForTimeout(2200);
+    await page
+      .evaluate(() => document.fonts?.ready)
+      .catch(() => {});
     await page.screenshot({
       path: path.join(dir, `${label}-t${String(t + 1).padStart(2, "0")}.png`),
     });
