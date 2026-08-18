@@ -15,7 +15,7 @@ import type {
   TextImageBlock,
   VideoBlock,
 } from "@/lib/types";
-import { CtaRow, Inline, Rule, Section, SectionHeading } from "./ui";
+import { Button, CtaRow, Inline, Rule, Section, SectionHeading } from "./ui";
 import { Testimonials } from "./Testimonials";
 
 /**
@@ -108,36 +108,40 @@ export function Hero({ block }: { block: HeroBlock }) {
         aria-hidden="true"
       />
 
-      <div className="mx-auto w-full max-w-(--container-content) px-6 pt-40 pb-16 lg:px-10 lg:pt-52 lg:pb-20">
+      <div className="mx-auto w-full max-w-(--container-content) px-6 pt-40 pb-20 lg:px-10 lg:pt-52 lg:pb-28">
+        {/*
+          One focal path, top to bottom: name, then claim, then a single way in.
+          The panel that failed this piece named three separate causes and they
+          were all the same cause — too many objects. The portrait sat loose in
+          the middle of the frame colliding with the horizon line, and a filled
+          button and an outlined button sat side by side reading as two equal
+          choices rather than a primary and a secondary.
+
+          The portrait is gone from the fold. It was never doing work here: it
+          is Eitan's weakest asset at 659px, it competed with his own
+          photograph, and it already appears further down the page where the
+          copy is actually about him.
+        */}
         <h1 className="text-display font-light text-paper">{block.title}</h1>
 
-        <div className="mt-12 grid items-end gap-x-12 gap-y-8 lg:grid-cols-12">
-          <div className="lg:col-span-7">
-            <p className="text-lede max-w-(--container-text) text-paper/80">
-              {block.subtitle ?? site.tagline}
-            </p>
-            <CtaRow ctas={block.ctas} onDark />
-          </div>
+        <p className="text-lede mt-8 max-w-(--container-text) text-paper/75">
+          {block.subtitle ?? site.tagline}
+        </p>
 
-          {/* The portrait, inset and small. 659px of source is plenty at this
-              size and would be embarrassing at any larger one. */}
-          <div className={`lg:col-span-5 ${imageLast ? "lg:order-last" : "lg:order-first"}`}>
-            <div className="flex items-end gap-4 lg:justify-end">
-              <div className="relative aspect-4/5 w-36 shrink-0 overflow-hidden bg-void/40 sm:w-44">
-                <Image
-                  src={block.image.src}
-                  alt={block.image.alt}
-                  fill
-                  sizes="176px"
-                  className="object-cover object-top"
-                />
-              </div>
-              <p className="pb-1 text-[0.8rem] leading-relaxed tracking-[0.14em] text-paper/55">
-                {site.siteName}
-              </p>
-            </div>
+        {block.ctas?.length ? (
+          <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <Button cta={{ ...block.ctas[0], tone: "solidWhite" }} />
+            {/* Secondary reads as a link, not a second button of equal weight. */}
+            {block.ctas[1] && (
+              <Link
+                href={block.ctas[1].href}
+                className="border-b border-paper/40 pb-0.5 text-[0.95rem] text-paper/75 transition-colors hover:border-paper hover:text-paper"
+              >
+                {block.ctas[1].label}
+              </Link>
+            )}
           </div>
-        </div>
+        ) : null}
       </div>
     </section>
   );

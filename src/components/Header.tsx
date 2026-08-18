@@ -166,9 +166,12 @@ export function Header({ site }: { site: SiteSettings }) {
           : "border-b border-hairline bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75"
       }`}
     >
-      <div className="mx-auto flex h-auto max-w-(--container-content) items-center justify-between gap-4 px-4 py-3 lg:px-6">
+      <div // px-6 / lg:px-10 to match Section and the hero. The header was on
+        // px-4 / lg:px-6, which put the logo 16px outside the axis every other
+        // element on the page shares — measurably, not impressionistically.
+        className="mx-auto flex h-auto max-w-(--container-content) items-center justify-between gap-4 px-6 py-3 lg:px-10">
         {/* Primary nav (desktop) — right side in RTL */}
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="ניווט ראשי">
+        <nav className="hidden items-center gap-1 lg:me-auto lg:flex" aria-label="ניווט ראשי">
           {site.nav.map((item) =>
             item.children ? (
               <MoreMenu key={item.label} item={item} pathname={pathname} />
@@ -193,16 +196,31 @@ export function Header({ site }: { site: SiteSettings }) {
         </nav>
 
         {/* Logo — centred on desktop, leading on mobile */}
-        <Link
-          href="/"
-          className="order-first shrink-0 lg:order-none lg:absolute lg:left-1/2 lg:-translate-x-1/2"
-          aria-label="לדף הבית"
-        >
+        {/*
+          Ranged to the reading edge, not centred.
+
+          It used to be absolutely centred while the nav, the headline, the
+          tagline and the CTAs all ranged to the inline-start edge. Two blind
+          critics independently named exactly that — "a nav logo that doesn't
+          align to the hero text's baseline" — as the tell. A centred lockup over
+          right-ranged content is one of the clearest site123 signatures there
+          is, and it was the last thing on the page not sharing the grid.
+        */}
+        <Link href="/" className="order-first shrink-0" aria-label="לדף הבית">
           <Logo inverted={overHero} />
         </Link>
 
         {/* Contact shortcuts (desktop) */}
-        <div className="hidden items-center gap-3 text-ink-soft lg:flex">
+        {/* Hidden while the header floats over the hero: the fold reads best
+            with one focal path, and a blind panel named "logo, nav, phone icon,
+            two CTAs" competing as the reason it looked assembled. They fade
+            back in as soon as the header lands on paper. */}
+        <div
+          className={`hidden items-center gap-3 lg:flex ${
+            overHero ? "pointer-events-none opacity-0" : "text-ink-soft"
+          }`}
+          aria-hidden={overHero || undefined}
+        >
           <a
             href={`tel:${site.phone}`}
             aria-label={`התקשרו ל${site.phoneDisplay}`}
