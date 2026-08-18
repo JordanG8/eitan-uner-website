@@ -4,24 +4,21 @@ import {
   ALLOWED_MIME,
   MAX_UPLOAD_BYTES,
   listObjects,
-  putObject,
-  safeKey,
+  optimize,
+  putObjects,
   storageDriver,
 } from "@/lib/storage";
 
 /**
  * Media library.
  *
- * GET  — everything pickable: images already committed to the repo, plus uploads.
- * POST — multipart upload, one or more files.
- *
- * Auth is enforced by middleware for /api/media, so these handlers assume a
- * valid session.
+ * GET  — everything pickable: images shipped in the repo, plus uploads.
+ * POST — upload, re-encode, store. Multiple files land in a single commit.
  */
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // re-encoding several large photos is not instant
 
-/** The curated images shipped in the repo. Not deletable from the UI. */
 function builtIns() {
   return [...IMAGE_OPTIONS, ...CLIENT_LOGOS].map((o) => ({
     key: o.value,
@@ -45,7 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "אין אחסון מוגדר בסביבת הייצור. יש לחבר אחסון אובייקטים (Cloudflare R2) או להריץ על שרת עם דיסק.",
+          "אין אחסון מוגדר. יש להגדיר GITHUB_TOKEN ו־GITHUB_REPO בהגדרות הפרויקט.",
       },
       { status: 501 }
     );
@@ -63,7 +60,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "לא נבחר קובץ" }, { status: 400 });
   }
 
-  const uploaded = [];
+  const prepared = [];
   for (const file of files) {
     if (!ALLOWED_MIME.has(file.type)) {
       return NextResponse.json(
@@ -74,14 +71,32 @@ export async function POST(request: Request) {
     if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
         {
-          error: `הקובץ ${file.name} גדול מדי (${Math.round(file.size / 1024 / 1024)}MB). המקסימום הוא ${MAX_UPLOAD_BYTES / 1024 / 1024}MB.`,
+          error: `הקובץ ${file.name} גדול מדי (${Math.round(file.size / 1024 / 1024)}MB). המקסימום ${MAX_UPLOAD_BYTES / 1024 / 1024}MB.`,
         },
         { status: 413 }
       );
     }
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    uploaded.push(await putObject(safeKey(file.name), bytes));
+
+    const original = new Uint8Array(await file.arrayBuffer());
+    try {
+      const { bytes, key, width, height } = await optimize(original, file.type, file.name);
+      prepared.push({
+        key,
+        bytes,
+        meta: { width, height, originalSize: original.byteLength },
+      });
+    } catch (err) {
+      return NextResponse.json(
+        { error: `לא ניתן לעבד את ${file.name}: ${(err as Error).message}` },
+        { status: 422 }
+      );
+    }
   }
 
-  return NextResponse.json({ ok: true, items: uploaded });
+  try {
+    const items = await putObjects(prepared);
+    return NextResponse.json({ ok: true, items, driver: storageDriver() });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+  }
 }

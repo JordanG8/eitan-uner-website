@@ -1,18 +1,27 @@
 import { pages, stories } from "./content";
+import { readStoredPage } from "./pages-store";
 import type { Page, Story } from "./types";
 
 /**
  * Read layer.
  *
- * Content lives in content.ts, in this repo. There is no external CMS: nothing
- * here can be taken down, rate-limited, or start charging per seat.
- *
- * These stay async so the routes that await them don't need to change when the
- * Puck store is wired in behind this seam.
+ * Published pages (committed to content/pages/*.json by the editor) win; the
+ * hand-written content in content.ts is the fallback for anything never edited.
+ * Both live in this repo, so there is no external service in the request path.
  */
 
 export async function getPageBySlug(slug: string): Promise<Page | undefined> {
-  return pages.find((p) => p.slug === slug);
+  const base = pages.find((p) => p.slug === slug);
+  const stored = await readStoredPage(slug);
+  if (!stored) return base;
+
+  return {
+    slug,
+    title: base?.title ?? slug,
+    showTitleBanner: base?.showTitleBanner,
+    seoDescription: base?.seoDescription,
+    blocks: stored.blocks,
+  };
 }
 
 export async function getAllPageSlugs(): Promise<string[]> {

@@ -12,6 +12,7 @@ it force him to depend on someone else's?* That is why there is no hosted CMS.
 | Vercel project | Vercel → Project Settings → Transfer to another account | Jordan's team |
 | Domain `eitanuner.co.il` | already his; DNS at enter-system.com | Eitan |
 | Content + images | in the repo — moves with it, no export step | — |
+| GitHub token | regenerate on his account (Contents: read/write, this repo) | Jordan |
 | Editor password | regenerate on his side (below) | Jordan |
 
 Nothing else. There is no CMS account, no database login, no media service, no
@@ -47,12 +48,14 @@ the editor keeps running.
 
 ## Keep it this way
 
-When picking anything new — storage in particular — prefer the option that adds
-no account Eitan would not control. Between the storage choices in the README:
+When picking anything new, prefer the option that adds no account Eitan would
+not control. Storage already follows this rule: the repo he owns *is* the store,
+so there is no database or media service in the handover.
 
-- **commit-back-to-repo** adds nothing; the repo he already owns *is* the store.
-- **Postgres + R2** is technically nicer but adds two more logins to hand over
-  and two more bills in his name.
+The one planned exception is Cloudflare R2, if the repo ever outgrows image
+storage — see the README for the symptoms, and EITAN-README.md for the
+plain-language version Eitan has. That is a deliberate, later trade, not a
+default.
 
 If he ever stops working with Jordan, he should be able to keep the site running
 by himself, with nothing to cancel and nobody to ask.

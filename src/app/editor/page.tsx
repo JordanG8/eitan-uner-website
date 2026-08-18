@@ -1,32 +1,20 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import type { Data } from "@measured/puck";
+import { readStoredPage } from "@/lib/pages-store";
+import { storageDriver } from "@/lib/storage";
 import { pageToPuckData } from "@/puck/seed";
 import { EditorClient } from "./EditorClient";
 
 /**
- * Spike: the Puck editor, loaded with the real homepage.
- *
- * Storage is the open question — see the POST handler in api/puck. Locally it
- * writes a JSON file, which is enough to feel the full edit → publish loop.
+ * Opens on the last published version of the homepage, or on the content in
+ * content.ts if it has never been published.
  */
 
 export const dynamic = "force-dynamic";
 
-const STORE = path.join(process.cwd(), "puck-data.json");
-
-async function loadData(): Promise<Data> {
-  try {
-    const raw = await readFile(STORE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (parsed?.content) return parsed as Data;
-  } catch {
-    /* nothing saved yet — fall back to the live homepage */
-  }
-  return pageToPuckData("/");
-}
+const SLUG = "/";
 
 export default async function EditorPage() {
-  const data = await loadData();
-  return <EditorClient data={data} />;
+  const stored = await readStoredPage(SLUG);
+  const data = (stored?.puck as Data) ?? pageToPuckData(SLUG);
+  return <EditorClient data={data} slug={SLUG} driver={storageDriver()} />;
 }

@@ -1,37 +1,53 @@
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
+import { puckToBlocks } from "@/puck/to-blocks";
+import { writeStoredPage } from "@/lib/pages-store";
+import { storageDriver } from "@/lib/storage";
 
 /**
- * Publish endpoint for the Puck spike.
+ * Publish.
  *
- * Deliberately local-only. Vercel's filesystem is read-only at runtime, so this
- * writes a JSON file when running locally and refuses clearly in production
- * rather than pretending to save. Choosing the real store — Postgres you own, or
- * a commit back to your own GitHub repo — is the open decision, and it is the
- * only thing standing between this spike and a working CMS.
+ * Stores both the Puck document (so the editor round-trips losslessly) and the
+ * flattened blocks (so rendering never touches the editor). Under the github
+ * driver this is a commit, which triggers a Vercel rebuild — the new page is
+ * live in about a minute, and every publish is revertible in git.
  */
 
-const STORE = path.join(process.cwd(), "puck-data.json");
+export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  if (process.env.VERCEL) {
+  let body: { slug?: string; data?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "בקשה לא תקינה" }, { status: 400 });
+  }
+
+  const data = body?.data ?? body; // tolerate a bare Puck document
+  const slug = typeof body?.slug === "string" ? body.slug : "/";
+
+  const blocks = puckToBlocks(data);
+  if (!blocks.length) {
     return NextResponse.json(
-      {
-        error:
-          "אין אפשרות לשמור בסביבת הייצור — יש לבחור מקום אחסון (בסיס נתונים או commit ל-git).",
-      },
-      { status: 501 }
+      { error: "אין תוכן לשמור — העמוד ריק." },
+      { status: 400 }
     );
   }
 
   try {
-    const data = await request.json();
-    if (!data || typeof data !== "object" || !("content" in data)) {
-      return NextResponse.json({ error: "Invalid Puck payload" }, { status: 400 });
-    }
-    await writeFile(STORE, JSON.stringify(data, null, 2), "utf8");
-    return NextResponse.json({ ok: true });
+    const result = await writeStoredPage({
+      slug,
+      updatedAt: new Date().toISOString(),
+      puck: data,
+      blocks,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      blocks: blocks.length,
+      committed: result.committed,
+      url: result.url,
+      driver: storageDriver(),
+    });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }

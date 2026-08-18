@@ -11,6 +11,51 @@ import { useCallback, useRef, useState } from "react";
  * make easy.
  */
 
+
+/**
+ * Shrink in the browser, before the upload leaves the machine.
+ *
+ * This is not an optimisation — it is load-bearing. Vercel caps a function's
+ * request body at 4.5MB as an infrastructure limit that cannot be raised in
+ * config, and Eitan's camera files run 6–15MB. Without this step his photos
+ * simply cannot be uploaded in production.
+ *
+ * Falls back to the original file if the browser cannot decode it, so an
+ * unusual format degrades to "maybe too big" rather than "silently broken".
+ */
+const MAX_EDGE = 2400;
+
+async function downscale(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") return file;
+
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", 0.85)
+    );
+    // If re-encoding didn't help, keep the original rather than degrade it.
+    if (!blob || blob.size >= file.size) return file;
+
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", {
+      type: "image/webp",
+    });
+  } catch {
+    return file;
+  }
+}
+
 export interface MediaValue {
   src?: string;
   alt?: string;
@@ -38,6 +83,7 @@ export function MediaField({
   const [driver, setDriver] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [busyLabel, setBusyLabel] = useState("מעלה…");
   const [query, setQuery] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -68,8 +114,11 @@ export function MediaField({
     setBusy(true);
     setError(null);
     try {
+      setBusyLabel("מכווץ…");
       const form = new FormData();
-      for (const f of Array.from(files)) form.append("file", f);
+      for (const f of Array.from(files)) form.append("file", await downscale(f));
+
+      setBusyLabel("מעלה…");
       const res = await fetch("/api/media", { method: "POST", body: form });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? `שגיאה ${res.status}`);
@@ -173,7 +222,7 @@ export function MediaField({
                 whiteSpace: "nowrap",
               }}
             >
-              {busy ? "מעלה…" : "העלאה"}
+              {busy ? busyLabel : "העלאה"}
             </button>
             <input
               ref={fileInput}

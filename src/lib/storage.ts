@@ -1,17 +1,28 @@
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
+import { commitFiles, githubConfig } from "./github";
 
 /**
  * Media storage.
  *
- * One interface, two drivers. The local driver writes into public/uploads and is
- * what runs in development and on any normal server (a VPS, Hostinger, a
- * container). It does NOT work on Vercel, whose filesystem is read-only at
- * runtime — which is exactly the storage decision still outstanding.
+ * Two drivers behind one interface:
  *
- * `putObject` is the only seam an S3/R2 driver needs to implement, so swapping
- * hosts later touches this file and nothing else.
+ *  - `github`  — production. Commits into the repo Eitan owns, which triggers a
+ *                Vercel rebuild. No database, no media service, no extra account.
+ *  - `local`   — development, or any server with a real disk.
+ *
+ * Vercel's runtime filesystem is read-only, so `local` cannot work there; if
+ * neither driver is configured we say so rather than failing at write time.
+ *
+ * Every raster upload is re-encoded before it is stored. That is the single
+ * thing that makes repo-as-storage viable: a photographer's 8MB camera JPEG
+ * becomes a ~150KB WebP, and git keeps every version of every binary forever.
  */
+
+export const UPLOAD_PREFIX = "public/uploads";
+const PUBLIC_PREFIX = "/uploads";
+const LOCAL_DIR = path.join(process.cwd(), UPLOAD_PREFIX);
 
 export interface StoredObject {
   key: string;
@@ -19,10 +30,9 @@ export interface StoredObject {
   size: number;
   width?: number;
   height?: number;
+  /** Bytes saved by re-encoding, for reporting back to the editor. */
+  originalSize?: number;
 }
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-const PUBLIC_PREFIX = "/uploads";
 
 export const ALLOWED_MIME = new Set([
   "image/jpeg",
@@ -30,19 +40,34 @@ export const ALLOWED_MIME = new Set([
   "image/webp",
   "image/avif",
   "image/svg+xml",
+  "image/tiff",
 ]);
 
-export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // photographers bring big files
+/**
+ * Ceiling on an incoming request body.
+ *
+ * Vercel caps a function's request body at 4.5MB — infrastructure, not config,
+ * so it cannot be raised. The browser downscales before uploading (see
+ * MediaField), which keeps real photos around 500KB; this limit exists to
+ * reject anything that slipped past that with a clear message instead of an
+ * opaque 413 from the platform.
+ */
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
 
-export function storageDriver(): "local" | "unavailable" {
-  // Vercel's runtime filesystem is read-only, so local writes would fail at the
-  // worst possible moment — better to report it up front.
-  return process.env.VERCEL ? "unavailable" : "local";
+/** Long edge, in pixels. Comfortably above any layout slot on the site. */
+const MAX_EDGE = 2400;
+const WEBP_QUALITY = 82;
+
+export type Driver = "github" | "local" | "unavailable";
+
+export function storageDriver(): Driver {
+  if (githubConfig()) return "github";
+  if (process.env.VERCEL) return "unavailable";
+  return "local";
 }
 
-/** Filesystem-safe, collision-resistant, and still recognisable. */
-export function safeKey(filename: string): string {
-  const ext = path.extname(filename).toLowerCase().slice(0, 6) || ".bin";
+/** Filesystem-safe, collision-resistant, still recognisable. */
+export function safeKey(filename: string, ext = ".webp"): string {
   const base = path
     .basename(filename, path.extname(filename))
     .normalize("NFC")
@@ -55,41 +80,119 @@ export function safeKey(filename: string): string {
   return `${base || "image"}-${stamp}${rand}${ext}`;
 }
 
-export async function putObject(
-  key: string,
-  bytes: Uint8Array
-): Promise<StoredObject> {
-  if (storageDriver() === "unavailable") {
-    throw new Error(
-      "אין אחסון מוגדר בסביבת הייצור. יש לחבר אחסון אובייקטים (למשל Cloudflare R2) או להריץ על שרת עם דיסק."
-    );
+/**
+ * Downscale and re-encode to WebP.
+ *
+ * SVG passes through untouched — it is already small, and rasterising a logo
+ * would be a downgrade.
+ */
+export async function optimize(
+  bytes: Uint8Array,
+  mime: string,
+  filename: string
+): Promise<{ bytes: Uint8Array; key: string; width?: number; height?: number }> {
+  if (mime === "image/svg+xml") {
+    return { bytes, key: safeKey(filename, ".svg") };
   }
-  await mkdir(UPLOAD_DIR, { recursive: true });
-  const dest = path.join(UPLOAD_DIR, key);
-  await writeFile(dest, bytes);
-  const dims = imageSize(bytes);
+
+  const pipeline = sharp(bytes, { failOn: "none" })
+    .rotate() // honour EXIF orientation, then drop it
+    .resize({
+      width: MAX_EDGE,
+      height: MAX_EDGE,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .webp({ quality: WEBP_QUALITY });
+
+  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
   return {
-    key,
-    url: `${PUBLIC_PREFIX}/${key}`,
-    size: bytes.byteLength,
-    ...dims,
+    bytes: new Uint8Array(data),
+    key: safeKey(filename, ".webp"),
+    width: info.width,
+    height: info.height,
   };
 }
 
+export async function putObject(
+  key: string,
+  bytes: Uint8Array,
+  meta: { width?: number; height?: number; originalSize?: number } = {}
+): Promise<StoredObject> {
+  const driver = storageDriver();
+  const result: StoredObject = {
+    key,
+    url: `${PUBLIC_PREFIX}/${key}`,
+    size: bytes.byteLength,
+    ...meta,
+  };
+
+  if (driver === "github") {
+    await commitFiles(
+      [{ path: `${UPLOAD_PREFIX}/${key}`, content: bytes }],
+      `Add image ${key}`
+    );
+    return result;
+  }
+
+  if (driver === "local") {
+    await mkdir(LOCAL_DIR, { recursive: true });
+    await writeFile(path.join(LOCAL_DIR, key), bytes);
+    return result;
+  }
+
+  throw new Error(
+    "אין אחסון מוגדר. יש להגדיר GITHUB_TOKEN ו־GITHUB_REPO, או להריץ על שרת עם דיסק."
+  );
+}
+
+/** Commits several images in one commit, so N uploads cause one rebuild. */
+export async function putObjects(
+  objects: { key: string; bytes: Uint8Array; meta?: { width?: number; height?: number; originalSize?: number } }[]
+): Promise<StoredObject[]> {
+  const driver = storageDriver();
+
+  if (driver === "github" && objects.length > 1) {
+    await commitFiles(
+      objects.map((o) => ({ path: `${UPLOAD_PREFIX}/${o.key}`, content: o.bytes })),
+      `Add ${objects.length} images`
+    );
+    return objects.map((o) => ({
+      key: o.key,
+      url: `${PUBLIC_PREFIX}/${o.key}`,
+      size: o.bytes.byteLength,
+      ...o.meta,
+    }));
+  }
+
+  const out: StoredObject[] = [];
+  for (const o of objects) out.push(await putObject(o.key, o.bytes, o.meta));
+  return out;
+}
+
+/**
+ * Lists previously uploaded files.
+ *
+ * Reads the deployed filesystem, which works under both drivers: images
+ * committed by the github driver arrive on disk with the next deployment.
+ * The consequence — an upload is not listed until the rebuild lands — is
+ * surfaced in the editor rather than hidden.
+ */
 export async function listObjects(): Promise<StoredObject[]> {
   try {
-    const names = await readdir(UPLOAD_DIR);
+    const names = await readdir(LOCAL_DIR);
     const out: StoredObject[] = [];
     for (const name of names) {
       if (name.startsWith(".")) continue;
-      const full = path.join(UPLOAD_DIR, name);
+      const full = path.join(LOCAL_DIR, name);
       const s = await stat(full);
       if (!s.isFile()) continue;
       let dims: { width?: number; height?: number } = {};
       try {
-        dims = imageSize(await readFile(full));
+        const m = await sharp(full).metadata();
+        dims = { width: m.width, height: m.height };
       } catch {
-        /* unreadable — list it without dimensions */
+        /* not a raster image — list it without dimensions */
       }
       out.push({ key: name, url: `${PUBLIC_PREFIX}/${name}`, size: s.size, ...dims });
     }
@@ -97,71 +200,4 @@ export async function listObjects(): Promise<StoredObject[]> {
   } catch {
     return [];
   }
-}
-
-/* --------------------------------------------------------------- dimensions */
-
-/**
- * Minimal dimension sniffer for PNG / JPEG / WebP.
- *
- * Worth the ~50 lines: the gallery lays out with CSS columns using each image's
- * intrinsic ratio, so uploads with unknown dimensions would render at a wrong
- * aspect and visibly break the masonry.
- */
-export function imageSize(buf: Uint8Array): { width?: number; height?: number } {
-  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-
-  // PNG: 8-byte signature, then IHDR
-  if (buf.length > 24 && buf[0] === 0x89 && buf[1] === 0x50) {
-    return { width: view.getUint32(16), height: view.getUint32(20) };
-  }
-
-  // WebP: "RIFF"...."WEBP"
-  if (
-    buf.length > 30 &&
-    buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 &&
-    buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50
-  ) {
-    const fmt = String.fromCharCode(buf[12], buf[13], buf[14], buf[15]);
-    if (fmt === "VP8 ") {
-      return {
-        width: view.getUint16(26, true) & 0x3fff,
-        height: view.getUint16(28, true) & 0x3fff,
-      };
-    }
-    if (fmt === "VP8L") {
-      const bits = view.getUint32(21, true);
-      return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 };
-    }
-    if (fmt === "VP8X") {
-      const w = 1 + (buf[24] | (buf[25] << 8) | (buf[26] << 16));
-      const h = 1 + (buf[27] | (buf[28] << 8) | (buf[29] << 16));
-      return { width: w, height: h };
-    }
-  }
-
-  // JPEG: walk the segment markers to the first SOF
-  if (buf.length > 4 && buf[0] === 0xff && buf[1] === 0xd8) {
-    let i = 2;
-    while (i < buf.length - 9) {
-      if (buf[i] !== 0xff) { i++; continue; }
-      const marker = buf[i + 1];
-      // SOF0..SOF3, SOF5..SOF7, SOF9..SOF11, SOF13..SOF15
-      if (
-        (marker >= 0xc0 && marker <= 0xc3) ||
-        (marker >= 0xc5 && marker <= 0xc7) ||
-        (marker >= 0xc9 && marker <= 0xcb) ||
-        (marker >= 0xcd && marker <= 0xcf)
-      ) {
-        return { height: view.getUint16(i + 5), width: view.getUint16(i + 7) };
-      }
-      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) {
-        i += 2;
-        continue;
-      }
-      i += 2 + view.getUint16(i + 2);
-    }
-  }
-
-  return {};
 }

@@ -75,30 +75,54 @@ each image's intrinsic ratio, so unknown dimensions would visibly break it.
 `src/lib/storage.ts` has one seam, `putObject`. The local driver writes to
 `public/uploads` and works in development and on any server with a disk.
 
-## Open decision: production storage
+## Storage: the repo is the database
 
-Both publishing and uploads currently work **locally only**, and refuse with a
-clear Hebrew error in production rather than pretending to succeed. Vercel's
-runtime filesystem is read-only, so one of these has to happen:
+Publishing commits `content/pages/<slug>.json`; uploads commit into
+`public/uploads/`. Both trigger a Vercel rebuild, so a change is live in about a
+minute and every edit is an ordinary commit — diffable, revertible, attributable.
 
-| | Publish latency | Media | Notes |
-| --- | --- | --- | --- |
-| Commit to this repo via GitHub API | ~40s rebuild | needs object storage anyway | free version history and rollback through git |
-| Postgres you control + Cloudflare R2 | instant | 10GB free, S3-compatible | behaves like a real CMS |
-| A server with a disk (VPS/Hostinger) | instant | local driver already works | you run the box |
+That choice follows from the ownership constraint. A database and a media bucket
+would each be another account and another bill in Eitan's name; the repo he
+already owns costs nothing extra to hand over.
 
-Recommended for a photographer: Postgres + R2.
+Configure with `GITHUB_TOKEN` (fine-grained PAT, Contents: read and write, this
+repo only), `GITHUB_REPO`, `GITHUB_BRANCH`. With them unset, writes go to the
+local filesystem — which is what development uses, and what a VPS would use.
 
-Also still to do: the editor composes one page; extending it to all 18 is
-straightforward once there is somewhere to save.
+Reads never touch the GitHub API: a committed file is just a file by the time it
+is deployed. Only writing needs the token, so serving the site cannot be broken
+by a network problem or an expired credential.
 
-## Ownership
+### Images are re-encoded twice, on purpose
 
-Eitan owns this outright — that is a design constraint, not an afterthought.
-There is no hosted CMS, no database login, no media service, and no per-seat
-licence: the repo is the content store and Puck is an npm package, not a vendor.
-Transferring the site means moving the GitHub repo and the Vercel project, and
-nothing else. See [HANDOVER.md](HANDOVER.md).
+**In the browser, before upload.** Not an optimisation — Vercel caps a function
+request body at 4.5MB as an infrastructure limit that cannot be raised in
+config, and Eitan's camera files run 6–15MB. Without the client-side downscale
+in `MediaField.tsx`, his photos simply cannot be uploaded in production.
+
+**On the server, with sharp.** Defence in depth for anything that skipped the
+first pass, and it normalises EXIF rotation. Measured on his own files: 6MB
+JPEGs land at ~790KB, an 8× reduction, at 2400px on the long edge.
+
+Both matter because git keeps every version of every binary forever. Compression
+is what makes repo-as-storage viable rather than a slow-motion mistake.
+
+### When to move to R2
+
+Watch for: publishes consistently taking several minutes, uploads failing
+repeatedly, roughly 1,500+ images accumulated, or a shift to video. GitHub
+recommends staying under 1GB per repo (5GB is the outer threshold), and the
+site's images are currently ~3.3MB.
+
+Migrating means implementing one function — `putObject` in `src/lib/storage.ts`
+— against S3/R2 and rewriting the stored URLs. Hours, not a rebuild. **Do not
+reach for Git LFS**: its objects transfer awkwardly between accounts and the
+free tier bills past 1GB, reintroducing exactly the account-to-hand-over problem
+this design avoids.
+
+Eitan has a plain-language version of all of this in
+[EITAN-README.md](EITAN-README.md), including the symptoms that should prompt him
+to call.
 
 ## Deploying
 
