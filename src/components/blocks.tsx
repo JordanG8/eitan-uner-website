@@ -349,8 +349,15 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
                   {card.title}
                 </h3>
                 {card.body && (
+                  /* 1rem, not 0.95.
+                     Card bodies carry the longest continuous prose on the
+                     page - the lead card's runs past 300 characters - and at
+                     0.95rem they measured 15.2px. Hebrew has no lowercase and
+                     no ascender/descender rhythm to help the eye at small
+                     sizes, so 15px is meaningfully below comfortable in a way
+                     the same value would not be in Latin. */
                   <p
-                    className={`mt-3 text-[0.95rem] leading-relaxed ${
+                    className={`mt-3 text-base leading-relaxed ${
                       onBrand ? "text-paper/65" : "text-ink-soft"
                     } ${big ? "max-w-(--container-text)" : ""}`}
                   >

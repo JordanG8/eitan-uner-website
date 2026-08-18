@@ -441,3 +441,78 @@ with the site forever.
 card (2.63x) and upscaling anywhere wider. That constraint, not taste, set the
 scope — and it happens to agree with the right answer anyway: on a
 photographer's site his own photographs should carry the slots that matter.
+
+## Round 6 panel: three critics, and what survived checking
+
+Three fresh critics, each shown A / B / C with the key withheld. A = this page,
+B = idangross, C = Magnum.
+
+### Scoreboard
+
+| | Ranked this page above idangross | Named this page the amateur | Ranked Magnum first |
+|---|---|---|---|
+| Critic 1 (fold) | yes | **no** — named idangross, high confidence | yes |
+| Critic 2 (typography) | yes | **no** — "A shows the more trained hand" | yes |
+| Critic 3 (full scroll) | yes | **no** — named idangross, high confidence | yes |
+
+**3/3 against the competitor bar. 0/3 against the hard bar.** By this
+technique's exit condition the page has beaten idangross and has *not* beaten
+Magnum, and the second half is the half that matters.
+
+### The blind was not blind
+
+Critic 3 opened its verdict by naming all three sites outright. It could,
+because every tile carries the site's own wordmark in the header — "IDAN GROSS"
+in Latin, Eitan's logo in Hebrew, Magnum's masthead. **No critic in this
+project has ever been meaningfully blind**, across six rounds; the labels were
+stripped from the filenames and left in the pixels.
+
+That does not overturn the result — the verdicts were consistent and critic 3's
+reasoning cited structural evidence, not identity — but it downgrades every
+discrimination verdict recorded here from blind to sighted, this round and all
+five before it. Fixing it properly means masking the masthead region on every
+target, which cannot be done without also removing something the design is
+being judged on. Worth knowing rather than quietly carrying.
+
+### Claims that did not survive the DOM
+
+Two of the three sharpest criticisms were factually wrong, and both would have
+been acted on if taken at face value:
+
+| Claim | Measured |
+|---|---|
+| "the body paragraph is centre-aligned with an overlong measure" | all 6 substantial paragraphs are `text-align: start`; measures 41–72 chars |
+| "144px logos request `w=3840`" (my own audit) | 256px at DPR 1, 384px at DPR 2 — correct |
+
+The centring claim was the single most specific and confident thing any critic
+said, and it described a page that does not exist. A critic reading a
+screenshot cannot distinguish a centred paragraph from a short flush paragraph
+in a narrow column, and it did not hedge.
+
+### What was real, and fixed
+
+- **Card body copy measured 15.2px.** The longest continuous prose on the page
+  sat below comfortable reading size, and Hebrew has no lowercase or
+  ascender/descender rhythm to carry small text the way Latin does. Now 16px.
+
+### What was real, and deliberately not changed
+
+- **The teal section numerals.** Critic 1 called them a palette break against
+  the warm hero, critic 3 called the numbering a template tell. The colour is
+  real — 10 numerals at `rgb(15,110,115)`. But round 3 added them for a
+  documented reason (a blind critic had called the teal logo "an orphan"), and
+  reversing a considered decision on two sighted opinions would be churn.
+  Recorded, not actioned.
+
+- **The dark block behind the footer map.** Critic 3 called it a broken
+  late-loading section. The iframe is present at 650×416, Google returns 200
+  for the embed and its tiles, and no request fails — the black is headless
+  Chromium not compositing a cross-origin iframe into the capture. Fixing this
+  would be fixing the harness, again.
+
+### Standing
+
+Beaten the competitor bar 3/3. Lost to Magnum 3/3. The gap the critics name
+against Magnum is not a defect list — it is that Magnum's images and text are
+sequenced to carry a narrative, and this page's are arranged in sections. That
+is an editorial problem, not a CSS one, and it does not close in a round.
