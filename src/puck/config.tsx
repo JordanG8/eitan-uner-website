@@ -100,7 +100,8 @@ export const config: Config = {
       fields: {
         title: { type: "text", label: "כותרת" },
         subtitle: { type: "textarea", label: "כותרת משנה" },
-        image: imageField("תמונה"),
+        backdrop: imageField("תמונת רקע (רוחב מלא)"),
+        image: imageField("תמונת דיוקן"),
         imageSide: imageSideField,
         background: {
           type: "radio",
@@ -114,6 +115,10 @@ export const config: Config = {
       },
       defaultProps: {
         title: "פוטודוקותרפיה",
+        backdrop: {
+          src: "/images/gallery-valley-dusk.webp",
+          alt: "עמק בשעת דמדומים",
+        },
         image: { src: "/images/eitan-hero.webp", alt: "איתן אונר" },
         imageSide: "end",
         background: "brand",

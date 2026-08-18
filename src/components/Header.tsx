@@ -84,6 +84,66 @@ export function Header({ site }: { site: SiteSettings }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  /**
+   * Over a full-bleed hero the header goes transparent and inverts.
+   *
+   * A light bar with a turquoise logo sitting on top of a dark photograph reads
+   * as chrome bolted over a design. Both bars run navigation *through* the
+   * image — one critic singled out the nav rule cutting across the photograph
+   * at mid-height as the giveaway of art direction.
+   *
+   * Detected from the DOM rather than the route, so it follows any page whose
+   * first block is a backdrop hero instead of hardcoding "/" — and it resets on
+   * navigation, which is why `pathname` is a dependency.
+   */
+  const [overHero, setOverHero] = useState(false);
+
+  /**
+   * Publish the header's measured height as --header-h.
+   *
+   * A sticky header reserves its own band in normal flow, so making it
+   * transparent over a full-bleed hero showed the paper body behind it, not the
+   * photograph — the nav went white-on-white. The hero pulls itself up by this
+   * value instead. Measured and observed rather than hardcoded, because the
+   * height is set by the logo and changes with it.
+   */
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () =>
+      document.documentElement.style.setProperty(
+        "--header-h",
+        `${Math.round(el.getBoundingClientRect().height)}px`
+      );
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const hero = document.querySelector("[data-hero-dark]");
+
+    const read = () => {
+      // Invert while the header still overlaps the hero, measured from the
+      // hero's own height rather than a guessed pixel threshold.
+      setOverHero(
+        !!hero && window.scrollY < hero.getBoundingClientRect().height - 120
+      );
+    };
+
+    // Deferred rather than called inline: setState synchronously inside an
+    // effect body triggers a cascading render, which the lint rule rightly
+    // objects to. rAF also means the first read happens after layout, so the
+    // hero's measured height is real.
+    const raf = requestAnimationFrame(read);
+    window.addEventListener("scroll", read, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", read);
+    };
+  }, [pathname]);
+
   // Lock body scroll behind the open drawer.
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -97,7 +157,15 @@ export function Header({ site }: { site: SiteSettings }) {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
+    <header
+      ref={headerRef}
+      data-over-hero={overHero ? "" : undefined}
+      className={`sticky top-0 z-40 transition-colors duration-300 ${
+        overHero
+          ? "border-b border-paper/15 bg-transparent text-paper"
+          : "border-b border-hairline bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75"
+      }`}
+    >
       <div className="mx-auto flex h-auto max-w-(--container-content) items-center justify-between gap-4 px-4 py-3 lg:px-6">
         {/* Primary nav (desktop) — right side in RTL */}
         <nav className="hidden items-center gap-1 lg:flex" aria-label="ניווט ראשי">
@@ -109,9 +177,13 @@ export function Header({ site }: { site: SiteSettings }) {
                 key={item.href}
                 href={item.href}
                 className={`border-b-2 px-3 py-2 text-[0.9rem] transition-colors ${
-                  isActive(pathname, item.href)
-                    ? "border-ink text-ink"
-                    : "border-transparent text-ink-soft hover:text-ink"
+                  overHero
+                    ? isActive(pathname, item.href)
+                      ? "border-paper text-paper"
+                      : "border-transparent text-paper/70 hover:text-paper"
+                    : isActive(pathname, item.href)
+                      ? "border-ink text-ink"
+                      : "border-transparent text-ink-soft hover:text-ink"
                 }`}
               >
                 {item.label}
@@ -126,7 +198,7 @@ export function Header({ site }: { site: SiteSettings }) {
           className="order-first shrink-0 lg:order-none lg:absolute lg:left-1/2 lg:-translate-x-1/2"
           aria-label="לדף הבית"
         >
-          <Logo />
+          <Logo inverted={overHero} />
         </Link>
 
         {/* Contact shortcuts (desktop) */}
@@ -158,7 +230,7 @@ export function Header({ site }: { site: SiteSettings }) {
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
           aria-label={mobileOpen ? "סגירת התפריט" : "פתיחת התפריט"}
-          className="p-2 text-ink lg:hidden"
+          className={`p-2 lg:hidden ${overHero ? "text-paper" : "text-ink"}`}
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             {mobileOpen ? (

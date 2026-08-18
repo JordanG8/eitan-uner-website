@@ -30,6 +30,15 @@ export interface HeroBlock {
   title: string;
   subtitle?: string;
   image: ImageRef;
+  /**
+   * Optional full-bleed photograph behind the masthead.
+   *
+   * `image` is Eitan's portrait, and the archive has nothing of him above
+   * ~1080px, so it cannot carry a 1440px fold without visibly upscaling. A
+   * backdrop lets the fold lead with one of his photographs at full bleed and
+   * keep the portrait inset at a size its resolution supports.
+   */
+  backdrop?: ImageRef;
   ctas?: Cta[];
   /** Which side the photo sits on. In RTL, "start" is the right. */
   imageSide?: "start" | "end";

@@ -1,6 +1,12 @@
 /**
  * The camera mark, rebuilt as vector.
  *
+ * The knocked-out details are painted with --logo-knockout rather than a literal
+ * #fff, because the mark has to sit on two grounds: warm paper in the normal
+ * header, and a dark photograph when the header goes transparent over a
+ * full-bleed hero. Hardcoded white made the lens and parting lines disappear
+ * against the photo.
+ *
  * The original was a small raster PNG baked into the site123 template; lifting it
  * from a screenshot would have shipped a blurry ~70px bitmap. This traces the same
  * silhouette so it stays sharp at any size and weighs ~1KB.
@@ -23,7 +29,7 @@ export function CameraMark({ className = "" }: { className?: string }) {
       <rect x="34" y="108" width="572" height="296" rx="30" />
 
       {/* cut-outs: everything below is knocked out in white */}
-      <g fill="#fff">
+      <g fill="var(--logo-knockout, #fff)">
         {/* slot in the viewfinder */}
         <rect x="278" y="66" width="86" height="15" rx="7" />
         {/* top-plate parting line, left and right of the lens */}
@@ -40,14 +46,14 @@ export function CameraMark({ className = "" }: { className?: string }) {
       {/* lens: outer ring */}
       <circle cx="320" cy="257" r="133" />
       {/* lens: inner gap */}
-      <circle cx="320" cy="257" r="113" fill="#fff" />
+      <circle cx="320" cy="257" r="113" fill="var(--logo-knockout, #fff)" />
       {/* lens: glass */}
       <circle cx="320" cy="257" r="104" />
       {/* glass highlight */}
       <path
         d="M243 220 A 82 82 0 0 1 297 180"
         fill="none"
-        stroke="#fff"
+        stroke="var(--logo-knockout, #fff)"
         strokeWidth="13"
         strokeLinecap="round"
       />
@@ -55,9 +61,24 @@ export function CameraMark({ className = "" }: { className?: string }) {
   );
 }
 
-export function Logo({ compact = false }: { compact?: boolean }) {
+export function Logo({
+  compact = false,
+  inverted = false,
+}: {
+  compact?: boolean;
+  inverted?: boolean;
+}) {
   return (
-    <span className="flex flex-col items-center leading-none text-brand-600">
+    <span
+      className={`flex flex-col items-center leading-none ${
+        inverted ? "text-paper" : "text-brand-600"
+      }`}
+      style={
+        inverted
+          ? ({ "--logo-knockout": "var(--color-void)" } as React.CSSProperties)
+          : undefined
+      }
+    >
       <CameraMark className={compact ? "h-7 w-auto" : "h-9 w-auto"} />
       <span
         className={`mt-1 font-bold tracking-tight ${

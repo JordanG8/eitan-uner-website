@@ -29,65 +29,113 @@ import { Testimonials } from "./Testimonials";
 /* -------------------------------------------------------------------- hero */
 
 export function Hero({ block }: { block: HeroBlock }) {
-  // "end" puts the photo on the inline-end side — the left, in RTL. That is
-  // where every photo sat on the original site.
+  // "end" puts the portrait on the inline-end side — the left, in RTL.
   const imageLast = (block.imageSide ?? "end") === "end";
+  const backdrop = block.backdrop;
 
   /**
-   * An editorial masthead rather than a 50/50 colour split.
+   * A masthead where the type sits ON the photograph, not beside it.
    *
-   * Three passes to get here, and the last two failures are worth recording
-   * because they were the same failure wearing different clothes.
+   * Four passes to get here. The first three all failed the same way and every
+   * blind panel said so in different words: "an inline thumbnail floating in
+   * dead beige", "the two halves share no axis and no baseline", "a centred
+   * word floating alone in empty beige". Title, photo and buttons were three
+   * objects sharing a screen.
    *
-   *  1. Title in a 7-column cell beside a tall portrait, bottom-aligned. This
-   *     hero has no `subtitle`, so the cell held only two buttons and opened a
-   *     large empty band above the headline.
-   *  2. Title full width, photograph in a contained 7-column box below it. A
-   *     blind critic called that box "an inline thumbnail floating in dead
-   *     beige" — margins on all four sides meant the type and the image read
-   *     as two unrelated objects sharing a screen rather than one composition.
+   * The reason it took four passes is that I had the wrong constraint. I kept
+   * writing that the source was 659px and full bleed would be a 2.1x upscale —
+   * true of the asset, and false of the archive, which holds 61 photographs
+   * between 12 and 24 megapixels. The portrait genuinely cannot go full bleed;
+   * his *photographs* always could. So the fold now leads with his work at
+   * 100vw and keeps the portrait inset, which is both the stronger composition
+   * and the only resolution-honest one.
    *
-   * The fix is to stop containing the photograph. It now bleeds off the
-   * inline-end edge of the viewport, so it terminates the composition instead
-   * of floating inside it, via the .bleed-end utility (see globals.css — the
-   * obvious percentage version of that calc is subtly wrong inside a grid).
-   *
-   * The 8-column span is also a resolution budget. The source is 675px wide;
-   * eight columns plus the bleed is ~913px, a 1.35x upscale that holds up.
-   * Full-bleed to 1440px would be 2.1x and visibly soft. When Eitan supplies
-   * originals this can widen; until then it does not advertise the asset.
-   *
-   * `background` is ignored: content.ts asks for "brand", which used to mean a
-   * turquoise slab. Paper is the ground now, so the hero inherits it.
+   * Backdrop is optional: without one this degrades to the previous contained
+   * layout on paper rather than breaking.
    */
-  return (
-    <section className="overflow-x-clip bg-paper">
-      <div className="mx-auto max-w-(--container-content) px-6 pt-16 sm:pt-20 lg:px-10 lg:pt-24">
-        <h1 className="text-display font-light text-ink">{block.title}</h1>
-
-        <div className="mt-14 grid items-center gap-x-12 gap-y-10 pb-24 lg:mt-20 lg:grid-cols-12 lg:pb-32">
-          <div
-            className={`lg:col-span-8 ${
-              imageLast ? "lg:order-last bleed-end" : "bleed-start"
-            }`}
-          >
-            <div className="relative aspect-4/3 w-full overflow-hidden bg-paper-deep">
-              <Image
-                src={block.image.src}
-                alt={block.image.alt}
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 66vw"
-                className="object-cover object-top"
-              />
+  if (!backdrop) {
+    return (
+      <section className="overflow-x-clip bg-paper">
+        <div className="mx-auto max-w-(--container-content) px-6 pt-16 sm:pt-20 lg:px-10 lg:pt-24">
+          <h1 className="text-display font-light text-ink">{block.title}</h1>
+          <div className="mt-14 grid items-center gap-x-12 gap-y-10 pb-24 lg:mt-20 lg:grid-cols-12 lg:pb-32">
+            <div className={`lg:col-span-8 ${imageLast ? "lg:order-last bleed-end" : "bleed-start"}`}>
+              <div className="relative aspect-4/3 w-full overflow-hidden bg-paper-deep">
+                <Image
+                  src={block.image.src}
+                  alt={block.image.alt}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                  className="object-cover object-top"
+                />
+              </div>
+            </div>
+            <div className="lg:col-span-4">
+              <p className="text-lede text-ink-soft">{block.subtitle ?? site.tagline}</p>
+              <CtaRow ctas={block.ctas} />
             </div>
           </div>
+        </div>
+      </section>
+    );
+  }
 
-          <div className="lg:col-span-4">
-            <p className="text-lede text-ink-soft">
+  return (
+    <section
+      // The header watches for this to go transparent and invert over the
+      // photograph, the way both bars run their navigation through the image
+      // rather than in a bar above it.
+      data-hero-dark=""
+      // Rise under the sticky header, then pad the content back down by the
+      // same amount, so the photograph runs edge to edge behind the nav while
+      // the type still clears it. --header-h is published by Header.
+      className="relative isolate -mt-[var(--header-h,68px)] flex min-h-[86vh] items-end overflow-hidden bg-void pt-[var(--header-h,68px)]"
+    >
+      <Image
+        src={backdrop.src}
+        alt={backdrop.alt}
+        fill
+        priority
+        sizes="100vw"
+        className="absolute inset-0 -z-20 object-cover"
+      />
+      {/* A scrim, not a wash. The dusk frame is already dark at the horizon;
+          this only guarantees the type holds its contrast at the bottom edge
+          where the CTAs sit. */}
+      <div
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-void/85 via-void/40 to-void/25"
+        aria-hidden="true"
+      />
+
+      <div className="mx-auto w-full max-w-(--container-content) px-6 pt-40 pb-16 lg:px-10 lg:pt-52 lg:pb-20">
+        <h1 className="text-display font-light text-paper">{block.title}</h1>
+
+        <div className="mt-12 grid items-end gap-x-12 gap-y-8 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <p className="text-lede max-w-(--container-text) text-paper/80">
               {block.subtitle ?? site.tagline}
             </p>
-            <CtaRow ctas={block.ctas} />
+            <CtaRow ctas={block.ctas} onDark />
+          </div>
+
+          {/* The portrait, inset and small. 659px of source is plenty at this
+              size and would be embarrassing at any larger one. */}
+          <div className={`lg:col-span-5 ${imageLast ? "lg:order-last" : "lg:order-first"}`}>
+            <div className="flex items-end gap-4 lg:justify-end">
+              <div className="relative aspect-4/5 w-36 shrink-0 overflow-hidden bg-void/40 sm:w-44">
+                <Image
+                  src={block.image.src}
+                  alt={block.image.alt}
+                  fill
+                  sizes="176px"
+                  className="object-cover object-top"
+                />
+              </div>
+              <p className="pb-1 text-[0.8rem] leading-relaxed tracking-[0.14em] text-paper/55">
+                {site.siteName}
+              </p>
+            </div>
           </div>
         </div>
       </div>

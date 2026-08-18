@@ -59,6 +59,17 @@ export const site: SiteSettings = {
 /* ----------------------------------------------------------------- images */
 
 const img = {
+  /**
+   * The fold's full-bleed photograph. One of Eitan's own images, already used
+   * in the gallery, now re-ingested from the 4288px original — chosen dark so
+   * the display type reads over it without a heavy scrim.
+   */
+  heroBackdrop: {
+    src: "/images/gallery-valley-dusk.webp",
+    alt: "עמק בשעת דמדומים, אגם משקף את השמיים",
+    width: 3200,
+    height: 2125,
+  },
   hero: {
     src: "/images/eitan-hero.webp",
     alt: "איתן אונר יושב בכורסה, קעקוע מצלמה על זרועו",
@@ -347,6 +358,7 @@ export const pages: Page[] = [
         _type: "hero",
         title: "פוטודוקותרפיה",
         image: img.hero,
+        backdrop: img.heroBackdrop,
         imageSide: "end",
         background: "brand",
         ctas: [
