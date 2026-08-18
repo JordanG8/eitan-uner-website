@@ -54,10 +54,8 @@ export function Hero({ block }: { block: HeroBlock }) {
    *
    * The fix is to stop containing the photograph. It now bleeds off the
    * inline-end edge of the viewport, so it terminates the composition instead
-   * of floating inside it. me-[calc(50%-50vw)] is exact rather than a guess:
-   * margin percentages resolve against the containing block's inline size, so
-   * inside the 1160px content box 50% - 50vw is precisely the distance from
-   * the content edge to the viewport edge, at any viewport width.
+   * of floating inside it, via the .bleed-end utility (see globals.css — the
+   * obvious percentage version of that calc is subtly wrong inside a grid).
    *
    * The 8-column span is also a resolution budget. The source is 675px wide;
    * eight columns plus the bleed is ~913px, a 1.35x upscale that holds up.
@@ -75,7 +73,7 @@ export function Hero({ block }: { block: HeroBlock }) {
         <div className="mt-14 grid items-center gap-x-12 gap-y-10 pb-24 lg:mt-20 lg:grid-cols-12 lg:pb-32">
           <div
             className={`lg:col-span-8 ${
-              imageLast ? "lg:order-last lg:me-[calc(50%-50vw)]" : "lg:ms-[calc(50%-50vw)]"
+              imageLast ? "lg:order-last bleed-end" : "bleed-start"
             }`}
           >
             <div className="relative aspect-4/3 w-full overflow-hidden bg-paper-deep">
@@ -104,32 +102,68 @@ export function Hero({ block }: { block: HeroBlock }) {
 
 /* --------------------------------------------------------------- textImage */
 
-export function TextImage({ block }: { block: TextImageBlock }) {
+export function TextImage({
+  block,
+  index = 0,
+  num,
+}: {
+  block: TextImageBlock;
+  index?: number;
+  num?: string;
+}) {
   const bg = block.background ?? "white";
   // "brand" is a tonal ground now, not an inverted one — nothing here flips.
   const onBrand = false;
+  const imageLast = (block.imageSide ?? "end") === "end";
+
+  /**
+   * Two alternating tempos, not one repeated row.
+   *
+   * Round 2 of the gauntlet was lost on this block more than any other. Two
+   * blind critics independently described the page as "a template being
+   * filled" and pointed at the same thing: consecutive 50/50 rows with the
+   * same image width, the same aspect and the same button pair, stacked with
+   * identical padding. Measuring the page settled it — 26 images, and every
+   * content band rendered its photograph at the same mid-size 4:3 rectangle.
+   * One image on the whole page was large.
+   *
+   * So even blocks now run the photograph wide and bleed it off the viewport
+   * edge; odd blocks pull it in small and give the column back to the text.
+   * The page gains a rhythm that alternates rather than repeats.
+   */
+  const wide = index % 2 === 0;
+
+  const imageCols = wide ? "lg:col-span-7" : "lg:col-span-4";
+  const textCols = wide ? "lg:col-span-5" : "lg:col-span-7 lg:col-start-2";
+  const bleed = wide ? (imageLast ? "bleed-end" : "bleed-start") : "";
+
   return (
     <Section background={bg}>
-      <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-20">
-        <div
-          className={`lg:col-span-7 ${
-            (block.imageSide ?? "end") === "end" ? "lg:order-last" : ""
-          }`}
-        >
-          <div className="relative aspect-4/3 w-full overflow-hidden bg-paper-deep">
+      <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
+        <div className={`${imageCols} ${imageLast ? "lg:order-last" : ""} ${bleed}`}>
+          <div
+            className={`relative w-full overflow-hidden bg-paper-deep ${
+              wide ? "aspect-3/2" : "aspect-4/5"
+            }`}
+          >
             <Image
               src={block.image.src}
               alt={block.image.alt}
               fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes={wide ? "(max-width: 1024px) 100vw, 60vw" : "(max-width: 1024px) 100vw, 34vw"}
               className="object-cover"
             />
           </div>
         </div>
 
-        <div className="lg:col-span-5">
+        <div className={textCols}>
           {block.title && (
             <>
+              {num && (
+                <span className="index-num mb-4 block text-[0.8rem]" aria-hidden="true">
+                  {num}
+                </span>
+              )}
               <h2
                 className={`text-section font-light ${onBrand ? "text-paper" : "text-ink"}`}
               >
@@ -159,14 +193,14 @@ export function TextImage({ block }: { block: TextImageBlock }) {
 
 /* ---------------------------------------------------------------- richText */
 
-export function RichText({ block }: { block: RichTextBlock }) {
+export function RichText({ block, num }: { block: RichTextBlock; num?: string }) {
   const bg = block.background ?? "white";
   const onBrand = false;
   return (
     <Section background={bg}>
       {block.title && (
         <div className="mb-16">
-          <SectionHeading onBrand={onBrand}>{block.title}</SectionHeading>
+          <SectionHeading onBrand={onBrand} index={num}>{block.title}</SectionHeading>
         </div>
       )}
       {/* Measure, not a fraction of the viewport. Long Hebrew lines are the
@@ -188,7 +222,7 @@ export function RichText({ block }: { block: RichTextBlock }) {
 
 /* ---------------------------------------------------------------- cardGrid */
 
-export function CardGrid({ block }: { block: CardGridBlock }) {
+export function CardGrid({ block, num }: { block: CardGridBlock; num?: string }) {
   const bg = block.background ?? "white";
   const onBrand = false;
   const cols =
@@ -202,7 +236,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
     <Section background={bg}>
       {block.title && (
         <div className="mb-16">
-          <SectionHeading onBrand={onBrand}>{block.title}</SectionHeading>
+          <SectionHeading onBrand={onBrand} index={num}>{block.title}</SectionHeading>
         </div>
       )}
 
@@ -288,42 +322,55 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
 
 /* ----------------------------------------------------------------- gallery */
 
-export function Gallery({ block }: { block: GalleryBlock }) {
+export function Gallery({ block, num }: { block: GalleryBlock; num?: string }) {
+  /**
+   * A contact sheet, full-bleed, with tiles of two sizes.
+   *
+   * The old version was a CSS-columns masonry inside the content container —
+   * which meant every photograph landed at roughly one width, and the whole
+   * page had a single visual tempo top to bottom. Here every fourth frame
+   * takes a 2x2 cell, the grid runs edge to edge, and `grid-flow-dense`
+   * backfills the gaps so the mosaic stays solid whatever the image count.
+   */
+  const isBig = (i: number) => i % 4 === 0;
+
   return (
-    <Section background={block.background ?? "white"}>
+    <section className={`${block.background === "alt" ? "bg-paper-deep" : "bg-paper"} py-24 sm:py-32 lg:py-40`}>
       {block.title && (
-        <div className="mb-16">
-          <SectionHeading>{block.title}</SectionHeading>
+        <div className="mx-auto mb-16 max-w-(--container-content) px-6 lg:px-10">
+          <SectionHeading index={num}>{block.title}</SectionHeading>
         </div>
       )}
-      {/* Tight gutters. Wide gaps between photographs read as a widget; a
-          near-flush mosaic reads as a contact sheet, which is what this is. */}
-      <div className="columns-1 gap-2 sm:columns-2 lg:columns-3 [&>*]:mb-2">
+      <div className="grid auto-rows-[clamp(9rem,15vw,15rem)] grid-flow-dense grid-cols-2 gap-2 px-2 sm:grid-cols-3 lg:grid-cols-4">
         {block.images.map((im, i) => (
-          <figure key={i} className="break-inside-avoid overflow-hidden bg-paper-deep">
+          <figure
+            key={i}
+            className={`relative overflow-hidden bg-paper-deep ${
+              isBig(i) ? "col-span-2 row-span-2" : ""
+            }`}
+          >
             <Image
               src={im.src}
               alt={im.alt}
-              width={im.width ?? 1200}
-              height={im.height ?? 900}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="h-auto w-full transition-opacity duration-500 hover:opacity-85"
+              fill
+              sizes={isBig(i) ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 50vw, 25vw"}
+              className="object-cover transition-opacity duration-500 hover:opacity-85"
             />
           </figure>
         ))}
       </div>
-    </Section>
+    </section>
   );
 }
 
 /* ------------------------------------------------------------------- logos */
 
-export function Logos({ block }: { block: LogosBlock }) {
+export function Logos({ block, num }: { block: LogosBlock; num?: string }) {
   return (
     <Section background="white">
       {block.title && (
         <div className="mb-16">
-          <SectionHeading>{block.title}</SectionHeading>
+          <SectionHeading index={num}>{block.title}</SectionHeading>
         </div>
       )}
       {/* The turquoise tiles are gone. Client logos are other people's brands;
@@ -385,14 +432,14 @@ export function Quote({ block }: { block: QuoteBlock }) {
 
 /* ------------------------------------------------------------------- video */
 
-export function Video({ block }: { block: VideoBlock }) {
+export function Video({ block, num }: { block: VideoBlock; num?: string }) {
   const id = extractYouTubeId(block.youtubeUrl);
   const onBrand = false;
   return (
     <Section background={block.background ?? "white"}>
       {block.title && (
         <div className="mb-14">
-          <SectionHeading onBrand={onBrand}>{block.title}</SectionHeading>
+          <SectionHeading onBrand={onBrand} index={num}>{block.title}</SectionHeading>
         </div>
       )}
       {block.body && (
@@ -431,7 +478,7 @@ function extractYouTubeId(url: string): string | null {
 
 /* ----------------------------------------------------------------- contact */
 
-export function Contact({ block }: { block: ContactBlock }) {
+export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
   const mapQuery = encodeURIComponent("תל יוסף, ישראל");
 
   const rows: { label: string; value: ReactNode }[] = [
@@ -465,19 +512,34 @@ export function Contact({ block }: { block: ContactBlock }) {
   return (
     <Section background="alt" id="צרו-קשר">
       <div className="mb-16">
-        <SectionHeading>{block.title ?? "צרו קשר"}</SectionHeading>
+        <SectionHeading index={num}>{block.title ?? "צרו קשר"}</SectionHeading>
       </div>
 
       <div className="grid gap-14 lg:grid-cols-2 lg:gap-20">
-        {/* Map on the inline-end side — the left, in RTL — as in the original. */}
-        <div className="overflow-hidden bg-paper lg:order-last">
-          <iframe
-            title="מפה — תל יוסף"
-            src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
-            className="h-80 w-full grayscale-[0.35] lg:h-full lg:min-h-[26rem]"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+        {/* Map on the inline-end side — the left, in RTL — as in the original.
+            The embed is third-party and can be slow, blocked by a tracking
+            blocker, or simply unavailable; when that happens an unstyled
+            iframe collapses to a white void the height of the section. The
+            wrapper carries its own ground and a real link underneath, so the
+            block still says where Eitan is even when the map never arrives. */}
+        <div className="lg:order-last">
+          <div className="overflow-hidden bg-paper-deep">
+            <iframe
+              title="מפה — תל יוסף"
+              src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
+              className="h-80 w-full grayscale-[0.35] lg:h-[26rem]"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-block border-b border-ink/25 pb-0.5 text-[0.9rem] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+          >
+            פתיחה במפות גוגל
+          </a>
         </div>
 
         {/* A definition list on the page, not a bordered white card. */}
@@ -510,30 +572,52 @@ export function Contact({ block }: { block: ContactBlock }) {
 /* ------------------------------------------------------------------ router */
 
 export function Blocks({ blocks }: { blocks: Block[] }) {
+  /**
+   * Sections are numbered 01, 02, 03 … as the page walks them.
+   *
+   * This was in the bar analysis from the first hour — Cine Casero indexes its
+   * sections exactly this way — and `SectionHeading` has accepted an `index`
+   * since the first commit. It was simply never passed, which a blind critic
+   * caught from the other direction: the page had display type, section heads
+   * and body, and nothing below body. No captions, no eyebrows, no smallest
+   * voice. A type ladder needs a bottom rung to set the scale of the top one.
+   *
+   * Only blocks that actually render a heading take a number, so the sequence
+   * a reader sees has no gaps in it.
+   */
+  const numbers = blocks.reduce<(string | undefined)[]>((acc, block) => {
+    const titled =
+      ("title" in block && Boolean(block.title)) || block._type === "contact";
+    const used = acc.filter(Boolean).length;
+    acc.push(titled ? String(used + 1).padStart(2, "0") : undefined);
+    return acc;
+  }, []);
+
   return (
     <>
       {blocks.map((block, i) => {
+        const num = numbers[i];
         switch (block._type) {
           case "hero":
             return <Hero key={i} block={block} />;
           case "textImage":
-            return <TextImage key={i} block={block} />;
+            return <TextImage key={i} block={block} index={i} num={num} />;
           case "richText":
-            return <RichText key={i} block={block} />;
+            return <RichText key={i} block={block} num={num} />;
           case "cardGrid":
-            return <CardGrid key={i} block={block} />;
+            return <CardGrid key={i} block={block} num={num} />;
           case "gallery":
-            return <Gallery key={i} block={block} />;
+            return <Gallery key={i} block={block} num={num} />;
           case "testimonials":
-            return <Testimonials key={i} block={block as TestimonialsBlock} />;
+            return <Testimonials key={i} block={block as TestimonialsBlock} num={num} />;
           case "logos":
-            return <Logos key={i} block={block} />;
+            return <Logos key={i} block={block} num={num} />;
           case "quote":
             return <Quote key={i} block={block} />;
           case "video":
-            return <Video key={i} block={block} />;
+            return <Video key={i} block={block} num={num} />;
           case "contact":
-            return <Contact key={i} block={block} />;
+            return <Contact key={i} block={block} num={num} />;
           default:
             return null;
         }

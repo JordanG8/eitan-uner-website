@@ -16,7 +16,7 @@ import { Section, SectionHeading } from "./ui";
  * but rendered as a quiet count rather than gold star clip-art, which is the
  * single loudest "widget" signal on the old page.
  */
-export function Testimonials({ block }: { block: TestimonialsBlock }) {
+export function Testimonials({ block, num }: { block: TestimonialsBlock; num?: string }) {
   const [i, setI] = useState(0);
   const items = block.items;
   if (!items.length) return null;
@@ -29,7 +29,7 @@ export function Testimonials({ block }: { block: TestimonialsBlock }) {
     <Section background="white">
       {block.title && (
         <div className="mb-16">
-          <SectionHeading>{block.title}</SectionHeading>
+          <SectionHeading index={num}>{block.title}</SectionHeading>
         </div>
       )}
 

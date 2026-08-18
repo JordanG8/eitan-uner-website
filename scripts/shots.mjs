@@ -80,24 +80,55 @@ for (let i = 0; i < TARGETS.length; i++) {
   await page.screenshot({ path: path.join(dir, `${label}-fold.png`) });
 
   // Scroll the full height once so lazy-loaded imagery is decoded before the
-  // full-page capture, otherwise half the page shoots as empty placeholders.
+  // tiles are taken, otherwise half the page shoots as empty placeholders.
   await page.evaluate(async () => {
     await new Promise((res) => {
       let y = 0;
       const step = () => {
         window.scrollBy(0, window.innerHeight);
         y += window.innerHeight;
-        if (y < document.body.scrollHeight && y < 30000) setTimeout(step, 120);
+        if (y < document.body.scrollHeight && y < 40000) setTimeout(step, 110);
         else {
           window.scrollTo(0, 0);
-          setTimeout(res, 600);
+          setTimeout(res, 700);
         }
       };
       step();
     });
   });
   await page.waitForTimeout(1200);
-  await page.screenshot({ path: path.join(dir, `${label}-full.png`), fullPage: true });
+
+  /**
+   * Tiles, not one enormous fullPage capture.
+   *
+   * Two separate failures came out of the fullPage approach, and both quietly
+   * corrupted a whole round of judging before they were caught:
+   *
+   *  1. Past roughly 15,000px Chromium stopped painting and returned blank.
+   *     A 9,900px-tall page rendered its last quarter — including the entire
+   *     footer — as empty ground, and two critics independently reported the
+   *     page "stopped rather than closed". That criticism was of the harness.
+   *  2. Even when it worked, a 20,000px image is downscaled so hard when read
+   *     that absolute type sizes are unrecoverable. Critics confidently
+   *     reported heading sizes that were wrong by 2-3x and prescribed fixes
+   *     for problems that did not exist.
+   *
+   * Sampling evenly-spaced viewport tiles at 1:1 fixes both: nothing is
+   * downscaled, and nothing past an arbitrary height is dropped.
+   */
+  const TILES = 6;
+  const scrollable = await page.evaluate(
+    () => document.documentElement.scrollHeight - window.innerHeight
+  );
+  for (let t = 0; t < TILES; t++) {
+    const y = Math.round((scrollable * t) / (TILES - 1));
+    await page.evaluate((yy) => window.scrollTo(0, yy), y);
+    await page.waitForTimeout(650);
+    await page.screenshot({
+      path: path.join(dir, `${label}-t${String(t + 1).padStart(2, "0")}.png`),
+    });
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   await page.close();
   console.log(`${label}  <-  ${t.id}`);

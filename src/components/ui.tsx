@@ -139,7 +139,7 @@ export function SectionHeading({
 export function Rule({ onBrand = false }: { onBrand?: boolean }) {
   return (
     <span
-      className={`mt-6 mb-7 block h-px w-16 ${onBrand ? "bg-paper/30" : "bg-ink/25"}`}
+      className={`mt-6 mb-7 block h-px w-16 ${onBrand ? "bg-paper/30" : "bg-brand-500"}`}
       aria-hidden="true"
     />
   );
