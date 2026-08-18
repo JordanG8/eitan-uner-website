@@ -339,3 +339,105 @@ Dieste fills its closing wordmark with brickwork — the material the man built
 in. A critic named that as the decisive tell and it is not a bug, a measurement
 or an alignment: it is bespoke art direction. Closing it means designing
 something equivalently specific to Eitan, not adjusting a token.
+
+---
+
+# Round 6: a new bar, and a measurement that lied three times
+
+Jordan named a new bar: **https://idangross.com/** — a Hebrew RTL commercial
+photography studio in Israel. Same language, same script direction, same
+trade, same market. He also asked for camera stock photography, bolder design
+and better readability.
+
+## The bar is weaker than the page, and that is worth saying
+
+Rounds 1–5 were run against Cine Casero and Eladio Dieste. Against those, this
+page lost every judged round. Against idangross it wins the axes those rounds
+optimised for before a critic is even asked:
+
+| | idangross | this page |
+|---|---|---|
+| Ground | `#FFFFFF` | `#EFEDE6` warm paper |
+| Display | ~40px bold | 120px / 300 |
+| Third-party chrome | cookie bar, accessibility toolbar, SEO credit in footer | none |
+
+Which means running the loop against it alone would exit on round one having
+produced nothing — the failure mode the technique names explicitly. So it is
+kept as the **competitor bar**, judged only on the three axes where it is
+genuinely better (camera imagery, a scannable service grid, sheer boldness),
+and **magnumphotos.com** is added as the hard bar. Documentary photography is
+Eitan's actual field, so Magnum is judgeable on subject as well as craft, and
+unlike Dieste it does not animate its fold on scroll — which is what made
+Dieste impossible to tile-sample soundly in round 5.
+
+## Fairness runs both ways
+
+Round 5's rule was "never win because the harness damaged the opponent." The
+new bar arrives with a cookie bar pinned across the footer and the standard
+Israeli accessibility toolbar floating over the layout. Capturing those would
+hand a critic exactly the "floating widget intruding on the layout" tell that
+the dev-badge incident proved decides rounds. `scripts/shots.mjs` now dismisses
+consent banners and removes third-party chrome on every target before shooting.
+
+## The measurement that lied three times
+
+The brief said every image must be sharp at 2x. Checking that turned into the
+most instructive failure of the whole project, because the check was wrong
+three separate ways and each way was convincing.
+
+| Attempt | Reported | Reality |
+|---|---|---|
+| `naturalWidth` at DPR 1 | 26 of 26 images below 2x | The browser correctly picks 1x srcset entries. This is next/image working. |
+| `naturalWidth` at DPR 2 | contradictory sizes across runs | Stale values even with `complete === true`; fetching the optimiser directly returned full-size images every time |
+| scroll-everything to force lazy decode | 144px logos requesting `w=3840` | The scroll trips the preload scanner before layout, so `sizes` falls back to `100vw`. Self-inflicted. |
+
+I reported the logo finding as a real performance bug before checking it. It
+was not. Under a normal render those logos request 256px at DPR 1 and 384px at
+DPR 2, which is correct.
+
+**The rule this produces:** when a measurement indicts *everything*, suspect the
+instrument before the subject. A page does not usually fail uniformly. Round 5
+learned not to let a broken harness damage the opponent; this round is the same
+lesson pointed inward — a broken harness can invent a defect in your own work
+just as easily, and a defect that flatters your sense of thoroughness is the
+hardest kind to doubt.
+
+`scripts/audit-images.mjs` now compares rendered CSS width against the
+intrinsic size of the file on disk. Both halves are stable, and the ratio is
+the one that actually decides sharpness.
+
+## What the sound version found
+
+Two real defects, both verified from file dimensions rather than from the
+instrument:
+
+- **`sculpture` declared 1400×930 for a 3200×2125 file.** A stale declaration
+  caps what next/image generates, so the widest slot on the page had been
+  served a soft image. Declared size is not documentation.
+- **CardGrid's lead card renders ~763px, not ~390px.** I placed a 960px camera
+  image there believing it was an ordinary card — 1.26x, upscaling. Same
+  mistake I had just fixed in the wide TextImage track, relocated rather than
+  understood.
+
+Three slots remain under 2x — `photo-salam` 759px, `crouching-alt` 640px,
+`memorial-flag` 1400px. All three are Eitan's own originals and none moves
+until he supplies full-size files. Same ceiling round 4 hit, unchanged.
+
+## Camera imagery: what the licence filter cost
+
+CC0 was treated as a hard constraint, not a preference, because this project
+exists to be handed to Eitan's accounts and an attribution obligation travels
+with the site forever.
+
+- **Unsplash** is unusable programmatically — bot protection, 403 to automated
+  clients. Not worked around.
+- **Wikimedia Commons** has excellent camera photography at 4000–6000px and
+  almost none of it is CC0. Ten queries returned one public-domain hit: a
+  414px engraving from a 1911 encyclopedia.
+- **StockSnap via Openverse** is art-directed and CC0, and its CDN caps at
+  960w. Confirmed by probing every plausible size path.
+
+960px is why cameras are confined to accent slots. It is sufficient at a 365px
+card (2.63x) and upscaling anywhere wider. That constraint, not taste, set the
+scope — and it happens to agree with the right answer anyway: on a
+photographer's site his own photographs should carry the slots that matter.
