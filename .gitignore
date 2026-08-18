@@ -52,3 +52,7 @@ puck-data.json
 # Generated credentials — never commit
 PRODUCTION-CREDENTIALS.local.md
 .shots/
+
+# Sourcing scratch: the raw candidate pool the contact sheet is built from.
+# The four that were actually chosen live in public/images, converted.
+.sourced/

@@ -106,6 +106,32 @@ const img = {
     width: 907,
     height: 676,
   },
+  /**
+   * Sourced camera photography, CC0 — see public/images/CREDITS.md.
+   *
+   * Confined to accent slots on purpose. These top out around 960px because
+   * that is StockSnap's CDN cap, which is exactly sharp behind a 480px column
+   * at 2x and visibly soft if run any wider. Every slot that needs real scale
+   * stays on Eitan's own work, which goes to 3200px.
+   */
+  cameraFinder: {
+    src: "/images/camera-finder.webp",
+    alt: "מבט מלמעלה על מצלמת פורמט בינוני, בעינית נשקף שדה פרחים",
+    width: 960,
+    height: 960,
+  },
+  lensesPrints: {
+    src: "/images/lenses-prints.webp",
+    alt: "עדשות מצלמה מונחות על ערימת תצלומים ישנים",
+    width: 960,
+    height: 636,
+  },
+  cameraClassicDark: {
+    src: "/images/camera-classic-dark.webp",
+    alt: "מצלמה קלאסית עם עדשה על רקע כהה",
+    width: 960,
+    height: 640,
+  },
   memorial: {
     src: "/images/memorial-flag.webp",
     alt: "תיעוד טקס זיכרון לצד דגל ישראל",
@@ -115,8 +141,20 @@ const img = {
   sculpture: {
     src: "/images/sculpture-lawn.webp",
     alt: "פסלים על מדשאה מול מבנה",
-    width: 1400,
-    height: 930,
+    width: 3200,
+    height: 2125,
+  },
+  /**
+   * The wide TextImage track renders ~790px at 1440, so it needs a source of
+   * at least ~1580px to stay sharp at 2x. This is one of the few of Eitan's
+   * own photographs that clears that, and it is human and warm where the fold
+   * is landscape and cool - which keeps the two from reading as one note.
+   */
+  whiteDress: {
+    src: "/images/gallery-white-dress.webp",
+    alt: "נערה בשמלה לבנה על גדת נחל",
+    width: 3200,
+    height: 2131,
   },
 };
 
@@ -167,7 +205,7 @@ const clientLogos = [
 const lectureCards = [
   {
     title: "דיוקנו של רגש",
-    image: img.crouching,
+    image: img.cameraFinder,
     body:
       "הצמיחה מתוך החושך – דלקת במוח. שינוי תעסוקתי בגיל 45. אז מי אני ולמה באתי לפה? " +
       "פוטודוקותרפיסט בוגר מכללת תל חי – לימודי חוץ במוזיאון ארץ ישראל, צילום חברתי " +
@@ -177,7 +215,7 @@ const lectureCards = [
   },
   {
     title: "מתוך ההרצאה דיוקן של רגש",
-    image: img.cameras,
+    image: img.lensesPrints,
     body:
       "הקרבה של אח למען אח ברגעים הכי קשים של חייו — לשכב על כל גדר, באשר היא, בשעה בה " +
       "חברים וקרובים אחרים קופצים הרחק מהספינה הטובעת.",
@@ -381,7 +419,7 @@ export const pages: Page[] = [
       {
         _type: "textImage",
         title: "פוטודוקותרפיה",
-        image: img.cameras,
+        image: img.whiteDress,
         imageSide: "end",
         body: [
           "חוויה סוחפת במנעד של רגשות.",

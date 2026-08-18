@@ -16,10 +16,24 @@ import path from "node:path";
 const OUT = process.env.SHOT_DIR ?? path.join(process.cwd(), ".shots");
 const round = process.argv[2] ?? "1";
 
+/**
+ * Two bars, chosen to fail in opposite directions.
+ *
+ * idangross is the competitor bar: same language, same script direction, same
+ * trade, same market. It is not a strong design reference and this page
+ * already clears it on ground, scale and restraint - but it is unarguably
+ * better at cameras, at a scannable service grid, and at sheer boldness, and
+ * those are the three things being asked for.
+ *
+ * Magnum is the hard bar. Documentary photography is Eitan's actual field, so
+ * it is judgeable on subject as well as craft, and unlike Dieste it does not
+ * animate its fold on scroll - which is what made Dieste impossible to sample
+ * soundly in the previous run.
+ */
 const TARGETS = [
   { id: "candidate", url: "http://localhost:3000" },
-  { id: "bar-cinecasero", url: "https://www.cinecasero.uy/" },
-  { id: "bar-dieste", url: "https://www.eladiodieste.com/" },
+  { id: "bar-idangross", url: "https://idangross.com/" },
+  { id: "bar-magnum", url: "https://www.magnumphotos.com/" },
 ];
 
 /** Fisher-Yates, so label order is not stable between rounds. */
@@ -49,7 +63,7 @@ const ctx = await browser.newContext({
   deviceScaleFactor: 1,
 });
 
-const labels = shuffle(["A", "B", "C"]);
+const labels = shuffle(["A", "B", "C"].slice(0, TARGETS.length));
 const key = {};
 
 for (let i = 0; i < TARGETS.length; i++) {
@@ -78,6 +92,45 @@ for (let i = 0; i < TARGETS.length; i++) {
   await page.mouse.move(720, 450);
   await page.mouse.click(720, 450).catch(() => {});
   await page.keyboard.press("Escape").catch(() => {});
+
+  /**
+   * Dismiss consent banners and accessibility-plugin launchers on the bar.
+   *
+   * Not cosmetic tidying, and not cheating in our favour - the opposite. A
+   * cookie bar pinned across the footer and a floating accessibility widget
+   * are third-party chrome bolted onto the page, and leaving them in hands a
+   * critic exactly the kind of "floating widget intruding on the layout" tell
+   * that the dev-badge incident proved decides rounds. Judging the bar with
+   * them up is damaging the opponent, which voids the comparison just as
+   * surely as damaging ourselves does.
+   */
+  await page.evaluate(() => {
+    const WORDS = ["הבנתי", "אני מסכים", "מסכים", "accept", "got it", "i understand", "agree", "ok"];
+    for (const el of Array.from(document.querySelectorAll("button, a, [role=button]"))) {
+      const t = (el.textContent || "").trim().toLowerCase();
+      if (t.length < 30 && WORDS.some((w) => t === w || t.includes(w))) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) el.click();
+      }
+    }
+  }).catch(() => {});
+  await page.waitForTimeout(900);
+
+  // Whatever survives the click - persistent consent bars, the Israeli
+  // accessibility toolbar, chat bubbles - is removed outright so it cannot be
+  // read as part of the design.
+  await page.addStyleTag({
+    content: `
+      [class*="cookie" i], [id*="cookie" i],
+      [class*="consent" i], [id*="consent" i],
+      [class*="nagish" i], [id*="nagish" i],
+      [class*="accessib" i], [id*="accessib" i],
+      [class*="INDmenu" i], [id*="INDmenu" i],
+      [class*="pojo-a11y" i], [id*="pojo-a11y" i],
+      [class*="whatsapp" i], [class*="chat-widget" i] { display: none !important; }
+    `,
+  }).catch(() => {});
+  await page.waitForTimeout(300);
   for (let n = 0; n < 12; n++) {
     const h = await page.evaluate(() => document.documentElement.scrollHeight);
     if (h > 1400) break;
