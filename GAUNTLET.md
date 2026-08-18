@@ -199,3 +199,64 @@ Both ranked it last. Both named a real gap, and they converge:
   Cine Casero contributes its measured numbers rather than its screenshots.
 - **Asset fix.** The hero source had an 11px black border baked in from the
   original screenshot crop; cropped to the content box (675x657 -> 659x657).
+
+---
+
+## Round 4: a void verdict, and the reason it was void
+
+The final round is logged as **unjudged**, not as a loss.
+
+The Opus critic 529'd twice on a server-side overload. I swapped the judge to
+Sonnet to get a verdict out, and that was a methodological error: it changed the
+instrument mid-experiment. The verdict that came back rested its entire
+conclusion on a detail that does not exist.
+
+Its answer to "what most threatens this reading as professional work" was:
+
+> the uniform rounded-thumbnail-plus-paragraph module repeated verbatim down
+> the page … the signature of an unmodified page-builder theme
+
+Measured: **every `img` and every image wrapper on the page computes
+`border-radius: 0px`.** Radii were removed in round 1 on purpose, because
+neither bar rounds a corner. Two further claims fail the same way:
+
+| Claim | Measured |
+|---|---|
+| "rounded card thumbnails", "rounded-rectangle slot" | `border-radius: 0px`, every image and wrapper |
+| "deep teal … consistent across every section" | 22 teal occurrences, all 12.8–16px numerals and 1px rules; no teal surface exists |
+| "no closing visual moment; the site just stops" | footer is `rgb(22,22,20)` with the name at 72px — the only inversion on the page |
+
+### The rule this produces
+
+**Never change the judge to work around an outage.** A blind comparison is only
+worth the critic running it; swapping in a cheaper model to keep the loop moving
+buys a verdict that has to be thrown away, and if it had happened to agree with
+the previous rounds it would have been *kept* without the numbers ever being
+checked. That is the real hazard — a wrong critic that confirms your priors is
+invisible.
+
+Retry the same judge, or log the round unjudged. Do not substitute.
+
+## Standing at the end
+
+Seven critics across three judged rounds, and the bar won every one. By this
+technique's own exit condition — win, or the user calls it — **this has not
+won**, and it should not be written up as if it had.
+
+What closed:
+
+| | Before | Now |
+|---|---|---|
+| Ground | `#FFFFFF` | `#EFEDE6` warm paper |
+| Display | 60px / 700 | **120px / 300** |
+| Section heads | 36px / 700 | **72px / 300** |
+| Card titles | 20px / 700 | 24px and 20px / **500** |
+| Micro tier | none | 12.8px, teal, section index |
+| Distinct image widths | 5, one large | **8, two bleeding off the viewport** |
+| Horizontal overflow | 0 | 0 (verified 1024–1920) |
+| Colour slabs | 4 turquoise bands | 1 near-black inversion |
+
+What is still open, and is the same note every round returned: Dieste varies its
+image scale across an order of magnitude. Eitan's largest asset is 659px wide.
+That ceiling is an asset problem, not a layout problem, and it does not move
+until he supplies originals — see HANDOVER.md.
