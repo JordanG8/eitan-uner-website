@@ -51,3 +51,4 @@ puck-data.json
 
 # Generated credentials — never commit
 PRODUCTION-CREDENTIALS.local.md
+.shots/

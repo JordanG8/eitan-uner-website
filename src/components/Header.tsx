@@ -45,8 +45,8 @@ function MoreMenu({ item, pathname }: { item: NavItem; pathname: string }) {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1 rounded-full px-3 py-2 text-[15px] transition-colors ${
-          childActive ? "text-brand-600 font-semibold" : "text-ink hover:text-brand-600"
+        className={`flex items-center gap-1.5 px-3 py-2 text-[0.9rem] transition-colors ${
+          childActive ? "text-ink" : "text-ink-soft hover:text-ink"
         }`}
       >
         {item.label}
@@ -61,16 +61,14 @@ function MoreMenu({ item, pathname }: { item: NavItem; pathname: string }) {
       </button>
 
       {open && (
-        <div className="absolute end-0 top-full z-50 min-w-[15rem] overflow-hidden rounded-lg border border-hairline bg-white py-1 shadow-xl">
+        <div className="absolute end-0 top-full z-50 min-w-[16rem] overflow-hidden border border-hairline bg-paper py-1 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.45)]">
           {item.children?.map((child) => (
             <Link
               key={child.href}
               href={child.href}
               onClick={() => setOpen(false)}
-              className={`block px-4 py-2 text-[15px] transition-colors hover:bg-brand-50 ${
-                isActive(pathname, child.href)
-                  ? "text-brand-600 font-semibold"
-                  : "text-ink"
+              className={`block px-4 py-2.5 text-[0.9rem] transition-colors hover:bg-paper-deep ${
+                isActive(pathname, child.href) ? "text-ink" : "text-ink-soft"
               }`}
             >
               {child.label}
@@ -99,7 +97,7 @@ export function Header({ site }: { site: SiteSettings }) {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header className="sticky top-0 z-40 border-b border-hairline bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
       <div className="mx-auto flex h-auto max-w-(--container-content) items-center justify-between gap-4 px-4 py-3 lg:px-6">
         {/* Primary nav (desktop) — right side in RTL */}
         <nav className="hidden items-center gap-1 lg:flex" aria-label="ניווט ראשי">
@@ -110,10 +108,10 @@ export function Header({ site }: { site: SiteSettings }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-full px-4 py-2 text-[15px] transition-colors ${
+                className={`border-b-2 px-3 py-2 text-[0.9rem] transition-colors ${
                   isActive(pathname, item.href)
-                    ? "bg-brand-500 font-semibold text-white"
-                    : "text-ink hover:text-brand-600"
+                    ? "border-ink text-ink"
+                    : "border-transparent text-ink-soft hover:text-ink"
                 }`}
               >
                 {item.label}
@@ -132,11 +130,11 @@ export function Header({ site }: { site: SiteSettings }) {
         </Link>
 
         {/* Contact shortcuts (desktop) */}
-        <div className="hidden items-center gap-3 text-brand-600 lg:flex">
+        <div className="hidden items-center gap-3 text-ink-soft lg:flex">
           <a
             href={`tel:${site.phone}`}
             aria-label={`התקשרו ל${site.phoneDisplay}`}
-            className="rounded p-1.5 transition-colors hover:text-brand-800"
+            className="p-1.5 transition-colors hover:text-ink"
           >
             <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.2 2.3z" />
@@ -145,7 +143,7 @@ export function Header({ site }: { site: SiteSettings }) {
           <a
             href={`mailto:${site.email}`}
             aria-label={`שלחו מייל ל${site.email}`}
-            className="rounded p-1.5 transition-colors hover:text-brand-800"
+            className="p-1.5 transition-colors hover:text-ink"
           >
             <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.2l-8 5-8-5V6l8 5 8-5v2.2z" />
@@ -160,7 +158,7 @@ export function Header({ site }: { site: SiteSettings }) {
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
           aria-label={mobileOpen ? "סגירת התפריט" : "פתיחת התפריט"}
-          className="rounded-md p-2 text-brand-600 lg:hidden"
+          className="p-2 text-ink lg:hidden"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             {mobileOpen ? (
@@ -177,7 +175,7 @@ export function Header({ site }: { site: SiteSettings }) {
         <nav
           id="mobile-nav"
           aria-label="ניווט ראשי"
-          className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-hairline bg-white lg:hidden"
+          className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-hairline bg-paper lg:hidden"
         >
           {flat
             .filter((i) => i.href !== "#")
@@ -186,20 +184,20 @@ export function Header({ site }: { site: SiteSettings }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`block border-b border-hairline px-5 py-3.5 text-[16px] ${
+                className={`block border-b border-hairline px-6 py-4 text-[1rem] ${
                   isActive(pathname, item.href)
-                    ? "bg-brand-50 font-semibold text-brand-700"
-                    : "text-ink"
+                    ? "bg-paper-deep text-ink"
+                    : "text-ink-soft"
                 }`}
               >
                 {item.label}
               </Link>
             ))}
-          <div className="flex flex-col gap-1 px-5 py-4 text-[15px]">
-            <a href={`tel:${site.phone}`} className="text-brand-600">
+          <div className="flex flex-col gap-1.5 px-6 py-6 text-[0.9rem]">
+            <a href={`tel:${site.phone}`} className="text-ink-soft">
               {site.phoneDisplay}
             </a>
-            <a href={`mailto:${site.email}`} className="text-brand-600">
+            <a href={`mailto:${site.email}`} className="text-ink-soft">
               {site.email}
             </a>
           </div>

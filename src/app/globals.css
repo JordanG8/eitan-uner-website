@@ -2,30 +2,79 @@
 
 /* ---------------------------------------------------------------
    Eitan Uner — Photodocutherapy
-   Palette sampled directly from the original site123 screenshots.
+   ALTERNATIVE DESIGN (branch: gauntlet/redesign)
+
+   Bars: cinecasero.uy, eladiodieste.com — both measured, not admired.
+   See GAUNTLET.md for the numbers this is built against.
+
+   The three moves that carry the whole redesign:
+     1. warm paper ground, never pure white
+     2. display type large and LIGHT (300), not small and bold (700)
+     3. turquoise as an accent, never as a slab
    --------------------------------------------------------------- */
 @theme {
-  /* Signature turquoise — sampled #14888D from section fills & buttons */
-  --color-brand-50: #eef7f7;
-  --color-brand-100: #d3e9ea;
-  --color-brand-200: #a7d3d5;
-  --color-brand-300: #6bb4b7;
-  --color-brand-400: #44a0a4;
+  /* Signature turquoise. brand-500 is the exact sampled value from the
+     original and is left alone — it is Eitan's colour and it stays.
+     The darker steps are new: on paper rather than white, 500 does not
+     have the contrast for body-size text. */
+  --color-brand-50: #eaf2f2;
+  --color-brand-100: #d3e6e6;
+  --color-brand-200: #a7cfd0;
+  --color-brand-300: #6bb0b3;
+  --color-brand-400: #3f989c;
   --color-brand-500: #14888d;
-  --color-brand-600: #0c898e;
-  --color-brand-700: #0d7378;
-  --color-brand-800: #0a5c60;
-  --color-brand-900: #084a4d;
+  --color-brand-600: #0f6e73;
+  --color-brand-700: #0b575b;
+  --color-brand-800: #084346;
+  --color-brand-900: #063134;
 
-  --color-ink: #1a1a1a;
-  --color-ink-soft: #4a4a4a;
-  --color-surface: #ffffff;
-  --color-surface-alt: #eff3f6;
-  --color-hairline: #e2e8ec;
+  /* Ground. Cine Casero sits on #EAE9E4, Dieste on #EADFD2 — both warm,
+     neither white. This is the single highest-leverage change on the page:
+     pure white is the tell of a template. */
+  --color-paper: #efede6;
+  --color-paper-deep: #e5e1d6;
+  --color-surface: #efede6;
+  --color-surface-alt: #e5e1d6;
+
+  /* Ink carries a trace of warmth so it belongs to the paper rather than
+     sitting on top of it. */
+  --color-ink: #1c1c1a;
+  --color-ink-soft: #57534a;
+  --color-ink-faint: #8a857a;
+  --color-hairline: #d6d2c6;
+
+  /* Near-black for inverted sections. Not #000 — that reads as a hole. */
+  --color-void: #161614;
 
   --font-sans: var(--font-assistant), system-ui, sans-serif;
 
-  --container-content: 1200px;
+  /* Type scale.
+     The bars run display type at 104–192px against 16–18px body. The current
+     site ran 60px against 18px — a 3.3x spread where the bars use 7–11x.
+     These clamps restore that spread. */
+  --text-display: clamp(3.25rem, 9vw, 7.5rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.025em;
+
+  --text-title: clamp(2.25rem, 5.5vw, 4.25rem);
+  --text-title--line-height: 1.02;
+  --text-title--letter-spacing: -0.022em;
+
+  /* Raised from a 2.75rem (44px) cap after round 1. Two independent blind
+     critics both put this page last, and both named the same underlying
+     failure: the sections had no presence against the hero. Checked against
+     the bar rather than against the critique — Dieste sets its section head
+     "Obras" at 112px, the same scale as its display type, and Cine Casero
+     runs 104px. 44px was not a considered choice, it was a default. */
+  --text-section: clamp(2rem, 5vw, 4.5rem);
+  --text-section--line-height: 1.04;
+  --text-section--letter-spacing: -0.02em;
+
+  --text-lede: clamp(1.125rem, 1.6vw, 1.4rem);
+  --text-lede--line-height: 1.6;
+
+  --container-content: 1240px;
+  --container-text: 68ch;
 }
 
 :root {
@@ -35,34 +84,42 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  background: var(--color-paper);
 }
 
 body {
-  background: var(--color-surface);
+  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-weight: 400;
   line-height: 1.75;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1;
 }
 
-/* Hebrew headings read better slightly tighter than the Latin default */
+/* Display headings are LIGHT. This is the counter-intuitive half of both
+   bars: at 100px+, weight 300 reads as confident and weight 700 reads as
+   shouting. Hebrew has no serif display tradition to borrow, so scale and
+   weight contrast do the work a second family would do in Latin. */
 h1, h2, h3, h4 {
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
 }
 
-/* Keep long Hebrew words and URLs from forcing horizontal scroll */
+/* Hebrew tracking note: Latin display type takes -0.05em happily because
+   its kerning pairs are loose. Hebrew letterforms are boxy and already
+   tight, so the same value closes the counters. -0.02em is the practical
+   floor here — verified against Assistant at 96px. */
+
 a, p, li, h1, h2, h3 {
   overflow-wrap: break-word;
 }
 
-/* Visible focus for keyboard users — the original had none */
 :focus-visible {
-  outline: 3px solid var(--color-brand-500);
+  outline: 2px solid var(--color-brand-600);
   outline-offset: 3px;
-  border-radius: 2px;
+  border-radius: 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -70,18 +127,48 @@ a, p, li, h1, h2, h3 {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Rich-text defaults */
-.prose-he > * + * { margin-top: 1.15rem; }
-.prose-he strong { font-weight: 700; }
-.prose-he a {
-  color: var(--color-brand-600);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+/* An index number set against a heading, the way Cine Casero marks its
+   sections 01 / 02 / 03. Tabular so the digits align down a column. */
+.index-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  color: var(--color-ink-faint);
+  letter-spacing: 0;
 }
-.prose-he a:hover { color: var(--color-brand-800); }
+
+/* Rich text */
+.prose-he > * + * { margin-top: 1.25rem; }
+.prose-he strong { font-weight: 600; }
+.prose-he a {
+  color: var(--color-brand-700);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: color 0.15s;
+}
+.prose-he a:hover { color: var(--color-ink); }
 .prose-he ul { padding-inline-start: 1.4rem; list-style: disc; }
 .prose-he ol { padding-inline-start: 1.4rem; list-style: decimal; }
-.prose-he li + li { margin-top: 0.35rem; }
+.prose-he li + li { margin-top: 0.4rem; }
+
+/* Images sit flush. Neither bar rounds a corner — a radius on a photograph
+   reads as a UI card, and these are photographs, not cards. */
+img { border-radius: 0; }
+
+/* A quiet reveal on scroll. Both bars move; neither bounces. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    animation: reveal-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 42%;
+  }
+  @keyframes reveal-in {
+    to { opacity: 1; transform: none; }
+  }
+}

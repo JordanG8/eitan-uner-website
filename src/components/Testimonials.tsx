@@ -5,116 +5,102 @@ import { useState } from "react";
 import type { TestimonialsBlock } from "@/lib/types";
 import { Section, SectionHeading } from "./ui";
 
-function Stars({ rating = 5 }: { rating?: number }) {
-  return (
-    <div
-      className="mt-6 flex justify-center gap-1.5"
-      role="img"
-      aria-label={`דירוג ${rating} מתוך 5`}
-    >
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg
-          key={i}
-          viewBox="0 0 20 20"
-          className={`h-5 w-5 ${i < rating ? "text-amber-400" : "text-hairline"}`}
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9L1.5 7.7l5.9-.8z" />
-        </svg>
-      ))}
-    </div>
-  );
-}
-
+/**
+ * Testimonials.
+ *
+ * The old treatment was a centred card with a round avatar, gold stars and
+ * dot pagination — three separate template conventions stacked on one another.
+ *
+ * Here the quote itself is the design: set at section scale, light, ranged to
+ * the reading edge. The rating is kept (it is Eitan's data, not decoration)
+ * but rendered as a quiet count rather than gold star clip-art, which is the
+ * single loudest "widget" signal on the old page.
+ */
 export function Testimonials({ block }: { block: TestimonialsBlock }) {
   const [i, setI] = useState(0);
   const items = block.items;
   if (!items.length) return null;
 
   const item = items[i];
-  const go = (delta: number) => setI((prev) => (prev + delta + items.length) % items.length);
+  const go = (delta: number) =>
+    setI((prev) => (prev + delta + items.length) % items.length);
 
   return (
     <Section background="white">
       {block.title && (
-        <div className="mb-12">
+        <div className="mb-16">
           <SectionHeading>{block.title}</SectionHeading>
         </div>
       )}
 
-      <div className="relative mx-auto max-w-3xl">
-        {items.length > 1 && (
-          <>
-            {/* In RTL, "previous" sits on the right */}
-            <button
-              type="button"
-              onClick={() => go(-1)}
-              aria-label="המלצה קודמת"
-              className="absolute end-0 top-1/2 z-10 -translate-y-1/2 rounded-full p-2 text-ink-soft transition-colors hover:text-brand-600"
-            >
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden="true">
-                <path d="M9 6l6 6-6 6z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => go(1)}
-              aria-label="ההמלצה הבאה"
-              className="absolute start-0 top-1/2 z-10 -translate-y-1/2 rounded-full p-2 text-ink-soft transition-colors hover:text-brand-600"
-            >
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden="true">
-                <path d="M15 6l-6 6 6 6z" />
-              </svg>
-            </button>
-          </>
-        )}
-
-        <figure className="px-12 text-center">
-          {item.avatar ? (
-            <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-full">
-              <Image src={item.avatar.src} alt={item.avatar.alt} fill className="object-cover" />
-            </div>
-          ) : (
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-500 text-white">
-              <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor" aria-hidden="true">
-                <path d="M7.5 5C5 5 3 7.2 3 10c0 2.6 1.9 4.7 4.3 4.9-.3 1.7-1.4 3-3 3.6V21c3.6-.8 6.2-4 6.2-8.4V10C10.5 7.2 9.5 5 7.5 5zm11 0C16 5 14 7.2 14 10c0 2.6 1.9 4.7 4.3 4.9-.3 1.7-1.4 3-3 3.6V21c3.6-.8 6.2-4 6.2-8.4V10c0-2.8-1-5-3-5z" />
-              </svg>
-            </div>
-          )}
-
-          <blockquote className="mt-7 whitespace-pre-line text-[17px] leading-relaxed text-ink">
+      <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <figure className="lg:col-span-9">
+          <blockquote className="text-section whitespace-pre-line font-light text-ink">
             {item.quote}
           </blockquote>
 
-          <Stars rating={item.rating} />
-
-          <figcaption className="mt-5">
-            <span className="block text-[16px] font-medium text-brand-600">
-              {item.author}
+          <figcaption className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-3">
+            {item.avatar && (
+              <span className="relative h-12 w-12 shrink-0 overflow-hidden">
+                <Image
+                  src={item.avatar.src}
+                  alt={item.avatar.alt}
+                  fill
+                  sizes="48px"
+                  className="object-cover"
+                />
+              </span>
+            )}
+            <span>
+              <span className="block text-[0.95rem] text-ink">{item.author}</span>
+              {item.role && (
+                <span className="mt-0.5 block text-[0.85rem] text-ink-faint">
+                  {item.role}
+                </span>
+              )}
             </span>
-            {item.role && (
-              <span className="mt-1 block text-[13px] italic text-ink-soft">
-                {item.role}
+            {item.rating != null && (
+              <span
+                className="index-num text-[0.8rem]"
+                aria-label={`דירוג ${item.rating} מתוך 5`}
+              >
+                {item.rating}/5
               </span>
             )}
           </figcaption>
         </figure>
 
         {items.length > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
-            {items.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setI(idx)}
-                aria-label={`המלצה ${idx + 1}`}
-                aria-current={idx === i}
-                className={`h-2 rounded-full transition-all ${
-                  idx === i ? "w-6 bg-brand-500" : "w-2 bg-brand-200 hover:bg-brand-300"
-                }`}
-              />
-            ))}
+          <div className="lg:col-span-3">
+            <div className="flex items-center gap-6 lg:flex-col lg:items-start lg:gap-4">
+              <p className="index-num text-[0.85rem]">
+                {String(i + 1).padStart(2, "0")}
+                <span className="text-ink-faint"> / {String(items.length).padStart(2, "0")}</span>
+              </p>
+              <div className="flex gap-2">
+                {/* In RTL, "previous" sits on the right — so it comes first. */}
+                <button
+                  type="button"
+                  onClick={() => go(-1)}
+                  aria-label="המלצה קודמת"
+                  className="flex h-11 w-11 items-center justify-center border border-ink/20 text-ink-soft transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M9 6l6 6-6 6z" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => go(1)}
+                  aria-label="ההמלצה הבאה"
+                  className="flex h-11 w-11 items-center justify-center border border-ink/20 text-ink-soft transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M15 6l-6 6 6 6z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
