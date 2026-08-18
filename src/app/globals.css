@@ -108,10 +108,20 @@ body {
    bars: at 100px+, weight 300 reads as confident and weight 700 reads as
    shouting. Hebrew has no serif display tradition to borrow, so scale and
    weight contrast do the work a second family would do in Latin. */
-h1, h2, h3, h4 {
-  font-weight: 300;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+/* @layer base, not a bare rule.
+   Tailwind v4 emits its utilities inside @layer utilities, and unlayered CSS
+   beats layered CSS in the cascade regardless of specificity — so this as a
+   plain `h1, h2, h3, h4` selector silently overrode every font-weight utility
+   on every heading in the project. `font-medium` on a card title measured 300.
+   It is also the mechanical cause of a complaint three blind critics made
+   independently: that everything on the page was set at the same light weight.
+   Inside @layer base it becomes the default it was meant to be. */
+@layer base {
+  h1, h2, h3, h4 {
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
 }
 
 /* Hebrew tracking note: Latin display type takes -0.05em happily because
