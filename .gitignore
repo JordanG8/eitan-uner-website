@@ -48,3 +48,6 @@ puck-data.json
 # Uploaded media is user data, not source
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Generated credentials — never commit
+PRODUCTION-CREDENTIALS.local.md

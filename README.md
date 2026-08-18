@@ -92,6 +92,14 @@ Recommended for a photographer: Postgres + R2.
 Also still to do: the editor composes one page; extending it to all 18 is
 straightforward once there is somewhere to save.
 
+## Ownership
+
+Eitan owns this outright — that is a design constraint, not an afterthought.
+There is no hosted CMS, no database login, no media service, and no per-seat
+licence: the repo is the content store and Puck is an npm package, not a vendor.
+Transferring the site means moving the GitHub repo and the Vercel project, and
+nothing else. See [HANDOVER.md](HANDOVER.md).
+
 ## Deploying
 
 Vercel, connected to `main`. Set `NEXT_PUBLIC_SITE_URL` to the production domain.
