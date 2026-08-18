@@ -36,9 +36,17 @@ const dir = path.join(OUT, `round-${round}`);
 await mkdir(dir, { recursive: true });
 
 const browser = await chromium.launch();
+/**
+ * deviceScaleFactor 1, deliberately.
+ *
+ * At 2 the tiles come out 2880x1800 and get downscaled again when a critic
+ * reads them, which is how four separate reviewers ended up asserting type
+ * sizes that were off by two to three times. At 1 a "1440x900 tile" really is
+ * 1440x900, and a claim about type size can be trusted or checked.
+ */
 const ctx = await browser.newContext({
   viewport: { width: 1440, height: 900 },
-  deviceScaleFactor: 2,
+  deviceScaleFactor: 1,
 });
 
 const labels = shuffle(["A", "B", "C"]);

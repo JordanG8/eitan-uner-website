@@ -59,3 +59,20 @@ default.
 
 If he ever stops working with Jordan, he should be able to keep the site running
 by himself, with nothing to cancel and nobody to ask.
+
+
+## Assets that need replacing
+
+Everything below works, but it is built on images cropped out of screenshots of
+the old site. None of it needs urgent attention; all of it will look better the
+day Eitan sends originals.
+
+| Asset | Now | Why it matters |
+|---|---|---|
+| `public/images/eitan-hero.webp` | 659x657 (an 11px black border was cropped off) | The hero holds it to 8 of 12 columns on purpose — that is ~913px, a 1.35x upscale. A real file lets the hero go full-bleed. |
+| `public/images/eitan-portrait-bw.webp` | 519x421 | Small for any large placement. |
+| `public/images/clients/*.webp` (13 files) | 314x312, **turquoise baked in** | The worst of the set. These were cropped out of the old site's turquoise tiles, and the turquoise is part of the bitmap — in several cases behind the mark, not just around it. Two repair passes were tried (crop to bounding box, recolour near-teal to white) and both failed on anti-aliasing and inconsistent shades. Greyscale is currently doing the work of making 13 inconsistent backgrounds look consistent. Ask each client for a PNG or SVG on a transparent background and the greyscale can become a real choice instead of a repair. |
+| 8 story thumbnails | screenshot crops | Fine at card size, will not enlarge. |
+
+Nothing here blocks launch. The client logos are the one place where a visitor
+who looks closely can tell the images were recovered rather than supplied.

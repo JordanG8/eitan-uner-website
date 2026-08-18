@@ -87,7 +87,40 @@ Spawn **fresh** each round. It must:
 |---|---|---|---|
 | 1 | tokens, hero, all blocks | **lost** — 2 of 2 critics ranked it last | (a) section headings have no scale step; (b) hero photo is "an inline thumbnail floating in dead beige" |
 | 2 | hero, block rhythm | **lost** — 4 of 4 critics picked the bar | 50/50 mirror bands; every photo the same size; no type tier below body |
-| 3 | numbering, accent, tiled capture | pending | — |
+| 3 | numbering, accent, tiled capture | **lost** — 2 of 2, but on far better evidence | identical repeated card rows; no dominant image per section; flat type ladder |
+
+### Round 3 notes
+
+The tiled harness paid for itself immediately: with true 1:1 captures the
+critics stopped guessing at type sizes and started naming things that were
+actually there. Two findings were specific enough to verify and fix on the spot:
+
+- **Borders drawn around nothing.** 13 logos in a five-column grid ends 5/5/3,
+  and the cell hairlines were still being stroked across the two empty slots.
+  Exactly right, and indefensible. The grid is now a centred flex row that does
+  not care about the count.
+- **Two competing numbering systems.** Sections were numbered 01-08 *and* cards
+  were numbered 01-04 inside them, so "03" meant two different things on one
+  screen. Card numbers dropped; the section sequence is now unambiguous.
+
+Also acted on: each card grid promotes its first card to a double-width,
+16:9 lead so three consecutive grids read as three compositions rather than
+"a loop with a different array passed in"; card titles moved to weight 500 so
+the step down to body is carried by weight as well as by 1.25x of size.
+
+**The asset wall.** One critic noticed a logo that "failed to desaturate" and
+was right about the symptom but not the cause. The 13 client logos have the old
+site's turquoise tile baked into the bitmap — behind the mark in several cases,
+not merely around it. Two repair passes failed (bounding-box crop lost to
+anti-aliasing; recolouring near-teal to white left a halo on some files and not
+others). Greyscale now normalises them, and the pixel edits were reverted rather
+than shipped half-working. Logged in HANDOVER.md — this one needs real files,
+not cleverness.
+
+**A CSS trap worth remembering:** `opacity` forms a stacking context, which
+isolates an element and stops `mix-blend-multiply` from reaching the page behind
+it. `opacity-60 mix-blend-multiply grayscale` rendered every logo as a grey
+swatch, and each of the three classes looked innocent on its own.
 
 ### Round 2 notes
 

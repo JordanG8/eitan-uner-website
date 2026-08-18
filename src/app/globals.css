@@ -83,6 +83,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* The header is sticky, so an anchor jump would otherwise land with the
+     heading tucked underneath it. Keeps in-page links (and the footer nav)
+     landing on the heading rather than just past it. */
+  scroll-padding-top: 6rem;
   -webkit-text-size-adjust: 100%;
   background: var(--color-paper);
 }

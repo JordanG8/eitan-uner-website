@@ -26,11 +26,6 @@ import { Testimonials } from "./Testimonials";
  * same components and content.ts is frozen. What changed is the design.
  */
 
-/** 01, 02, 03 … the section marker Cine Casero indexes its work with. */
-function idx(i: number) {
-  return String(i + 1).padStart(2, "0");
-}
-
 /* -------------------------------------------------------------------- hero */
 
 export function Hero({ block }: { block: HeroBlock }) {
@@ -232,6 +227,21 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
         ? "sm:grid-cols-2"
         : "sm:grid-cols-2 lg:grid-cols-3";
 
+  /**
+   * The first card leads.
+   *
+   * Three of these grids run back to back on the home page, and two blind
+   * critics independently described them as "a loop with a different array
+   * passed in" — same width, same aspect, same rule, same link, three screens
+   * running. Promoting the lead card to a double-width, wider-cropped frame
+   * turns each grid into a composition with a dominant and subordinates,
+   * which is the shape both bars use, without touching the content.
+   *
+   * Only worth doing when there are enough cards left to fill the row behind
+   * it; below that it just makes a lopsided grid.
+   */
+  const lead = block.cards.length >= 3;
+
   return (
     <Section background={bg}>
       {block.title && (
@@ -245,52 +255,62 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
           that a box used to do. */}
       <div className={`grid gap-x-8 gap-y-14 ${cols}`}>
         {block.cards.map((card, i) => {
+          const big = lead && i === 0;
           const inner = (
             <>
               {card.image && (
-                <div className="relative aspect-[5/4] w-full overflow-hidden bg-paper-deep">
+                <div
+                  className={`relative w-full overflow-hidden bg-paper-deep ${
+                    big ? "aspect-16/9" : "aspect-[5/4]"
+                  }`}
+                >
                   <Image
                     src={card.image.src}
                     alt={card.image.alt}
                     fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes={
+                      big
+                        ? "(max-width: 640px) 100vw, 66vw"
+                        : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    }
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                   />
                 </div>
               )}
 
-              <div className={card.image ? "pt-6" : ""}>
+              <div className={`flex flex-1 flex-col ${card.image ? "pt-6" : ""}`}>
                 <div
                   className={`mb-5 h-px w-full ${onBrand ? "bg-paper/20" : "bg-hairline"}`}
                   aria-hidden="true"
                 />
-                <div className="flex items-baseline gap-4">
-                  <span
-                    className={`index-num text-[0.8rem] ${onBrand ? "text-paper/40" : ""}`}
-                    aria-hidden="true"
-                  >
-                    {idx(i)}
-                  </span>
-                  <h3
-                    className={`text-xl font-normal leading-snug transition-colors ${
-                      onBrand ? "text-paper" : "text-ink"
-                    } ${card.href ? "group-hover:text-brand-700" : ""}`}
-                  >
-                    {card.title}
-                  </h3>
-                </div>
+                {/* Card titles carry weight where the display type carries
+                    size. Everything on the page was set at 300, so the step
+                    from a 20px title to 16px body was doing its work on 1.25x
+                    of size alone — which reads as mush. */}
+                <h3
+                  className={`font-medium leading-snug transition-colors ${
+                    big ? "text-2xl" : "text-xl"
+                  } ${onBrand ? "text-paper" : "text-ink"} ${
+                    card.href ? "group-hover:text-brand-700" : ""
+                  }`}
+                >
+                  {card.title}
+                </h3>
                 {card.body && (
                   <p
-                    className={`mt-3 ps-9 text-[0.95rem] leading-relaxed ${
+                    className={`mt-3 text-[0.95rem] leading-relaxed ${
                       onBrand ? "text-paper/65" : "text-ink-soft"
-                    }`}
+                    } ${big ? "max-w-(--container-text)" : ""}`}
                   >
                     {card.body}
                   </p>
                 )}
+                {/* mt-auto pins the link to the bottom of the cell, so a card
+                    whose title wraps to two lines still lines its link up with
+                    its neighbours instead of hanging below them. */}
                 {card.href && (
                   <span
-                    className={`mt-5 ms-9 inline-block border-b pb-0.5 text-[0.9rem] transition-colors ${
+                    className={`mt-auto inline-block self-start border-b pt-5 pb-0.5 text-[0.9rem] transition-colors ${
                       onBrand
                         ? "border-paper/30 text-paper/70 group-hover:border-paper group-hover:text-paper"
                         : "border-ink/25 text-ink-soft group-hover:border-ink group-hover:text-ink"
@@ -303,7 +323,9 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
             </>
           );
 
-          const shell = "group flex flex-col";
+          const shell = `group flex flex-col ${
+            big ? "sm:col-span-2" : ""
+          }`;
 
           return card.href ? (
             <Link key={i} href={card.href} className={shell}>
@@ -373,22 +395,39 @@ export function Logos({ block, num }: { block: LogosBlock; num?: string }) {
           <SectionHeading index={num}>{block.title}</SectionHeading>
         </div>
       )}
-      {/* The turquoise tiles are gone. Client logos are other people's brands;
-          painting them all one colour was louder than the logos themselves.
-          A hairline grid, desaturated until hover, lets them read as a list. */}
-      <ul className="grid grid-cols-2 border-s border-t border-hairline sm:grid-cols-3 lg:grid-cols-5">
+      {/* The hairline grid is gone, for a concrete reason: there are 13 logos,
+          so a five-column grid ends 5 / 5 / 3 and the cell borders were still
+          being drawn across the two empty slots. A blind critic put it exactly
+          right — nobody art-directing ships a drawn border around nothing. A
+          centred flex row carries an odd count without advertising it.
+
+          On the treatment: all 13 files are screenshot crops off the old site,
+          where the logos sat inside turquoise tiles — and that turquoise is
+          baked into the bitmaps, in some cases behind the mark itself rather
+          than merely around it. Two passes at repairing the pixels (cropping to
+          a bounding box, then recolouring near-teal to white) both failed:
+          the ring is anti-aliased and the teal is not a uniform shade, so what
+          survived was a teal halo on some files and none on others — which is
+          worse than uniform, because it reads as a mistake.
+
+          Greyscale is therefore doing real work here, not decoration: it is the
+          one treatment that renders thirteen inconsistent backgrounds
+          consistently. Colour returns on hover, per logo. No blend mode and no
+          opacity — `opacity` forms a stacking context, which isolates the
+          element and stops `mix-blend-multiply` reaching the page behind it,
+          and the two together rendered every logo as a grey swatch.
+
+          The real fix is real files. See HANDOVER.md. */}
+      <ul className="flex flex-wrap justify-center gap-x-12 gap-y-10 sm:gap-x-16">
         {block.logos.map((logo, i) => (
-          <li
-            key={i}
-            className="flex aspect-4/3 items-center justify-center border-b border-e border-hairline p-7"
-          >
+          <li key={i} className="flex w-[7.5rem] items-center justify-center sm:w-[9rem]">
             <Image
               src={logo.src}
               alt={logo.alt}
               width={160}
               height={160}
-              sizes="200px"
-              className="h-full w-full object-contain opacity-55 mix-blend-multiply grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+              sizes="180px"
+              className="h-auto w-full object-contain grayscale transition duration-300 hover:grayscale-0"
             />
           </li>
         ))}
