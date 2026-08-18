@@ -572,11 +572,21 @@ function extractYouTubeId(url: string): string | null {
 export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
   const mapQuery = encodeURIComponent("תל יוסף, ישראל");
 
+  /**
+   * The contact block closes the page, so it shares the footer's ground.
+   *
+   * It used to sit on paper directly above a near-black footer, and two critics
+   * on the same panel described the result the same way: "two disconnected
+   * panels", "beige and black zones that don't relate compositionally". They
+   * were right — the page's last movement was a colour change with nothing
+   * motivating it. Running contact on the dark ground makes the ending one
+   * continuous passage that the footer completes rather than interrupts.
+   */
   const rows: { label: string; value: ReactNode }[] = [
     {
       label: "טלפון",
       value: (
-        <a href={`tel:${site.phone}`} className="hover:text-brand-700">
+        <a href={`tel:${site.phone}`} className="transition-colors hover:text-paper">
           {site.phoneDisplay}
         </a>
       ),
@@ -584,7 +594,7 @@ export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
     {
       label: "דוא״ל",
       value: (
-        <a href={`mailto:${site.email}`} className="hover:text-brand-700">
+        <a href={`mailto:${site.email}`} className="break-all transition-colors hover:text-paper">
           {site.email}
         </a>
       ),
@@ -601,62 +611,60 @@ export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
   ];
 
   return (
-    <Section background="alt" id="צרו-קשר">
-      <div className="mb-16">
-        <SectionHeading index={num}>{block.title ?? "צרו קשר"}</SectionHeading>
-      </div>
+    <section id="צרו-קשר" className="bg-void py-24 text-paper sm:py-32 lg:py-40">
+      <div className="mx-auto max-w-(--container-content) px-6 lg:px-10">
+        <div className="mb-16">
+          <SectionHeading onBrand index={num}>
+            {block.title ?? "צרו קשר"}
+          </SectionHeading>
+        </div>
 
-      <div className="grid gap-14 lg:grid-cols-2 lg:gap-20">
-        {/* Map on the inline-end side — the left, in RTL — as in the original.
-            The embed is third-party and can be slow, blocked by a tracking
-            blocker, or simply unavailable; when that happens an unstyled
-            iframe collapses to a white void the height of the section. The
-            wrapper carries its own ground and a real link underneath, so the
-            block still says where Eitan is even when the map never arrives. */}
-        <div className="lg:order-last">
-          <div className="overflow-hidden bg-paper-deep">
-            <iframe
-              title="מפה — תל יוסף"
-              src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
-              className="h-80 w-full grayscale-[0.35] lg:h-[26rem]"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+        <div className="grid gap-14 lg:grid-cols-12 lg:gap-16">
+          {/* Map on the inline-end side — the left, in RTL — as in the original. */}
+          <div className="lg:order-last lg:col-span-7">
+            <div className="overflow-hidden bg-paper/5">
+              <iframe
+                title="מפה — תל יוסף"
+                src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
+                className="h-80 w-full opacity-80 grayscale invert-[0.92] lg:h-[26rem]"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-block border-b border-paper/25 pb-0.5 text-[0.9rem] text-paper/60 transition-colors hover:border-paper hover:text-paper"
+            >
+              פתיחה במפות גוגל
+            </a>
           </div>
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block border-b border-ink/25 pb-0.5 text-[0.9rem] text-ink-soft transition-colors hover:border-ink hover:text-ink"
-          >
-            פתיחה במפות גוגל
-          </a>
-        </div>
 
-        {/* A definition list on the page, not a bordered white card. */}
-        <div>
-          <dl>
-            {rows.map((r) => (
-              <div
-                key={r.label}
-                className="grid grid-cols-[6rem_1fr] gap-4 border-b border-ink/12 py-5"
-              >
-                <dt className="text-[0.8rem] tracking-[0.14em] text-ink-faint">
-                  {r.label}
-                </dt>
-                <dd className="text-[0.98rem] text-ink">{r.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <div className="lg:col-span-5">
+            <dl>
+              {rows.map((r) => (
+                <div
+                  key={r.label}
+                  className="grid grid-cols-[6rem_1fr] gap-4 border-b border-paper/12 py-5"
+                >
+                  <dt className="text-[0.78rem] tracking-[0.16em] text-paper/40">
+                    {r.label}
+                  </dt>
+                  <dd className="text-[0.98rem] text-paper/80">{r.value}</dd>
+                </div>
+              ))}
+            </dl>
 
-          <ul className="mt-10 space-y-1.5 text-[0.9rem] text-ink-soft">
-            {site.roles.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
+            <ul className="mt-10 space-y-1.5 text-[0.9rem] text-paper/50">
+              {site.roles.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
-    </Section>
+    </section>
   );
 }
 

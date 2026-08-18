@@ -260,3 +260,82 @@ What is still open, and is the same note every round returned: Dieste varies its
 image scale across an order of magnitude. Eitan's largest asset is 659px wide.
 That ceiling is an asset problem, not a layout problem, and it does not move
 until he supplies originals — see HANDOVER.md.
+
+---
+
+# Round 5: an actual gauntlet
+
+Jordan's verdict on rounds 1–4 was that the critics were too soft and it was
+not really a gauntlet. That was correct, and the specific failure was mine: I
+ran three whole-page rounds, made a small fix each time, and then **called the
+loop myself** — the one exit the technique forbids.
+
+## What changed in the method
+
+| Before | Now |
+|---|---|
+| "Which is better?" | **"Which was made by a studio and which by an amateur?"** |
+| whole page, 1 verdict | **5 pieces, judged separately** |
+| 1–2 critics | **3 fresh critics per piece, worst verdict wins** |
+| claims taken on trust | **every factual claim checked against the DOM** |
+| builder decides when done | every piece must pass, or Jordan calls it |
+
+Discrimination beats preference because it can be *lost*, and because
+"genuinely cannot tell" is a real win rather than a compliment.
+
+## Scoreboard (critics who correctly identified this page as the amateur)
+
+| Piece | R1 | R2 | R3 |
+|---|---|---|---|
+| masthead | 2 / 3 | 2 / 3 | *unsound — see below* |
+| index | 1 / 3 | — | — |
+| close | — | 3 / 3 | **2 / 3** |
+
+Nothing has passed. The close went 6/6 against, then 2/3 — real movement,
+still a fail.
+
+## The bugs the panels found, which opinion never would have
+
+- **The footer emitted every parent twice.** `[...topLevel, ...children]` gave
+  23 links with 5 duplicated hrefs. Three critics called it "a raw sitemap
+  dump". Now 18, then cut to a four-element close entirely.
+- **The header was on different gutters from the page.** `px-4/lg:px-6` against
+  `px-6/lg:px-10` everywhere else, putting the logo **16px** off the shared
+  axis. Two critics named "a nav logo that doesn't align to the hero text".
+  Logo, h1, tagline and footer name now all end at exactly 1300px at 1440.
+- **The centred logo lockup** — a centred mark over right-ranged content, the
+  clearest site123 signature on the page.
+- **Paper contact block above a black footer** — "two disconnected panels".
+  The close now runs on one ground.
+
+## Three times the harness decided the result
+
+1. **My dev badge.** Next's dev indicator rendered in every capture and two
+   critics cited "a floating chat-widget bubble intruding on the layout" as
+   evidence of amateur work. I had written that exact failure mode into the
+   skill file as a rule, then failed to apply it.
+2. **The bar caught mid-animation.** Round 22's masthead went 3/3 in this
+   page's favour — and all three cited text clipping into a panel on the *other*
+   image. That is Dieste's scroll-linked reveal sampled mid-transition.
+   Lengthening the settle to 2.2s and awaiting `document.fonts` changed nothing,
+   so it is not transient: **tile sampling cannot compare this bar's fold
+   soundly.** The result is discarded. Winning because the harness damaged the
+   opponent is the dev-badge mistake with the roles reversed.
+3. **Judge substitution** (round 4, already logged above).
+
+## A bias worth knowing about
+
+These panels run on Sonnet, at Jordan's request. Consistency is what matters —
+the earlier sin was *switching* mid-run, not the model itself. But this panel
+visibly rewards tidiness: two critics praised this page's uniform grid over
+Dieste's deliberate off-axis stagger, calling the bar "scattered at arbitrary
+coordinates", and one read Dieste's generous whitespace as "unfilled space, not
+a decision". So a win here is weaker evidence than a loss. **The losses are the
+signal.**
+
+## The one gap that stays
+
+Dieste fills its closing wordmark with brickwork — the material the man built
+in. A critic named that as the decisive tell and it is not a bug, a measurement
+or an alignment: it is bespoke art direction. Closing it means designing
+something equivalently specific to Eitan, not adjusting a token.
