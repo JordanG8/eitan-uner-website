@@ -11,6 +11,9 @@
      1. warm paper ground, never pure white
      2. display type large and LIGHT (300), not small and bold (700)
      3. turquoise as an accent, never as a slab
+
+   Round 7 adds a fourth, which is not a look but a discipline:
+     4. nothing on the page gets a value that is not a named token.
    --------------------------------------------------------------- */
 @theme {
   /* Signature turquoise. brand-500 is the exact sampled value from the
@@ -48,33 +51,189 @@
 
   --font-sans: var(--font-assistant), system-ui, sans-serif;
 
-  /* Type scale.
-     The bars run display type at 104–192px against 16–18px body. The current
-     site ran 60px against 18px — a 3.3x spread where the bars use 7–11x.
-     These clamps restore that spread. */
-  --text-display: clamp(3.25rem, 9vw, 7.5rem);
-  --text-display--line-height: 0.98;
-  --text-display--letter-spacing: -0.025em;
+  /* ------------------------------------------------------------------
+     THE RAMP — major third, 1.25, from a 16px base.
 
-  --text-title: clamp(2.25rem, 5.5vw, 4.25rem);
-  --text-title--line-height: 1.02;
-  --text-title--letter-spacing: -0.022em;
+     Before this, the home page rendered 14 distinct size/weight pairs at
+     1440px and five of the sizes sat inside two pixels of each other:
+     14, 14.4, 15, 15.2, 15.68. Those are not decisions. They are what you
+     get when every component picks its own `text-[0.9rem]`, and they are
+     the mechanical cause of the owner's complaint that the site "doesn't
+     feel consistent across the design".
 
-  /* Raised from a 2.75rem (44px) cap after round 1. Two independent blind
-     critics both put this page last, and both named the same underlying
-     failure: the sections had no presence against the hero. Checked against
-     the bar rather than against the critique — Dieste sets its section head
-     "Obras" at 112px, the same scale as its display type, and Cine Casero
-     runs 104px. 44px was not a considered choice, it was a default. */
-  --text-section: clamp(2rem, 5vw, 4.5rem);
+     One ratio, one base, and every component points at a named step.
+     Nothing on the page may set a font-size that is not on this ramp.
+
+       step   ×          px      role
+       -1     1/1.25     12.80   micro — labels, meta, nav, credits
+        0     1          16.00   body
+        1     1.25       20.00   lede
+        2     1.5625     25.00   card titles
+        3     1.25³      31.25   ─┐
+        4     1.25⁴      39.06    │
+        5     1.25⁵      48.83    ├ the responsive rungs the three
+        6     1.25⁶      61.04    │ display roles walk up and down
+        7     1.25⁷      76.29    │
+        8     1.25⁸      95.37    │
+        9     1.25⁹     119.21   ─┘
+     ------------------------------------------------------------------ */
+  --step--1: 0.8rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.5625rem;
+  --step-3: 1.9531rem;
+  --step-4: 2.4414rem;
+  --step-5: 3.0518rem;
+  --step-6: 3.8147rem;
+  --step-7: 4.7684rem;
+  --step-8: 5.9605rem;
+  --step-9: 7.4506rem;
+
+  /* Named steps. The three display roles resolve through --ramp-* vars that
+     step at breakpoints (below), rather than through clamp().
+
+     clamp() was the old mechanism and it is the reason a "scale" produced
+     72px at one viewport and 51.2px at another: a vw-interpolated size is
+     off the ramp at every width between the two ends. Discrete steps mean
+     the page is on the ramp at 375px exactly as much as at 1440px. */
+  --text-micro: var(--step--1);
+  --text-micro--line-height: 1.5;
+
+  --text-body: var(--step-0);
+  --text-body--line-height: 1.75;
+
+  --text-lede: var(--step-1);
+  --text-lede--line-height: 1.6;
+
+  --text-rise: var(--step-2);
+  --text-rise--line-height: 1.2;
+  --text-rise--letter-spacing: -0.01em;
+
+  --text-title: var(--ramp-title);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.02em;
+
+  --text-section: var(--ramp-section);
   --text-section--line-height: 1.04;
   --text-section--letter-spacing: -0.02em;
 
-  --text-lede: clamp(1.125rem, 1.6vw, 1.4rem);
-  --text-lede--line-height: 1.6;
+  --text-display: var(--ramp-display);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.025em;
+
+  /* One tracking value for every letterspaced micro label. There were three
+     (0.16em, 0.18em, and Tailwind's `tracking-wide`) doing the same job. */
+  --tracking-label: 0.16em;
+
+  /* One duration for every state change on an interactive element.
+     Before: 150ms (bare `transition-colors`), 200ms, 300ms, 500ms and 700ms
+     all on the same page — a reader moving across sections felt the site
+     change its mind about how fast it responds. `--duration-slow` is the one
+     documented exception: an image easing under the cursor is a different
+     gesture from a link changing colour, and wants the longer curve. */
+  --default-transition-duration: 200ms;
+  --duration-slow: 500ms;
+
+  /* Radius is zero, by design law, not by accident.
+     "Neither bar rounds a corner — a radius on a photograph reads as a UI
+     card, and these are photographs, not cards." Zeroing the scale rather
+     than deleting `rounded-md` from each copied file means a shadcn
+     primitive added a year from now arrives square without being edited. */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+
+  /* ------------------------------------------------------------------
+     shadcn/ui token bridge.
+
+     The primitives under src/components/ui are copied MIT source and they
+     speak in semantic names — bg-background, text-muted-foreground,
+     ring-ring. Mapping those names onto this site's palette once, here, is
+     what stops the copied components from being a second design system
+     living beside the first. Add a primitive later and it is already
+     wearing paper and ink.
+     ------------------------------------------------------------------ */
+  --color-background: var(--color-paper);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-paper);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-paper);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary: var(--color-ink);
+  --color-primary-foreground: var(--color-paper);
+  --color-secondary: var(--color-paper-deep);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-paper-deep);
+  --color-muted-foreground: var(--color-ink-soft);
+  --color-accent: var(--color-paper-deep);
+  --color-accent-foreground: var(--color-ink);
+  --color-destructive: #8f2f24;
+  --color-border: var(--color-hairline);
+  --color-input: var(--color-hairline);
+  --color-ring: var(--color-brand-600);
 
   --container-content: 1240px;
   --container-text: 68ch;
+
+  /* The header bar's own container.
+     Identical to --container-content up to 2xl; see the override below for
+     why it is allowed to diverge above it. */
+  --container-shell: 1240px;
+}
+
+/* The three display roles, stepped.
+   Each role walks the same ramp; they are simply offset from one another by
+   one step, which is what keeps display / section / quote reading as three
+   rungs of one ladder at every viewport instead of three independent clamps
+   that happen to cross somewhere. */
+:root {
+  --ramp-display: var(--step-5); /*  48.83 */
+  --ramp-section: var(--step-3); /*  31.25 */
+  --ramp-title: var(--step-2); /*  25.00 */
+}
+@media (min-width: 40rem) {
+  :root {
+    --ramp-display: var(--step-6); /*  61.04 */
+    --ramp-section: var(--step-4); /*  39.06 */
+    --ramp-title: var(--step-3); /*  31.25 */
+  }
+}
+@media (min-width: 48rem) {
+  :root {
+    --ramp-display: var(--step-7); /*  76.29 */
+    --ramp-section: var(--step-5); /*  48.83 */
+    --ramp-title: var(--step-4); /*  39.06 */
+  }
+}
+@media (min-width: 64rem) {
+  :root {
+    --ramp-display: var(--step-8); /*  95.37 */
+    --ramp-section: var(--step-6); /*  61.04 */
+    --ramp-title: var(--step-5); /*  48.83 */
+  }
+}
+@media (min-width: 80rem) {
+  /* The defended maximum. GAUNTLET.md round 1 settled that display type here
+     is 120px at weight 300 — small-and-bold was the exact inverse of both
+     bars. 119.21px is step 9, which is where 120 was always trying to be:
+     16 × 1.25⁹ = 119.209. The decision is unchanged; it now lands on the
+     ramp instead of near it. */
+  :root {
+    --ramp-display: var(--step-9); /* 119.21 */
+    --ramp-section: var(--step-7); /*  76.29 */
+    --ramp-title: var(--step-6); /*  61.04 */
+  }
+}
+
+/* Above 2xl the reading container leaves 300px+ of dead margin on each side,
+   and the header was pretending 18 destinations fit in 1240px. See the note
+   in Header.tsx — the bar borrows the margin the text column cannot use. */
+@media (min-width: 96rem) {
+  :root {
+    --container-shell: 1800px;
+  }
 }
 
 :root {
@@ -98,6 +257,7 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: var(--step-0);
   font-weight: 400;
   line-height: 1.75;
   text-rendering: optimizeLegibility;
@@ -116,11 +276,16 @@ body {
    It is also the mechanical cause of a complaint three blind critics made
    independently: that everything on the page was set at the same light weight.
    Inside @layer base it becomes the default it was meant to be. */
+/* The letter-spacing and line-height that used to live here have moved onto
+   the named steps. They belonged to the *size*, not to the tag: -0.02em is
+   right at 119px and wrong at 25px, and setting it per-tag meant every card
+   title in the project was being tracked as if it were display type. */
 @layer base {
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-weight: 300;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
   }
 }
 
@@ -129,7 +294,12 @@ body {
    tight, so the same value closes the counters. -0.02em is the practical
    floor here — verified against Assistant at 96px. */
 
-a, p, li, h1, h2, h3 {
+a,
+p,
+li,
+h1,
+h2,
+h3 {
   overflow-wrap: break-word;
 }
 
@@ -139,13 +309,90 @@ a, p, li, h1, h2, h3 {
   border-radius: 1px;
 }
 
+/* Radix primitives set their own focus rings (focus-visible:ring-*). The page
+   already has one focus treatment and two would be worse than either, so the
+   copied components are stripped of theirs and inherit this one. */
+
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/**
+ * The vertical rhythm of a full-width band.
+ *
+ * Four components were each spelling out `py-24 sm:py-32 lg:py-40` — Section,
+ * Gallery, Quote and Contact — which is the same value written four times and
+ * therefore four places for it to drift. It had already drifted once: the
+ * heading-to-content gap was mb-16 in five blocks and mb-14 in Video.
+ */
+.band {
+  padding-block: 6rem;
+}
+@media (min-width: 40rem) {
+  .band {
+    padding-block: 8rem;
+  }
+}
+@media (min-width: 64rem) {
+  .band {
+    padding-block: 10rem;
+  }
+}
+
+/**
+ * Entry/exit motion for the two Radix primitives that mount and unmount.
+ *
+ * Hand-rolled rather than pulling in tailwindcss-animate for two keyframes.
+ * This site has to transfer to the client's own accounts, so every dependency
+ * is a thing he inherits; 14 lines of CSS is not worth a package.
+ *
+ * --dir is the trick that makes the drawer direction-correct. `transform` is
+ * physical, but the drawer is pinned with `inset-inline-end`, which in RTL is
+ * the *left* edge — so it has to arrive from -100%, not +100%. One sign flip
+ * declared once, rather than an `[dir=rtl]:` override on every panel.
+ */
+:root {
+  --dir: 1;
+}
+[dir="rtl"] {
+  --dir: -1;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    translate: calc(100% * var(--dir)) 0;
+  }
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    translate: 0 -0.375rem;
+  }
+}
+
+.sheet-overlay[data-state="open"] {
+  animation: fade-in var(--default-transition-duration) ease-out;
+}
+.sheet-panel[data-state="open"] {
+  animation: panel-in var(--duration-slow) cubic-bezier(0.32, 0.72, 0, 1);
+}
+.nav-menu-content[data-state="open"] {
+  animation: menu-in var(--default-transition-duration) ease-out;
 }
 
 /**
@@ -173,40 +420,40 @@ a, p, li, h1, h2, h3 {
   }
 }
 
-/* An index number set against a heading, the way Cine Casero marks its
-   sections 01 / 02 / 03. Tabular so the digits align down a column. */
-.index-num {
-  font-variant-numeric: tabular-nums;
-  font-weight: 400;
-  /* Teal, deliberately.
-     Stripping the turquoise slabs left the colour with nowhere to live except
-     the logo, and a blind critic called that out precisely: "the teal logo is
-     an orphan against a beige/black page that uses no other accent." The
-     section numbers reprise it down the whole scroll at the smallest size on
-     the page, which is where an accent belongs — Dieste places its copper at
-     the open and answers it at the close. */
-  color: var(--color-brand-600);
-  letter-spacing: 0.02em;
-}
-
 /* Rich text */
-.prose-he > * + * { margin-top: 1.25rem; }
-.prose-he strong { font-weight: 600; }
+.prose-he > * + * {
+  margin-top: 1.25rem;
+}
+.prose-he strong {
+  font-weight: 600;
+}
 .prose-he a {
   color: var(--color-brand-700);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 4px;
-  transition: color 0.15s;
+  transition: color var(--default-transition-duration);
 }
-.prose-he a:hover { color: var(--color-ink); }
-.prose-he ul { padding-inline-start: 1.4rem; list-style: disc; }
-.prose-he ol { padding-inline-start: 1.4rem; list-style: decimal; }
-.prose-he li + li { margin-top: 0.4rem; }
+.prose-he a:hover {
+  color: var(--color-ink);
+}
+.prose-he ul {
+  padding-inline-start: 1.4rem;
+  list-style: disc;
+}
+.prose-he ol {
+  padding-inline-start: 1.4rem;
+  list-style: decimal;
+}
+.prose-he li + li {
+  margin-top: 0.4rem;
+}
 
 /* Images sit flush. Neither bar rounds a corner — a radius on a photograph
    reads as a UI card, and these are photographs, not cards. */
-img { border-radius: 0; }
+img {
+  border-radius: 0;
+}
 
 /* A quiet reveal on scroll. Both bars move; neither bounces. */
 @media (prefers-reduced-motion: no-preference) {
@@ -218,6 +465,9 @@ img { border-radius: 0; }
     animation-range: entry 0% entry 42%;
   }
   @keyframes reveal-in {
-    to { opacity: 1; transform: none; }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 }

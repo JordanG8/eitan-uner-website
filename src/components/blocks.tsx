@@ -15,7 +15,8 @@ import type {
   TextImageBlock,
   VideoBlock,
 } from "@/lib/types";
-import { Button, CtaRow, Inline, Rule, Section, SectionHeading } from "./ui";
+import { Button, CtaRow, Inline, QuietLink, Rule, Section, SectionHeading } from "./site";
+import { Separator } from "./ui/separator";
 import { Testimonials } from "./Testimonials";
 
 /**
@@ -131,14 +132,14 @@ export function Hero({ block }: { block: HeroBlock }) {
         {block.ctas?.length ? (
           <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
             <Button cta={{ ...block.ctas[0], tone: "solidWhite" }} />
-            {/* Secondary reads as a link, not a second button of equal weight. */}
+            {/* Secondary reads as a link, not a second button of equal weight.
+                QuietLink, not a hand-rolled border-b: this treatment appears
+                three times on the page and used to be written out three times
+                at three different sizes. */}
             {block.ctas[1] && (
-              <Link
-                href={block.ctas[1].href}
-                className="border-b border-paper/40 pb-0.5 text-[0.95rem] text-paper/75 transition-colors hover:border-paper hover:text-paper"
-              >
+              <QuietLink href={block.ctas[1].href} onDark>
                 {block.ctas[1].label}
-              </Link>
+              </QuietLink>
             )}
           </div>
         ) : null}
@@ -152,11 +153,9 @@ export function Hero({ block }: { block: HeroBlock }) {
 export function TextImage({
   block,
   index = 0,
-  num,
 }: {
   block: TextImageBlock;
   index?: number;
-  num?: string;
 }) {
   const bg = block.background ?? "white";
   // "brand" is a tonal ground now, not an inverted one — nothing here flips.
@@ -206,11 +205,6 @@ export function TextImage({
         <div className={textCols}>
           {block.title && (
             <>
-              {num && (
-                <span className="index-num mb-4 block text-[0.8rem]" aria-hidden="true">
-                  {num}
-                </span>
-              )}
               <h2
                 className={`text-section font-light ${onBrand ? "text-paper" : "text-ink"}`}
               >
@@ -240,14 +234,14 @@ export function TextImage({
 
 /* ---------------------------------------------------------------- richText */
 
-export function RichText({ block, num }: { block: RichTextBlock; num?: string }) {
+export function RichText({ block }: { block: RichTextBlock }) {
   const bg = block.background ?? "white";
   const onBrand = false;
   return (
     <Section background={bg}>
       {block.title && (
         <div className="mb-16">
-          <SectionHeading onBrand={onBrand} index={num}>{block.title}</SectionHeading>
+          <SectionHeading onBrand={onBrand}>{block.title}</SectionHeading>
         </div>
       )}
       {/* Measure, not a fraction of the viewport. Long Hebrew lines are the
@@ -269,7 +263,7 @@ export function RichText({ block, num }: { block: RichTextBlock; num?: string })
 
 /* ---------------------------------------------------------------- cardGrid */
 
-export function CardGrid({ block, num }: { block: CardGridBlock; num?: string }) {
+export function CardGrid({ block }: { block: CardGridBlock }) {
   const bg = block.background ?? "white";
   const onBrand = false;
   const cols =
@@ -298,7 +292,7 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
     <Section background={bg}>
       {block.title && (
         <div className="mb-16">
-          <SectionHeading onBrand={onBrand} index={num}>{block.title}</SectionHeading>
+          <SectionHeading onBrand={onBrand}>{block.title}</SectionHeading>
         </div>
       )}
 
@@ -325,23 +319,20 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
                         ? "(max-width: 640px) 100vw, 66vw"
                         : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     }
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                    className="object-cover transition-transform duration-(--duration-slow) ease-out group-hover:scale-[1.04]"
                   />
                 </div>
               )}
 
               <div className={`flex flex-1 flex-col ${card.image ? "pt-6" : ""}`}>
-                <div
-                  className={`mb-5 h-px w-full ${onBrand ? "bg-paper/20" : "bg-hairline"}`}
-                  aria-hidden="true"
-                />
+                <Separator className="mb-5" tone={onBrand ? "dark" : "paper"} />
                 {/* Card titles carry weight where the display type carries
                     size. Everything on the page was set at 300, so the step
                     from a 20px title to 16px body was doing its work on 1.25x
                     of size alone — which reads as mush. */}
                 <h3
                   className={`font-medium leading-snug transition-colors ${
-                    big ? "text-2xl" : "text-xl"
+                    "text-rise"
                   } ${onBrand ? "text-paper" : "text-ink"} ${
                     card.href ? "group-hover:text-brand-700" : ""
                   }`}
@@ -357,7 +348,7 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
                      sizes, so 15px is meaningfully below comfortable in a way
                      the same value would not be in Latin. */
                   <p
-                    className={`mt-3 text-base leading-relaxed ${
+                    className={`mt-3 text-body ${
                       onBrand ? "text-paper/65" : "text-ink-soft"
                     } ${big ? "max-w-(--container-text)" : ""}`}
                   >
@@ -367,11 +358,15 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
                 {/* mt-auto pins the link to the bottom of the cell, so a card
                     whose title wraps to two lines still lines its link up with
                     its neighbours instead of hanging below them. */}
+                {/* A span, not a QuietLink: the whole card is already the
+                    anchor, and nesting an <a> inside an <a> is invalid. Same
+                    treatment, same 16px, same border opacity — driven from the
+                    group hover instead of its own. */}
                 {card.href && (
                   <span
-                    className={`mt-auto inline-block self-start border-b pt-5 pb-0.5 text-[0.9rem] transition-colors ${
+                    className={`mt-auto inline-block self-start border-b pt-5 pb-0.5 text-body transition-colors ${
                       onBrand
-                        ? "border-paper/30 text-paper/70 group-hover:border-paper group-hover:text-paper"
+                        ? "border-paper/40 text-paper/75 group-hover:border-paper group-hover:text-paper"
                         : "border-ink/25 text-ink-soft group-hover:border-ink group-hover:text-ink"
                     }`}
                   >
@@ -403,7 +398,7 @@ export function CardGrid({ block, num }: { block: CardGridBlock; num?: string })
 
 /* ----------------------------------------------------------------- gallery */
 
-export function Gallery({ block, num }: { block: GalleryBlock; num?: string }) {
+export function Gallery({ block }: { block: GalleryBlock }) {
   /**
    * A contact sheet, full-bleed, with tiles of two sizes.
    *
@@ -416,10 +411,10 @@ export function Gallery({ block, num }: { block: GalleryBlock; num?: string }) {
   const isBig = (i: number) => i % 4 === 0;
 
   return (
-    <section className={`${block.background === "alt" ? "bg-paper-deep" : "bg-paper"} py-24 sm:py-32 lg:py-40`}>
+    <section className={`band ${block.background === "alt" ? "bg-paper-deep" : "bg-paper"}`}>
       {block.title && (
         <div className="mx-auto mb-16 max-w-(--container-content) px-6 lg:px-10">
-          <SectionHeading index={num}>{block.title}</SectionHeading>
+          <SectionHeading>{block.title}</SectionHeading>
         </div>
       )}
       <div className="grid auto-rows-[clamp(9rem,15vw,15rem)] grid-flow-dense grid-cols-2 gap-2 px-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -435,7 +430,7 @@ export function Gallery({ block, num }: { block: GalleryBlock; num?: string }) {
               alt={im.alt}
               fill
               sizes={isBig(i) ? "(max-width: 640px) 100vw, 50vw" : "(max-width: 640px) 50vw, 25vw"}
-              className="object-cover transition-opacity duration-500 hover:opacity-85"
+              className="object-cover transition-opacity duration-(--duration-slow) hover:opacity-85"
             />
           </figure>
         ))}
@@ -446,12 +441,12 @@ export function Gallery({ block, num }: { block: GalleryBlock; num?: string }) {
 
 /* ------------------------------------------------------------------- logos */
 
-export function Logos({ block, num }: { block: LogosBlock; num?: string }) {
+export function Logos({ block }: { block: LogosBlock }) {
   return (
     <Section background="white">
       {block.title && (
         <div className="mb-16">
-          <SectionHeading index={num}>{block.title}</SectionHeading>
+          <SectionHeading>{block.title}</SectionHeading>
         </div>
       )}
       {/* The hairline grid is gone, for a concrete reason: there are 13 logos,
@@ -486,7 +481,7 @@ export function Logos({ block, num }: { block: LogosBlock; num?: string }) {
               width={160}
               height={160}
               sizes="180px"
-              className="h-auto w-full object-contain grayscale transition duration-300 hover:grayscale-0"
+              className="h-auto w-full object-contain grayscale transition hover:grayscale-0"
             />
           </li>
         ))}
@@ -507,7 +502,7 @@ export function Quote({ block }: { block: QuoteBlock }) {
    * what a blanket remap produced, just read as stripes.
    */
   return (
-    <section className="bg-void py-24 text-paper sm:py-32 lg:py-40">
+    <section className="band bg-void text-paper">
       <div className="mx-auto max-w-(--container-content) px-6 lg:px-10">
         <div className="max-w-5xl">
           {/* Display scale, light weight, ranged start. A centred bold
@@ -517,7 +512,7 @@ export function Quote({ block }: { block: QuoteBlock }) {
             {block.quote}
           </blockquote>
           {block.attribution && (
-            <p className="mt-10 text-sm tracking-[0.18em] text-paper/50">
+            <p className="mt-10 text-micro tracking-label text-paper/50">
               {block.attribution}
             </p>
           )}
@@ -530,19 +525,19 @@ export function Quote({ block }: { block: QuoteBlock }) {
 
 /* ------------------------------------------------------------------- video */
 
-export function Video({ block, num }: { block: VideoBlock; num?: string }) {
+export function Video({ block }: { block: VideoBlock }) {
   const id = extractYouTubeId(block.youtubeUrl);
   const onBrand = false;
   return (
     <Section background={block.background ?? "white"}>
       {block.title && (
-        <div className="mb-14">
-          <SectionHeading onBrand={onBrand} index={num}>{block.title}</SectionHeading>
+        <div className="mb-16">
+          <SectionHeading onBrand={onBrand}>{block.title}</SectionHeading>
         </div>
       )}
       {block.body && (
         <div
-          className={`prose-he text-lede mb-14 max-w-(--container-text) ${
+          className={`prose-he text-lede mb-16 max-w-(--container-text) ${
             onBrand ? "text-paper/85" : "text-ink-soft"
           }`}
         >
@@ -576,7 +571,7 @@ function extractYouTubeId(url: string): string | null {
 
 /* ----------------------------------------------------------------- contact */
 
-export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
+export function Contact({ block }: { block: ContactBlock }) {
   const mapQuery = encodeURIComponent("תל יוסף, ישראל");
 
   /**
@@ -618,10 +613,10 @@ export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
   ];
 
   return (
-    <section id="צרו-קשר" className="bg-void py-24 text-paper sm:py-32 lg:py-40">
+    <section id="צרו-קשר" className="band bg-void text-paper">
       <div className="mx-auto max-w-(--container-content) px-6 lg:px-10">
         <div className="mb-16">
-          <SectionHeading onBrand index={num}>
+          <SectionHeading onBrand>
             {block.title ?? "צרו קשר"}
           </SectionHeading>
         </div>
@@ -638,14 +633,14 @@ export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
-            <a
+            <QuietLink
               href={`https://www.google.com/maps/search/?api=1&query=${mapQuery}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 inline-block border-b border-paper/25 pb-0.5 text-[0.9rem] text-paper/60 transition-colors hover:border-paper hover:text-paper"
+              external
+              onDark
+              className="mt-4"
             >
               פתיחה במפות גוגל
-            </a>
+            </QuietLink>
           </div>
 
           <div className="lg:col-span-5">
@@ -653,17 +648,17 @@ export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
               {rows.map((r) => (
                 <div
                   key={r.label}
-                  className="grid grid-cols-[6rem_1fr] gap-4 border-b border-paper/12 py-5"
+                  className="grid grid-cols-[6rem_1fr] gap-4 border-b border-paper/20 py-5"
                 >
-                  <dt className="text-[0.78rem] tracking-[0.16em] text-paper/40">
+                  <dt className="text-micro tracking-label text-paper/40">
                     {r.label}
                   </dt>
-                  <dd className="text-[0.98rem] text-paper/80">{r.value}</dd>
+                  <dd className="text-body text-paper/80">{r.value}</dd>
                 </div>
               ))}
             </dl>
 
-            <ul className="mt-10 space-y-1.5 text-[0.9rem] text-paper/50">
+            <ul className="mt-10 space-y-1.5 text-micro text-paper/50">
               {site.roles.map((r) => (
                 <li key={r}>{r}</li>
               ))}
@@ -679,51 +674,44 @@ export function Contact({ block, num }: { block: ContactBlock; num?: string }) {
 
 export function Blocks({ blocks }: { blocks: Block[] }) {
   /**
-   * Sections are numbered 01, 02, 03 … as the page walks them.
+   * Round 3 numbered the sections 01 / 02 / 03 down the page, after Cine
+   * Casero, and threaded a `num` string through nine of these renderers to do
+   * it. Round 6's panel objected twice — a palette break, and a template tell —
+   * and it was deliberately not actioned, on the grounds that reversing a
+   * documented decision on two sighted opinions is churn.
    *
-   * This was in the bar analysis from the first hour — Cine Casero indexes its
-   * sections exactly this way — and `SectionHeading` has accepted an `index`
-   * since the first commit. It was simply never passed, which a blind critic
-   * caught from the other direction: the page had display type, section heads
-   * and body, and nothing below body. No captions, no eyebrows, no smallest
-   * voice. A type ladder needs a bottom rung to set the scale of the top one.
+   * The site owner has now rejected the numerals outright, which is a
+   * different kind of evidence entirely, so they are gone: the class, the
+   * prop, and this reducer. Recorded in GAUNTLET.md round 7.
    *
-   * Only blocks that actually render a heading take a number, so the sequence
-   * a reader sees has no gaps in it.
+   * The thing the numbering was *also* doing — being the bottom rung of the
+   * type ladder, which a blind critic had asked for — is now done properly by
+   * the `micro` step, which twelve elements share instead of one.
    */
-  const numbers = blocks.reduce<(string | undefined)[]>((acc, block) => {
-    const titled =
-      ("title" in block && Boolean(block.title)) || block._type === "contact";
-    const used = acc.filter(Boolean).length;
-    acc.push(titled ? String(used + 1).padStart(2, "0") : undefined);
-    return acc;
-  }, []);
-
   return (
     <>
       {blocks.map((block, i) => {
-        const num = numbers[i];
         switch (block._type) {
           case "hero":
             return <Hero key={i} block={block} />;
           case "textImage":
-            return <TextImage key={i} block={block} index={i} num={num} />;
+            return <TextImage key={i} block={block} index={i} />;
           case "richText":
-            return <RichText key={i} block={block} num={num} />;
+            return <RichText key={i} block={block} />;
           case "cardGrid":
-            return <CardGrid key={i} block={block} num={num} />;
+            return <CardGrid key={i} block={block} />;
           case "gallery":
-            return <Gallery key={i} block={block} num={num} />;
+            return <Gallery key={i} block={block} />;
           case "testimonials":
-            return <Testimonials key={i} block={block as TestimonialsBlock} num={num} />;
+            return <Testimonials key={i} block={block as TestimonialsBlock} />;
           case "logos":
-            return <Logos key={i} block={block} num={num} />;
+            return <Logos key={i} block={block} />;
           case "quote":
             return <Quote key={i} block={block} />;
           case "video":
-            return <Video key={i} block={block} num={num} />;
+            return <Video key={i} block={block} />;
           case "contact":
-            return <Contact key={i} block={block} num={num} />;
+            return <Contact key={i} block={block} />;
           default:
             return null;
         }

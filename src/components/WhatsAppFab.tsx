@@ -1,3 +1,5 @@
+import { Button } from "./ui/button";
+
 /**
  * WhatsApp shortcut.
  *
@@ -16,19 +18,26 @@ export function WhatsAppFab({ url }: { url: string }) {
    * for attention", which is fair. It is also how Israeli clients actually make
    * contact, so removing it would trade a real lead for a tidier screenshot.
    * Deferring it until the reader has left the masthead keeps both.
+   *
+   * It is the site's Button now, at the `icon` size, rather than a hand-rolled
+   * `h-13 w-13 bg-ink hover:bg-brand-700` that happened to duplicate the solid
+   * tone's hover by coincidence. The drop shadow is the one shadow on the site
+   * and it stays: this is the only element that floats over arbitrary content,
+   * so it is the only one that has to separate itself from an unknown ground.
    */
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="שליחת הודעה בוואטסאפ"
-      data-defer-over-hero=""
-      className="fixed bottom-6 end-6 z-50 flex h-13 w-13 items-center justify-center bg-ink text-paper shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)] transition-colors hover:bg-brand-700"
-    >
-      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
-        <path d="M17.5 14.4c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.4.2-.7.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.2.4-.5.5-.7.2-.2.2-.4.3-.6.1-.2 0-.4 0-.5 0-.2-.7-1.7-.9-2.3-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 1.7 2.7 4.2 3.8 2.5 1 2.8.9 3.3.8.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.5-.3zM12 21.8c-1.7 0-3.4-.5-4.9-1.4l-3.4.9.9-3.3A9.7 9.7 0 012.2 12 9.8 9.8 0 0112 2.2 9.8 9.8 0 0121.8 12 9.8 9.8 0 0112 21.8z" />
-      </svg>
-    </a>
+    <Button asChild size="icon" className="fixed bottom-6 end-6 z-50 shadow-[0_10px_30px_-12px_rgba(0,0,0,0.6)]">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="שליחת הודעה בוואטסאפ"
+        data-defer-over-hero=""
+      >
+        <svg viewBox="0 0 24 24" className="size-6" fill="currentColor" aria-hidden="true">
+          <path d="M17.5 14.4c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.1-.2.3-.7 1-.9 1.2-.2.2-.4.2-.7.1-.3-.2-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.2.4-.5.5-.7.2-.2.2-.4.3-.6.1-.2 0-.4 0-.5 0-.2-.7-1.7-.9-2.3-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.1.2 1.7 2.7 4.2 3.8 2.5 1 2.8.9 3.3.8.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.5-.3zM12 21.8c-1.7 0-3.4-.5-4.9-1.4l-3.4.9.9-3.3A9.7 9.7 0 012.2 12 9.8 9.8 0 0112 2.2 9.8 9.8 0 0121.8 12 9.8 9.8 0 0112 21.8z" />
+        </svg>
+      </a>
+    </Button>
   );
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Inline } from "@/components/ui";
+import { Inline, QuietLink } from "@/components/site";
+import { Separator } from "@/components/ui/separator";
 import { getAllStorySlugs, getStoryBySlug } from "@/lib/fetch";
 
 /** The only parent segment that has children. */
@@ -46,15 +46,16 @@ export default async function StoryPage({
   if (!doc) notFound();
 
   return (
-    <article className="bg-white py-14 sm:py-16">
-      <div className="mx-auto max-w-3xl px-4 lg:px-6">
-        <header className="text-center">
-          <h1 className="text-3xl font-normal text-ink sm:text-4xl">{doc.title}</h1>
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <span className="h-px w-24 bg-brand-300" aria-hidden="true" />
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
-          </div>
-          {doc.date && <p className="mt-6 text-[14px] text-ink-soft">{doc.date}</p>}
+    <article className="band bg-paper">
+      <div className="mx-auto max-w-3xl px-6 lg:px-10">
+        {/* Same treatment as SectionHeading and as the page title banner.
+            This header was centred over a rule-and-dot on a white ground —
+            the one layout on the site that had survived every round
+            untouched, and the one a reader lands on from the story grid. */}
+        <header>
+          <h1 className="text-section font-light text-ink">{doc.title}</h1>
+          <Separator className="mt-6" />
+          {doc.date && <p className="mt-6 text-micro text-ink-faint">{doc.date}</p>}
         </header>
 
         {doc.image && (
@@ -86,7 +87,7 @@ export default async function StoryPage({
                   href={l.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="break-all text-brand-600 underline underline-offset-4 hover:text-brand-800"
+                  className="break-all text-body text-brand-700 underline underline-offset-4 transition-colors hover:text-ink"
                 >
                   {l.label}
                 </a>
@@ -100,7 +101,7 @@ export default async function StoryPage({
             {doc.tags.map((t) => (
               <li
                 key={t}
-                className="bg-brand-500 px-3 py-1.5 text-[13px] font-medium text-white"
+                className="border border-hairline bg-paper-deep px-3 py-1.5 text-micro text-ink-soft"
               >
                 {t}
               </li>
@@ -108,16 +109,11 @@ export default async function StoryPage({
           </ul>
         ) : null}
 
-        <div className="mt-12 border-t border-hairline pt-8">
-          <Link
-            href={`/${STORIES_SLUG}`}
-            className="inline-flex items-center gap-2 text-[15px] font-medium text-brand-600 hover:text-brand-800"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden="true">
-              <path d="M13 4l-6 6 6 6z" />
-            </svg>
-            חזרה לכל הסיפורים
-          </Link>
+        <Separator className="mt-12" />
+        {/* In RTL "back" points to the right, so the chevron is mirrored from
+            the original. It pointed left on a right-to-left page. */}
+        <div className="mt-8">
+          <QuietLink href={`/${STORIES_SLUG}`}>חזרה לכל הסיפורים</QuietLink>
         </div>
       </div>
     </article>

@@ -81,9 +81,11 @@ export function Logo({
     >
       <CameraMark className={compact ? "h-7 w-auto" : "h-9 w-auto"} />
       <span
-        className={`mt-1 font-bold tracking-tight ${
-          compact ? "text-[13px]" : "text-[15px]"
-        }`}
+        /* On the ramp at the micro step. It was 15px / 13px — two more values
+           inside the two-pixel pile-up the ramp exists to clear out. A
+           logotype can carry weight instead of size, and this one already
+           does: it is the only 700 on the page. */
+        className="mt-1 text-micro font-bold tracking-tight"
       >
         פוטודוקותרפיה איתן אונר
       </span>

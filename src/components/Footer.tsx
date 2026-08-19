@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { SiteSettings } from "@/lib/types";
+import { Separator } from "./ui/separator";
 
 /**
  * Footer.
@@ -27,7 +28,7 @@ export function Footer({ site }: { site: SiteSettings }) {
     <footer className="bg-void text-paper">
       <div className="mx-auto max-w-(--container-content) px-6 pt-24 pb-12 lg:px-10 lg:pt-32">
         {/* One row, one baseline. Contact on the reading edge, social opposite. */}
-        <div className="flex flex-wrap items-baseline justify-between gap-x-10 gap-y-6 text-[0.95rem]">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-10 gap-y-6 text-body">
           <ul className="flex flex-wrap items-baseline gap-x-8 gap-y-3">
             <li>
               <a
@@ -53,7 +54,7 @@ export function Footer({ site }: { site: SiteSettings }) {
               href={site.facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="border-b border-paper/25 pb-0.5 text-paper/70 transition-colors hover:border-paper hover:text-paper"
+              className="border-b border-paper/40 pb-0.5 text-paper/75 transition-colors hover:border-paper hover:text-paper"
             >
               פייסבוק
             </a>
@@ -65,11 +66,12 @@ export function Footer({ site }: { site: SiteSettings }) {
           measure, with nothing stacked above it competing for the same job.
           `text-balance` keeps a two-line wrap from leaving one orphaned word.
         */}
-        <p className="text-display mt-28 text-balance font-light leading-[0.92] text-paper lg:mt-36">
+        <p className="text-display mt-28 text-balance font-light text-paper lg:mt-36">
           {site.siteName}
         </p>
 
-        <div className="mt-10 flex flex-wrap items-baseline justify-between gap-4 border-t border-paper/12 pt-6 text-[0.78rem] text-paper/40">
+        <Separator className="mt-10" tone="dark" />
+        <div className="flex flex-wrap items-baseline justify-between gap-4 pt-6 text-micro text-paper/40">
           <p>
             זכויות יוצרים © {new Date().getFullYear()} כל הזכויות שמורות
           </p>

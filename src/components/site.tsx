@@ -1,47 +1,93 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Cta, CtaTone } from "@/lib/types";
+import { Button as UiButton } from "./ui/button";
+import { Separator } from "./ui/separator";
 
 /**
- * Shared primitives, retuned against the bars (see GAUNTLET.md).
+ * Site-level composition over the shadcn primitives in ./ui.
  *
- * The prop *contract* is unchanged — `background="brand"` and `onBrand` still
+ * This file used to be `ui.tsx` and used to own the button's padding, its
+ * hover states and its four tone strings inline. That namespace now belongs to
+ * the copied MIT primitives, and the split is the point: ./ui knows how a
+ * button behaves, this file knows what a CTA *is* in this site's content model.
+ *
+ * The prop contract is unchanged — `background="brand"` and `onBrand` still
  * exist, and content.ts is untouched — but what they mean has changed. "brand"
  * used to paint a flat turquoise slab across the viewport; neither bar has a
  * single flat colour block anywhere, so it now paints the near-black inverted
  * treatment instead. Same content, different design.
  */
 
-const toneClass: Record<CtaTone, string> = {
-  // Squared, not pill. Both bars are entirely square-cornered; a rounded
-  // button is the loudest single "template" signal on a page.
-  solid:
-    "bg-ink text-paper border border-ink hover:bg-brand-700 hover:border-brand-700",
-  outline:
-    "bg-transparent text-ink border border-ink/25 hover:border-ink hover:bg-ink hover:text-paper",
-  solidWhite: "bg-paper text-ink border border-paper hover:bg-transparent hover:text-paper",
-  outlineWhite:
-    "bg-transparent text-paper border border-paper/40 hover:border-paper hover:bg-paper hover:text-ink",
+/**
+ * content.ts speaks in tones that were named for the old design, where
+ * "…White" meant "this sits on a turquoise panel". Translating them here
+ * rather than editing the frozen content is the same trick CtaRow already
+ * used; it now happens in exactly one place instead of two.
+ */
+const toneToVariant: Record<CtaTone, "default" | "outline" | "inverse" | "inverseOutline"> = {
+  solid: "default",
+  outline: "outline",
+  solidWhite: "inverse",
+  outlineWhite: "inverseOutline",
 };
 
 export function Button({ cta }: { cta: Cta }) {
-  const tone = cta.tone ?? "solid";
+  const variant = toneToVariant[cta.tone ?? "solid"];
   const external = /^https?:\/\//.test(cta.href);
-  const className =
-    "inline-flex min-h-12 items-center justify-center px-8 py-3 text-[0.95rem] " +
-    "font-normal tracking-wide transition-colors duration-200 " +
-    toneClass[tone];
 
-  if (external) {
-    return (
-      <a href={cta.href} target="_blank" rel="noopener noreferrer" className={className}>
-        {cta.label}
-      </a>
-    );
-  }
+  /* asChild is why adopting shadcn's Button was worth it here: the site needs
+     the same box on a next/link, an <a target=_blank> and (in the editor) a
+     plain button, and the old version reimplemented the class string for each
+     branch. Now there is one box and the caller chooses the element. */
   return (
-    <Link href={cta.href} className={className}>
-      {cta.label}
+    <UiButton asChild variant={variant}>
+      {external ? (
+        <a href={cta.href} target="_blank" rel="noopener noreferrer">
+          {cta.label}
+        </a>
+      ) : (
+        <Link href={cta.href}>{cta.label}</Link>
+      )}
+    </UiButton>
+  );
+}
+
+/**
+ * The quiet tertiary action: a ruled label, not a box.
+ *
+ * Three places were hand-rolling this — the hero's secondary CTA, every card's
+ * "read more", and the map's "open in Google Maps" — at three different sizes
+ * (0.95rem, 0.9rem, 0.9rem), two different border opacities and two different
+ * hover treatments. It is one component now.
+ */
+export function QuietLink({
+  href,
+  children,
+  onDark = false,
+  external = false,
+  className = "",
+}: {
+  href: string;
+  children: ReactNode;
+  onDark?: boolean;
+  external?: boolean;
+  className?: string;
+}) {
+  const cls =
+    `inline-block self-start border-b pb-0.5 text-body transition-colors ${
+      onDark
+        ? "border-paper/40 text-paper/75 hover:border-paper hover:text-paper"
+        : "border-ink/25 text-ink-soft hover:border-ink hover:text-ink"
+    } ${className}`;
+
+  return external ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
+      {children}
+    </a>
+  ) : (
+    <Link href={href} className={cls}>
+      {children}
     </Link>
   );
 }
@@ -58,11 +104,9 @@ export function CtaRow({
   if (!ctas?.length) return null;
 
   /**
-   * content.ts pins several CTAs to the "…White" tones, because in the old
-   * design they sat on a flat turquoise panel. Almost nothing sits on a dark
-   * ground now, and a white-on-paper button is invisible. Rather than edit the
-   * frozen content, translate the tone to its light-ground equivalent unless
-   * the caller really is on a dark section.
+   * Almost nothing sits on a dark ground now, and a white-on-paper button is
+   * invisible. Rather than edit the frozen content, translate the tone to its
+   * light-ground equivalent unless the caller really is on a dark section.
    */
   const resolve = (t: CtaTone | undefined): CtaTone => {
     const tone = t ?? "solid";
@@ -92,45 +136,25 @@ export function CtaRow({
  * edge, with a hairline running the full width beneath it — the heading marks
  * a boundary in the page rather than decorating a box.
  *
- * `index` renders the 01 / 02 / 03 marker Cine Casero uses to number its
- * sections. It is optional; unnumbered headings just omit the column.
+ * The `index` prop and the 01 / 02 / 03 numerals it rendered are gone. See
+ * GAUNTLET.md round 7: they were added in round 3 for a documented reason and
+ * the site owner has now rejected them outright.
  */
 export function SectionHeading({
   children,
   align = "start",
   onBrand = false,
-  index,
 }: {
   children: ReactNode;
   align?: "start" | "center";
   onBrand?: boolean;
-  index?: string;
 }) {
   return (
     <div className={align === "center" ? "text-center" : "text-start"}>
-      <div
-        className={`flex items-baseline gap-4 ${
-          align === "center" ? "justify-center" : "justify-start"
-        }`}
-      >
-        {index && (
-          <span
-            className={`index-num text-base ${onBrand ? "text-paper/40" : ""}`}
-            aria-hidden="true"
-          >
-            {index}
-          </span>
-        )}
-        <h2
-          className={`text-section font-light ${onBrand ? "text-paper" : "text-ink"}`}
-        >
-          {children}
-        </h2>
-      </div>
-      <div
-        className={`mt-6 h-px w-full ${onBrand ? "bg-paper/20" : "bg-hairline"}`}
-        aria-hidden="true"
-      />
+      <h2 className={`text-section font-light ${onBrand ? "text-paper" : "text-ink"}`}>
+        {children}
+      </h2>
+      <Separator className="mt-6" tone={onBrand ? "dark" : "paper"} />
     </div>
   );
 }
@@ -138,9 +162,9 @@ export function SectionHeading({
 /** Short rule under in-block headings. Hairline, not a 3px bar. */
 export function Rule({ onBrand = false }: { onBrand?: boolean }) {
   return (
-    <span
-      className={`mt-6 mb-7 block h-px w-16 ${onBrand ? "bg-paper/30" : "bg-brand-500"}`}
-      aria-hidden="true"
+    <Separator
+      className={`mt-6 mb-7 w-16 ${onBrand ? "" : "bg-brand-500"}`}
+      tone={onBrand ? "dark" : "paper"}
     />
   );
 }
@@ -166,6 +190,13 @@ export function Inline({ text }: { text: string }) {
   );
 }
 
+/**
+ * A full-width band on the page's own ground.
+ *
+ * `.band` carries the vertical rhythm (see globals.css). It used to be spelled
+ * `py-24 sm:py-32 lg:py-40` here and repeated verbatim in Gallery, Quote and
+ * Contact — the same value in four files, which is four chances to drift.
+ */
 export function Section({
   children,
   background = "white",
@@ -183,10 +214,8 @@ export function Section({
   const bg =
     background === "brand" || background === "alt" ? "bg-paper-deep" : "bg-paper";
 
-  // Both bars breathe far harder than the old 4rem. Dieste runs an 11,673px
-  // document for a comparable amount of content; whitespace is the medium.
   return (
-    <section id={id} className={`${bg} ${padded ? "py-24 sm:py-32 lg:py-40" : ""}`}>
+    <section id={id} className={`${bg} ${padded ? "band" : ""}`}>
       <div className="mx-auto max-w-(--container-content) px-6 lg:px-10">{children}</div>
     </section>
   );
