@@ -53,6 +53,27 @@ const navLinkClass = (active: boolean, overHero: boolean) =>
         : "border-transparent text-ink-soft hover:text-ink"
   }`;
 
+/**
+ * The two contact shortcuts in the bar.
+ *
+ * They hover correctly on every light-header page - rgb(87,83,74) to
+ * rgb(28,28,26), measured - and produced an empty hover diff on `/`, because
+ * `hover:text-ink` is the only hover they had and ink is the wrong end of the
+ * scale while the bar floats over a photograph. The nav links beside them
+ * have carried the conditional pair since the transparent header was built;
+ * these two were left on the light-only string.
+ *
+ * They are also `opacity-0` and `pointer-events-none` in that state, which is
+ * a deliberate decision (see the note at the call site) and is why the gap
+ * went unnoticed: the broken state is invisible. It stops being invisible the
+ * moment anyone changes their mind about hiding them, and a hover that is
+ * correct only because you cannot reach it is not a hover.
+ */
+const contactIconClass = (overHero: boolean) =>
+  `p-1.5 transition-colors ${
+    overHero ? "text-paper-soft hover:text-paper" : "hover:text-ink"
+  }`;
+
 export function Header({ site }: { site: SiteSettings }) {
   const pathname = usePathname();
 
@@ -209,9 +230,17 @@ export function Header({ site }: { site: SiteSettings }) {
     <header
       ref={headerRef}
       data-over-hero={overHero ? "" : undefined}
-      className={`sticky top-0 z-40 transition-colors ${
+      /* `header-shell` rather than `transition-colors`: the utility's property
+         list does not include backdrop-filter, so the tint faded over 200ms
+         while the blur snapped on in one frame. See globals.css.
+         `backdrop-blur-[0px]` in the overHero branch is not redundant, and
+         it is not `backdrop-blur-none` either: v4 does not ship that class,
+         so it emitted nothing and the computed value stayed `none`. An
+         explicit blur(0px) gives the transition a real value to start from
+         rather than relying on `none` being read as the identity filter. */
+      className={`header-shell sticky top-0 z-40 ${
         overHero
-          ? "border-b border-paper/20 bg-transparent text-paper"
+          ? "border-b border-paper/20 bg-transparent text-paper backdrop-blur-[0px]"
           : "border-b border-hairline bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75"
       }`}
     >
@@ -221,14 +250,19 @@ export function Header({ site }: { site: SiteSettings }) {
           px-4 / lg:px-6, which put the logo 16px outside the axis every other
           element on the page shares — measurably, not impressionistically.
 
-          --container-shell equals --container-content (1240px) up to 2xl, so
-          that alignment holds at every width anyone actually browses at. Above
-          1536px it widens to 1800px, which is the only honest way to answer
-          "there is ample room at 3440px": there is, but it was all sitting in
-          the margins of a 1240px text column. The bar borrows the margin the
-          reading measure cannot use. See GAUNTLET.md round 7.
+          Above 1536px the shell widens to 1800px, which is the only honest way
+          to answer "there is ample room at 3440px": there is, but it was all
+          sitting in the margins of a 1240px text column. The bar borrows the
+          margin the reading measure cannot use. See GAUNTLET.md round 7.
+
+          What round 7 missed is that it borrowed the margin on BOTH sides.
+          Centring an 1800px shell and a 1240px column on the same axis puts
+          their edges 280px apart at 1920 - the logo landed at 100 against 380
+          for the h1 - which re-broke the exact alignment the px-6/lg:px-10
+          change above was made to fix. `.header-row` pins the inline-start
+          edge to the content column and lets only the far end run out.
         */
-        className="mx-auto flex max-w-(--container-shell) items-center gap-6 px-6 py-3 lg:px-10"
+        className="header-row flex items-center gap-6 px-6 py-3 lg:px-10"
       >
         {/*
           Logo ranged to the reading edge, not centred.
@@ -240,7 +274,29 @@ export function Header({ site }: { site: SiteSettings }) {
           right-ranged content is one of the clearest site123 signatures there
           is, and it was the last thing on the page not sharing the grid.
         */}
-        <Link href="/" className="order-first shrink-0" aria-label="לדף הבית">
+        {/*
+          The largest click target in the header had no hover state and no
+          transition: computed transition-property was the initial `all` at
+          `0s`, and the hover diff was empty in both header states.
+
+          The nav links' pattern is "rest is a softened value, hover is the
+          full one", which a logotype cannot borrow directly - a mark that
+          sits dimmed at rest is worse than one that does not respond. So it
+          keeps its rest value and moves toward the brand on hover, which is
+          the same gesture the filled buttons and the card titles already make
+          (both land on a brand step). On paper that is brand-600 to brand-700;
+          over the hero, where the mark is already paper, it is paper to
+          brand-200 - the direction that ground allows, on the same ramp.
+        */}
+        <Link
+          href="/"
+          className={`order-first shrink-0 transition-colors ${
+            overHero
+              ? "text-paper hover:text-brand-200"
+              : "text-brand-600 hover:text-brand-700"
+          }`}
+          aria-label="לדף הבית"
+        >
           <Logo inverted={overHero} />
         </Link>
 
@@ -350,7 +406,7 @@ export function Header({ site }: { site: SiteSettings }) {
           <a
             href={`tel:${site.phone}`}
             aria-label={`התקשרו ל${site.phoneDisplay}`}
-            className="p-1.5 transition-colors hover:text-ink"
+            className={contactIconClass(overHero)}
           >
             <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.2 2.3z" />
@@ -359,7 +415,7 @@ export function Header({ site }: { site: SiteSettings }) {
           <a
             href={`mailto:${site.email}`}
             aria-label={`שלחו מייל ל${site.email}`}
-            className="p-1.5 transition-colors hover:text-ink"
+            className={contactIconClass(overHero)}
           >
             <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.2l-8 5-8-5V6l8 5 8-5v2.2z" />

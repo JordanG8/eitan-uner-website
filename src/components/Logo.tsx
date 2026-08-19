@@ -69,10 +69,16 @@ export function Logo({
   inverted?: boolean;
 }) {
   return (
+    /*
+      The mark's colour is set by the anchor that wraps it, not here.
+      It used to be pinned on this span, which meant a `hover:` on the link
+      could not reach it - the anchor's colour changed and the logo went on
+      rendering the value this element had hardcoded. `inverted` still owns
+      the one thing that genuinely belongs to the mark: which ground its
+      knock-outs have to disappear into.
+    */
     <span
-      className={`flex flex-col items-center leading-none ${
-        inverted ? "text-paper" : "text-brand-600"
-      }`}
+      className="flex flex-col items-center leading-none"
       style={
         inverted
           ? ({ "--logo-knockout": "var(--color-void)" } as React.CSSProperties)

@@ -413,6 +413,48 @@ h3 {
 }
 
 /**
+ * The header bar: its transition, and its box.
+ *
+ * TRANSITION. The bar carried `transition-colors`, which covers colour,
+ * background-color and border-color and does not cover backdrop-filter. So
+ * crossing the hero threshold faded the tint in over 200ms while the 8px blur
+ * snapped on in a single frame - measured at scrollY 650 as
+ * `backdrop-filter: none` and at 700 as `blur(8px)` with nothing in between.
+ * A blur arriving a fifth of a second before the colour it belongs to reads as
+ * the page stuttering, not as a transition. Spelled out rather than left to a
+ * utility because the utility's list is fixed and this property is not in it.
+ *
+ * BOX. The shell was centred at --container-shell and the page is centred at
+ * --container-content, and above 2xl those two are 1800px and 1240px. Centring
+ * two different widths on the same axis puts their *edges* in different
+ * places: at 1920 the logo sat 100px from the reading edge against 380px for
+ * the h1 and every paragraph; at 3440 it was 860 against 1140. They agreed
+ * exactly at 1024 and 1440 - the two widths anyone had checked.
+ *
+ * The fix is to stop centring the bar. Its inline-start edge is pinned to the
+ * content column's inline-start edge at every width, and only its far end is
+ * allowed to run out into the margin the reading measure cannot use. That
+ * keeps round 7's reason for widening the shell (eighteen Hebrew labels
+ * measure ~1345px and there genuinely is room for them at 1920) without
+ * paying for it in the one alignment two blind critics named as the tell.
+ *
+ * Percentages, not vw: a margin percentage resolves against the containing
+ * block's inline size, which is exactly what `mx-auto max-w-*` resolves
+ * against on every section of the page. `100vw` includes the scrollbar and
+ * would put the bar half a scrollbar off the axis it is being aligned to.
+ */
+.header-shell {
+  transition-property: color, background-color, border-color, -webkit-backdrop-filter,
+    backdrop-filter;
+  transition-duration: var(--default-transition-duration);
+}
+.header-row {
+  max-width: var(--container-shell);
+  margin-inline-start: max(0px, calc((100% - var(--container-content)) / 2));
+  margin-inline-end: 0;
+}
+
+/**
  * The vertical rhythm of a full-width band.
  *
  * Four components were each spelling out `py-24 sm:py-32 lg:py-40` — Section,
