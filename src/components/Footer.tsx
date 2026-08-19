@@ -75,10 +75,28 @@ export function Footer({ site }: { site: SiteSettings }) {
           <p>
             זכויות יוצרים © {new Date().getFullYear()} כל הזכויות שמורות
           </p>
-          {/* One credit line, not two. The tagline already carries the fold. */}
-          <Link href="/צרו-קשר" className="transition-colors hover:text-paper/70">
-            צרו קשר
-          </Link>
+          {/*
+            The legal pair sits here rather than in the nav, which is already
+            carrying 18 items. Both are stubs saying the statements are
+            pending while the site is in development - see content.ts.
+
+            On the hover value: these were `hover:text-paper/70` against
+            siblings that go to full `paper`, so the link both started dimmer
+            and stopped short of where every neighbour landed. Measured
+            before/after, it was the only link in the row with its own
+            endpoint. One rest state, one hover state, across the row.
+          */}
+          <nav className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+            <Link href="/הצהרת-נגישות" className="transition-colors hover:text-paper">
+              הצהרת נגישות
+            </Link>
+            <Link href="/מדיניות-פרטיות" className="transition-colors hover:text-paper">
+              מדיניות פרטיות
+            </Link>
+            <Link href="/צרו-קשר" className="transition-colors hover:text-paper">
+              צרו קשר
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>

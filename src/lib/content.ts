@@ -839,6 +839,57 @@ export const pages: Page[] = [
       "צרו קשר עם איתן אונר — תל יוסף, 054-787-2228, eitanuner@gmail.com",
     blocks: [{ _type: "contact" }],
   },
+
+  /* ------------------------------------------------------------ legal
+     Two pages an Israeli commercial site is expected to carry, and this one
+     carried neither - a regex for נגישות|פרטיות|תקנון returned false on every
+     route. The competitor site links both from its footer.
+
+     The text says the statements are pending because the site is in
+     development, which is true. It deliberately does not attempt the
+     statements themselves: an accessibility declaration under תקן ישראלי 5568
+     commits Eitan to specific claims about conformance level, testing dates
+     and remediation contacts, and a privacy policy commits him to claims
+     about what data is collected and retained. Inventing either would put
+     false statements about a real business in his name. A stub that says
+     "not yet" is honest; a generated policy is not.
+
+     Footer-linked only, deliberately - these belong in the closing bar, not
+     in a nav that is already carrying 18 items. */
+  {
+    slug: "הצהרת-נגישות",
+    title: "הצהרת נגישות",
+    showTitleBanner: true,
+    seoDescription:
+      "הצהרת הנגישות של אתר פוטודוקותרפיה איתן אונר — האתר בשלבי פיתוח.",
+    blocks: [
+      {
+        _type: "richText",
+        body: [
+          "האתר נמצא בשלבי פיתוח, והצהרת הנגישות המלאה טרם פורסמה. ההצהרה תעלה לאתר עם סיום הפיתוח.",
+          "בכל פנייה בנושא נגישות, ובכל בקשה לקבלת מידע מהאתר בדרך חלופית, ניתן ליצור קשר בטלפון **054-787-2228** או בדוא״ל **eitanuner@gmail.com**.",
+        ],
+      },
+      { _type: "contact", title: "צרו קשר" },
+    ],
+  },
+  {
+    slug: "מדיניות-פרטיות",
+    title: "מדיניות פרטיות",
+    showTitleBanner: true,
+    seoDescription:
+      "מדיניות הפרטיות של אתר פוטודוקותרפיה איתן אונר — האתר בשלבי פיתוח.",
+    blocks: [
+      {
+        _type: "richText",
+        body: [
+          "האתר נמצא בשלבי פיתוח, ומדיניות הפרטיות המלאה טרם פורסמה. המדיניות תעלה לאתר עם סיום הפיתוח.",
+          "בכל שאלה בנושא פרטיות או בנוגע לפרטים שנמסרו דרך טופס יצירת הקשר, ניתן ליצור קשר בטלפון **054-787-2228** או בדוא״ל **eitanuner@gmail.com**.",
+        ],
+      },
+      { _type: "contact", title: "צרו קשר" },
+    ],
+  },
 ];
 
 export function getPage(slug: string): Page | undefined {
