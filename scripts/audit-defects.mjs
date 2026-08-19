@@ -167,13 +167,16 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
     await wait(400);
     const at650 = read();
     window.scrollTo(0, 700);
-    await wait(16);
-    const at700_1frame = read();
-    await wait(400);
+    const trace = [];
+    for (const t of [16, 60, 100, 140, 200, 400]) {
+      await wait(t === 16 ? 16 : 40);
+      trace.push({ t, ...read() });
+    }
+    const at700_1frame = trace[0];
     const at700_settled = read();
     window.scrollTo(0, 0);
     await wait(400);
-    return { at650, at700_1frame, at700_settled };
+    return { at650, at700_1frame, trace, at700_settled };
   });
 
   /* 4 + 5 — header hover diffs, in both header states. */
@@ -221,6 +224,24 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
       return a ? getComputedStyle(a.parentElement).opacity : null;
     }),
   };
+  /* The wrapper is opacity-0 / pointer-events-none over the hero by design,
+     so :hover cannot fire and the diff above is empty for a reason that has
+     nothing to do with the class. Reachability is restored for the length of
+     one measurement to read what the class actually resolves to. */
+  R["4_contact_icons_overHero_unmasked"] = await (async () => {
+    await page.evaluate(() => {
+      const w = document.querySelector('header a[href^="tel:"]').parentElement;
+      w.style.pointerEvents = "auto";
+      w.style.opacity = "1";
+    });
+    const r = await hoverDiff('header a[href^="tel:"]', "tel");
+    await page.evaluate(() => {
+      const w = document.querySelector('header a[href^="tel:"]').parentElement;
+      w.style.pointerEvents = "";
+      w.style.opacity = "";
+    });
+    return r;
+  })();
   R["5_logo_overHero"] = await hoverDiff('header a[aria-label="לדף הבית"]', "logo");
 
   lockedScroll = 1400;
@@ -350,10 +371,15 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
     for (const sheet of document.styleSheets) {
       let rules;
       try { rules = sheet.cssRules; } catch { continue; }
+      /* `if`, not `else if`. CSS Nesting gave CSSStyleRule its own (usually
+         empty) .cssRules, so an `else if` on selectorText is never reached
+         for a plain style rule - this check reported NO ::selection RULE on
+         a page that had one. Second instrument bug in this file; both were
+         "the DOM API grew a property since the idiom was learned". */
       const walk = (rs) => {
         for (const r of rs) {
           if (r.cssRules) walk(r.cssRules);
-          else if (r.selectorText && r.selectorText.includes("selection")) hits.push(r.cssText.slice(0, 160));
+          if (r.selectorText && r.selectorText.includes("selection")) hits.push(r.cssText.slice(0, 160));
         }
       };
       walk(rules);
