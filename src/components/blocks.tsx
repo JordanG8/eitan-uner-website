@@ -625,9 +625,27 @@ export function Contact({ block }: { block: ContactBlock }) {
           {/* Map on the inline-end side — the left, in RTL — as in the original. */}
           <div className="lg:order-last lg:col-span-7">
             <div className="overflow-hidden bg-paper/5">
+              {/*
+                tabIndex={-1}, and the reason is worth stating because removing
+                something from the tab order usually makes accessibility worse.
+
+                Measured, this iframe was tab stop 28 of 36 and the only
+                focusable element on the page with `outline-style: none` — so a
+                keyboard reader hit it, saw no ring anywhere, and had to guess
+                whether focus had been lost. Inside it is Google's own map
+                widget: a further dozen stops of third-party controls with
+                their own focus model, in a document this site does not
+                control and cannot ring.
+
+                The keyboard path to the same destination already exists
+                directly below as "פתיחה במפות גוגל", which is a real link
+                to a real map with a visible focus ring. So this removes a
+                black hole and keeps the route.
+              */}
               <iframe
                 title="מפה — תל יוסף"
                 src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
+                tabIndex={-1}
                 className="h-80 w-full opacity-80 grayscale invert-[0.92] lg:h-[26rem]"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

@@ -87,6 +87,16 @@ function NavigationMenuTrigger({
   return (
     <NavigationMenuPrimitive.Trigger
       data-slot="navigation-menu-trigger"
+      /* Radix wires aria-expanded and aria-controls and deliberately omits
+         aria-haspopup, because a navigation menu's panel is a list of links
+         and not a role=menu. That is defensible in the abstract and it leaves
+         a real gap here: the trigger announces "collapsed" without ever
+         announcing that there is something to expand, so a screen-reader
+         reader meets a button called עוד — literally "more" — with no
+         indication of more what. "true" rather than "menu": the panel holds
+         links, and claiming menu semantics would promise arrow-key behaviour
+         that this panel does not implement. */
+      aria-haspopup="true"
       className={cn(
         "group inline-flex w-max items-center gap-1.5 border-b-2 border-transparent",
         "py-2 text-micro whitespace-nowrap transition-colors outline-none",
