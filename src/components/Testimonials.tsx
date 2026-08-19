@@ -34,8 +34,27 @@ export function Testimonials({ block }: { block: TestimonialsBlock }) {
       )}
 
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-        <figure className="lg:col-span-9">
-          <blockquote className="text-title whitespace-pre-line font-light text-ink">
+        {/*
+          aria-live="polite" on the figure, and it was the only live region on
+          the site — the audit counted zero [aria-live] elements in the whole
+          document. Pressing "ההמלצה הבאה" replaced the quote, the
+          author, the role and the rating with nothing announced at all, so a
+          screen-reader reader pressed a button and was told the button was
+          still there. The figure is the region rather than the blockquote
+          because the caption changes with the quote and belongs to the same
+          announcement.
+        */}
+        <figure className="lg:col-span-9" aria-live="polite">
+          {/*
+            `key={i}` is what makes the animation replay. Without it React
+            reuses the element, only the text node changes, and a mounted
+            element does not restart an animation — the class would be present
+            and inert, which is the most expensive kind of fix.
+          */}
+          <blockquote
+            key={i}
+            className="quote-swap text-title whitespace-pre-line font-light text-ink"
+          >
             {item.quote}
           </blockquote>
 
@@ -73,9 +92,27 @@ export function Testimonials({ block }: { block: TestimonialsBlock }) {
         {items.length > 1 && (
           <div className="lg:col-span-3">
             <div className="flex items-center gap-6 lg:flex-col lg:items-start lg:gap-4">
-              <p className="text-micro text-brand-600 tabular-nums">
-                {String(i + 1).padStart(2, "0")}
-                <span className="text-ink-faint"> / {String(items.length).padStart(2, "0")}</span>
+              {/*
+                The position indicator. It was reported missing and it is not
+                — it has been here since the block was rewritten, reading
+                "01 / 02". What it lacked was a name: to a screen reader it
+                announced as two bare numerals with a slash between them, in a
+                column with two unlabelled arrows.
+
+                aria-label would need new Hebrew and the strings are frozen,
+                so the label is built from the numerals themselves.
+              */}
+              <p
+                className="text-micro text-brand-600 tabular-nums"
+                aria-label={`${i + 1} / ${items.length}`}
+              >
+                <span aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                  <span className="text-ink-faint">
+                    {" "}
+                    / {String(items.length).padStart(2, "0")}
+                  </span>
+                </span>
               </p>
               <div className="flex gap-2">
                 {/* In RTL, "previous" sits on the right — so it comes first. */}

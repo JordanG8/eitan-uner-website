@@ -561,6 +561,30 @@ h3 {
     translate: calc(100% * var(--dir)) 0;
   }
 }
+/**
+ * The testimonial swap.
+ *
+ * Measured, the <blockquote> had transitionDuration 0s and animationName
+ * none: pressing an arrow replaced a paragraph of Hebrew with a different
+ * paragraph of Hebrew in a single frame, at section scale, with no other
+ * change on screen. There is nothing to tell a reader that a control they
+ * pressed is what did it rather than the page reloading.
+ *
+ * A fade-in on the incoming quote, not a two-layer crossfade. The quotes are
+ * different lengths and overlaying them to cross-dissolve means the figure
+ * has to be tall enough for the longer one at all times, which puts a hole
+ * under the shorter. Stated plainly because "crossfade" is what this is
+ * usually called and this is not quite that.
+ *
+ * --duration-slow rather than the 200ms state-change token. 200ms is right
+ * for a control answering a cursor; this is a block of reading matter being
+ * replaced, which is the same class of gesture as the image easing under the
+ * cursor that the slow token was introduced for. No third value.
+ */
+.quote-swap {
+  animation: fade-in var(--duration-slow) ease-out;
+}
+
 @keyframes menu-in {
   from {
     opacity: 0;
