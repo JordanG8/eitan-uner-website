@@ -73,7 +73,7 @@ const img = {
   hero: {
     src: "/images/eitan-hero.webp",
     alt: "איתן אונר יושב בכורסה, קעקוע מצלמה על זרועו",
-    width: 675,
+    width: 659,
     height: 657,
   },
   portrait: {
@@ -171,17 +171,17 @@ const storyImg = {
 
 const gallery = [
   { src: "/images/gallery-sunflower.webp", alt: "חמנייה בתקריב", width: 719, height: 719 },
-  { src: "/images/gallery-palms-dusk.webp", alt: "דקלים בשקיעה מול עננים", width: 1600, height: 1200 },
+  { src: "/images/gallery-palms-dusk.webp", alt: "דקלים בשקיעה מול עננים", width: 3200, height: 2400 },
   { src: "/images/gallery-poppies.webp", alt: "שדה כלניות אדומות ועץ", width: 1080, height: 719 },
-  { src: "/images/gallery-white-dress.webp", alt: "נערה בשמלה לבנה על שפת המים", width: 1600, height: 1066 },
-  { src: "/images/gallery-white-dress-2.webp", alt: "נערה בשמלה לבנה יושבת על סלע", width: 1112, height: 1600 },
-  { src: "/images/gallery-valley-dusk.webp", alt: "שקיעה מעל אגם בעמק", width: 1600, height: 1063 },
+  { src: "/images/gallery-white-dress.webp", alt: "נערה בשמלה לבנה על שפת המים", width: 3200, height: 2131 },
+  { src: "/images/gallery-white-dress-2.webp", alt: "נערה בשמלה לבנה יושבת על סלע", width: 2223, height: 3200 },
+  { src: "/images/gallery-valley-dusk.webp", alt: "שקיעה מעל אגם בעמק", width: 3200, height: 2125 },
   { src: "/images/gallery-nofyam-wall.webp", alt: "קיר I LOVE NOF YAM במרכז הקהילתי", width: 1200, height: 1600 },
   { src: "/images/gallery-nofyam-sea.webp", alt: "מיצב צילומי ים במסדרון", width: 1200, height: 1600 },
   { src: "/images/gallery-sea-cliffs.webp", alt: "מצוקי חוף וים כחול", width: 1240, height: 923 },
-  { src: "/images/gallery-iris.webp", alt: "אירוס סגול בתקריב", width: 1600, height: 1143 },
-  { src: "/images/gallery-deadsea.webp", alt: "פיצוץ במי ים המלח", width: 1600, height: 1079 },
-  { src: "/images/gallery-white-flower.webp", alt: "פרח לבן בתקריב", width: 1063, height: 1600 },
+  { src: "/images/gallery-iris.webp", alt: "אירוס סגול בתקריב", width: 2038, height: 1456 },
+  { src: "/images/gallery-deadsea.webp", alt: "פיצוץ במי ים המלח", width: 3200, height: 2265 },
+  { src: "/images/gallery-white-flower.webp", alt: "פרח לבן בתקריב", width: 2125, height: 3200 },
 ];
 
 const clientLogos = [
