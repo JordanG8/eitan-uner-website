@@ -516,3 +516,161 @@ Beaten the competitor bar 3/3. Lost to Magnum 3/3. The gap the critics name
 against Magnum is not a defect list — it is that Magnum's images and text are
 sequenced to carry a narrative, and this page's are arranged in sections. That
 is an editorial problem, not a CSS one, and it does not close in a round.
+
+---
+
+# Round 7: the design system, and the difference between an opinion and the owner
+
+No panel this round. The brief was not "beat a bar", it was the owner's own
+report: *"the site doesn't feel consistent across the design, which completely
+breaks flow... there are a bunch of little things... once you actually try to
+experience the site, these little things completely break the flow."*
+
+That is a different kind of evidence from a critic, and it changed one
+decision that six rounds of critics had not.
+
+## The numbering is gone, and that reverses round 3
+
+Round 3 added the `01 / 02 / 03` section numerals for a documented reason: a
+blind critic had called the teal logo "an orphan against a beige/black page
+that uses no other accent", and the numerals reprised the colour down the
+whole scroll at the smallest size on the page. Round 6's panel objected twice
+— a palette break, and a template tell — and was **deliberately overruled**,
+on the grounds that reversing a considered decision on two sighted opinions is
+churn.
+
+That reasoning was right and the outcome is still reversed. The site owner has
+now rejected the numerals outright, and the owner is not another vote in the
+panel. Removed cleanly: `.index-num`, the `num` prop threaded through nine
+renderers, the numbering reducer in `Blocks`.
+
+The accent survives elsewhere — the rule under in-block headings, prose links,
+the testimonial counter — and the job the numerals were *also* doing, being
+the bottom rung of the type ladder that a blind critic had asked for, is now
+done by the `micro` step, which twelve elements share instead of one.
+
+## 14 type steps to 7
+
+| | before | after |
+|---|---|---|
+| distinct size/weight pairs @1440 | **14** | **7** |
+| sizes within 2px of each other | 14, 14.4, 15, 15.2, 15.68 | none |
+| mechanism | three `clamp()`s plus ~20 one-off `text-[...]` | one ratio, named steps |
+| steps at 375 / 768 / 1024 / 1920 / 3440 | 14 at every width | 7 at every width |
+
+Major third, 1.25, from a 16px base. The display type is unchanged in intent —
+still enormous, still weight 300, the decision round 1 fought for. It is
+119.21px rather than 120px because 16 x 1.25^9 = 119.209: **120 was already
+trying to be step 9.**
+
+The mechanism change that matters is dropping `clamp()`. A vw-interpolated
+size is off the ramp at every width between its two ends, which is why "the
+scale" rendered 72px at 1440 and 51.2px at 1024. Discrete steps mean the page
+is as much on the ramp at 375px as at 1440px.
+
+Sizes now in use: 12.8 / 16 / 20 / 25 / 61.04 / 76.29 / 119.21.
+
+## What the consistency pass actually found
+
+The owner said "little things". They were not little, and none of them were
+visible in a screenshot of the home page:
+
+- **Three routes had never been through any redesign round.** The page title
+  banner — which opens *seventeen of the eighteen slugs* — plus the story page
+  and 404 were all still on pure white, the one thing both bars agreed you
+  never do, with centred headings over the decorative rule-and-dot that was
+  removed from `SectionHeading` in round 1, `px-4 lg:px-6` against everything
+  else's `px-6 lg:px-10`, turquoise slab buttons and six more off-ramp sizes.
+  Six rounds of judging the home page never once looked at the page a reader
+  reaches by clicking almost any nav link.
+- **Five transition durations** on one page (150/200/300/500/700ms). Now two:
+  200ms for a state change, 500ms for an image easing under the cursor, which
+  is a genuinely different gesture.
+- **Five dark-ground hairline opacities** (/12, /20, /25, /30, /40). Now one
+  `Separator` with a `tone`.
+- **`py-24 sm:py-32 lg:py-40` written out in four files.** Now one `.band`.
+  It had already drifted once: the heading gap was `mb-16` in five blocks and
+  `mb-14` in Video.
+
+## shadcn/ui: what was taken and what was refused
+
+Taken: **button, sheet, separator, navigation-menu**. Refused, with reasons:
+
+- **card** — shadcn's Card is a bordered, rounded, shadowed box. Round 3
+  settled that neither bar puts a photograph in a card. Adopting it would mean
+  overriding every property that makes it Card. That is a rename, not a
+  migration.
+- **aspect-ratio** — Radix ships the padding-bottom hack. `aspect-3/2` is
+  native CSS and already in use in six places. The bespoke option is better
+  and it stays.
+
+The part that matters more than any component is the **token bridge**: the
+primitives speak `--color-primary` / `--color-border` / `--color-ring`, and
+those are mapped once onto paper, ink and hairline, with the radius scale
+zeroed there rather than by editing `rounded-md` out of each copied file. The
+next primitive anyone adds arrives square and already wearing this palette.
+
+Two notes on the CLI, for whoever runs it next. `init` insists on a preset
+that rewrites `globals.css` with its own colour tokens and pulls in Geist —
+fatal here, so `components.json` is hand-written and only `add` is ever run.
+And `cssVariables: false` is **broken** for the neutral base: it emits class
+names like `bg-oklch(0.205 0 0)`, which are not Tailwind classes and resolve
+to nothing. Caught by reading the generated file, not the rendered page.
+
+## The header, and a documented reversal
+
+`navHasDropdown`, measured at six widths with `scripts/probe.mjs`:
+
+| | 375 | 768 | 1024 | 1440 | 1920 | 3440 |
+|---|---|---|---|---|---|---|
+| before | drawer | drawer | **true** | **true** | **true** | **true** |
+| after | drawer | drawer | true (8 inline) | true (10 inline) | **false, 18 inline** | **false, 18 inline** |
+
+The bar measures now instead of hardcoding the grouping. `content.ts` is
+untouched; it still declares the "עוד" group. What changed is that an
+editorial grouping stopped being treated as a layout decision.
+
+The widths come from a hidden measuring row rather than the live one, and the
+reason is worth keeping: measuring the live row can tell you a visible item
+fits but never that a hidden one would, which makes the layout a ratchet that
+sheds items on the way down and never takes them back on the way up.
+
+**The reversal:** the header shared the 1240px content axis, and that was a
+fix — two blind critics named the logo not aligning to the hero text as the
+tell. Above 2xl the shell now widens to 1800px. This is the only honest answer
+to "there is ample room at 3440px": there is, but all of it was sitting in the
+margins of a 1240px text column, and eighteen Hebrew labels measure 1345px at
+the micro step before the logo is paid for. Below 1536px the alignment is
+untouched.
+
+## Two RTL bugs a screenshot would never have shown
+
+Both in the copied shadcn source, both found from a bounding box:
+
+| | what it looked like | what it was |
+|---|---|---|
+| Drawer opened on the wrong edge | plausible | **`inset-inline-end-0` is not a Tailwind class.** The class is `end-0`. It was silently dropped — and an unpositioned absolute element falls back to its static position, which in RTL is often where you wanted it, so the bug hides. |
+| Menu panel thrown toward the viewport edge | plausible | `end-0` is correct in the LTR registry and wrong here. **In RTL `end` is the outward side**; a dropdown under a right-ranged trigger pins `start-0`. |
+
+Round 6's lesson was that a critic reading a screenshot cannot distinguish a
+centred paragraph from a short flush one. This is the same lesson pointed at
+my own work: *a class that does nothing and a class that does the right thing
+look identical until you read the box.* The registry is LTR-biased in ways
+that survive its own `--rtl` flag.
+
+## Not fixed
+
+- **`/אודות` logs a Next LCP warning.** The `TextImage` photograph is the
+  largest contentful paint on every content page and is not marked `priority`.
+  Pre-existing, not caused here, and it is real: `priority` on the first
+  `TextImage` of a page needs the block index, which `Blocks` has and does not
+  currently thread. Left rather than half-done.
+- **The editor was verified structurally, not by logging in.** `/editor` is
+  password-gated and I will not enter a password. `npx tsc --noEmit` passes,
+  `npm run build` succeeds, and `puck/config.tsx` never passed `num` — so the
+  renderers it shares with production are unchanged in behaviour. That is
+  evidence, not a click-through.
+- **A rename of mine was swept into someone else's commit.** `git mv ui.tsx
+  site.tsx` sat staged while a concurrent agent committed, and it landed in
+  `892ddb0` alongside the content.ts dimension fixes. Harmless, and a reminder
+  that staging early on a shared branch is not free.
