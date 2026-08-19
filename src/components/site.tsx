@@ -74,8 +74,11 @@ export function QuietLink({
   external?: boolean;
   className?: string;
 }) {
+  /* `tap-hit` rather than padding: this treatment is a label with a hairline
+     ruled tight under it, and padding the box to 44px moves the rule, not the
+     text. See globals.css. Measured 91x31 and 109x31 at 375 before. */
   const cls =
-    `inline-block self-start border-b pb-0.5 text-body transition-colors ${
+    `tap-hit inline-block self-start border-b pb-0.5 text-body transition-colors ${
       onDark
         ? "border-paper/40 text-paper-soft hover:border-paper hover:text-paper"
         : "border-ink/25 text-ink-soft hover:border-ink hover:text-ink"

@@ -29,11 +29,15 @@ export function Footer({ site }: { site: SiteSettings }) {
       <div className="mx-auto max-w-(--container-content) px-6 pt-24 pb-12 lg:px-10 lg:pt-32">
         {/* One row, one baseline. Contact on the reading edge, social opposite. */}
         <div className="flex flex-wrap items-baseline justify-between gap-x-10 gap-y-6 text-body">
-          <ul className="flex flex-wrap items-baseline gap-x-8 gap-y-3">
+          {/* Measured at 375, these were 89x21 and 147x21 — the flattest
+              targets on the site. Real height (min-h-11) rather than an
+              overlay, because they stack when the row wraps and a 44px
+              overlay would swallow part of its neighbour. */}
+          <ul className="flex flex-wrap items-baseline gap-x-8">
             <li>
               <a
                 href={`tel:${site.phone}`}
-                className="text-paper-soft transition-colors hover:text-paper"
+                className="inline-flex min-h-11 items-center text-paper-soft transition-colors hover:text-paper"
               >
                 {site.phoneDisplay}
               </a>
@@ -41,7 +45,7 @@ export function Footer({ site }: { site: SiteSettings }) {
             <li>
               <a
                 href={`mailto:${site.email}`}
-                className="text-paper-soft transition-colors hover:text-paper"
+                className="inline-flex min-h-11 items-center text-paper-soft transition-colors hover:text-paper"
               >
                 {site.email}
               </a>
@@ -54,7 +58,7 @@ export function Footer({ site }: { site: SiteSettings }) {
               href={site.facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="border-b border-paper/40 pb-0.5 text-paper-soft transition-colors hover:border-paper hover:text-paper"
+              className="tap-hit border-b border-paper/40 pb-0.5 text-paper-soft transition-colors hover:border-paper hover:text-paper"
             >
               פייסבוק
             </a>
@@ -86,14 +90,16 @@ export function Footer({ site }: { site: SiteSettings }) {
             before/after, it was the only link in the row with its own
             endpoint. One rest state, one hover state, across the row.
           */}
-          <nav className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
-            <Link href="/הצהרת-נגישות" className="transition-colors hover:text-paper">
+          {/* צרו קשר measured 39x19 — under the 44px bar on both axes,
+              so min-w-11 as well as min-h-11. */}
+          <nav className="flex flex-wrap items-baseline gap-x-6">
+            <Link href="/הצהרת-נגישות" className="inline-flex min-h-11 min-w-11 items-center justify-center transition-colors hover:text-paper">
               הצהרת נגישות
             </Link>
-            <Link href="/מדיניות-פרטיות" className="transition-colors hover:text-paper">
+            <Link href="/מדיניות-פרטיות" className="inline-flex min-h-11 min-w-11 items-center justify-center transition-colors hover:text-paper">
               מדיניות פרטיות
             </Link>
-            <Link href="/צרו-קשר" className="transition-colors hover:text-paper">
+            <Link href="/צרו-קשר" className="inline-flex min-h-11 min-w-11 items-center justify-center transition-colors hover:text-paper">
               צרו קשר
             </Link>
           </nav>

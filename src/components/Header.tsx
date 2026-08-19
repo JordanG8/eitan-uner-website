@@ -427,7 +427,13 @@ export function Header({ site }: { site: SiteSettings }) {
         <Sheet>
           <SheetTrigger
             aria-label="פתיחת התפריט"
-            className={`ms-auto p-2 transition-colors lg:hidden ${
+            /* 40x40 measured at 375 — p-2 around a size-6 glyph. size-12
+               rather than the size-11 that would just clear the 44px bar:
+               the Button scale in this project already states that every
+               size carrying a box clears 48px, and the mobile menu is the
+               one control on the page a reader must hit before they can do
+               anything else. */
+            className={`ms-auto flex size-12 shrink-0 items-center justify-center transition-colors lg:hidden ${
               overHero ? "text-paper" : "text-ink"
             }`}
           >
@@ -462,11 +468,21 @@ export function Header({ site }: { site: SiteSettings }) {
                 </SheetClose>
               ))}
             </nav>
-            <div className="flex flex-col gap-1.5 px-6 py-6 text-micro">
-              <a href={`tel:${site.phone}`} className="text-ink-soft transition-colors hover:text-ink">
+            {/* Not on the backlog, found while measuring the trigger above:
+                these two were 19px tall inside a drawer whose every other row
+                is 60px. Real height rather than a `tap-hit`, because they are
+                stacked and an expanded overlay would overlap its neighbour. */}
+            <div className="flex flex-col px-6 py-4 text-micro">
+              <a
+                href={`tel:${site.phone}`}
+                className="inline-flex min-h-11 items-center text-ink-soft transition-colors hover:text-ink"
+              >
                 {site.phoneDisplay}
               </a>
-              <a href={`mailto:${site.email}`} className="text-ink-soft transition-colors hover:text-ink">
+              <a
+                href={`mailto:${site.email}`}
+                className="inline-flex min-h-11 items-center text-ink-soft transition-colors hover:text-ink"
+              >
                 {site.email}
               </a>
             </div>

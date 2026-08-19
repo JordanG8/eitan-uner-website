@@ -500,6 +500,38 @@ h3 {
 }
 
 /**
+ * A 44px pointer target on an element that must stay its own size.
+ *
+ * Measured at 375: the two ruled CTA links were 91x31 and 109x31. Both are
+ * QuietLinks — a label with a hairline ruled under it at pb-0.5 — and the
+ * obvious fix is wrong for exactly that reason. Padding the element to 44px
+ * does not move the text, it moves the *rule*, which would end up floating
+ * 13px below the words it belongs to. The rule sitting tight under the label
+ * is the whole treatment.
+ *
+ * So the box stays and the target grows underneath it. Nothing about the
+ * rendered design changes; the element simply becomes catchable by a thumb.
+ *
+ * Used only where the visible box is load-bearing. Everywhere else — the
+ * footer's links, the drawer's — the honest fix is real height, because an
+ * expanded hit area that overlaps its neighbour hands clicks to whichever
+ * element happens to come later in the DOM, and that is a worse bug than a
+ * small target.
+ */
+.tap-hit {
+  position: relative;
+}
+.tap-hit::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0;
+  inline-size: max(100%, 44px);
+  block-size: 44px;
+  translate: 0 -50%;
+}
+
+/**
  * Entry/exit motion for the two Radix primitives that mount and unmount.
  *
  * Hand-rolled rather than pulling in tailwindcss-animate for two keyframes.
