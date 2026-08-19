@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
  *    that also happens to be a grid child animates layout.
  *  - the size scale (h-9 / h-8 / h-10) → the site's own. These are the only
  *    buttons on the page and they are editorial CTAs, not app chrome:
- *    min-h-12 so the tap target clears 48px, and body size, on the ramp.
+ *    every size that carries a box clears 48px, and body size, on the ramp.
  *  - variants: the registry's default/secondary/destructive palette is
  *    replaced by the four tones content.ts actually asks for, plus the pair
  *    of them inverted for the two dark bands. `default`, `outline`, `ghost`
@@ -37,9 +37,17 @@ const buttonVariants = cva(
           "border border-ink bg-ink text-paper hover:border-brand-700 hover:bg-brand-700",
         outline:
           "border border-ink/25 bg-transparent text-ink hover:border-ink hover:bg-ink hover:text-paper",
-        /* On the two near-black bands: the fill and the outline, inverted. */
+        /* On the two near-black bands: the fill and the outline, inverted.
+           `inverse` used to hover by emptying out - bg paper -> transparent,
+           colour ink -> paper - which made it the only filled button on the
+           site that answers a cursor by becoming an outline. `default` and the
+           WhatsApp FAB both stay filled and shift to a brand step, and all
+           three appear within one scroll of the home page. Two of the three
+           agreed, so the third moved: the fill travels paper -> brand-200, the
+           mirror of default's ink -> brand-700, and the label stays ink
+           throughout at 11:1 rather than swapping colour mid-gesture. */
         inverse:
-          "border border-paper bg-paper text-ink hover:bg-transparent hover:text-paper",
+          "border border-paper bg-paper text-ink hover:border-brand-200 hover:bg-brand-200",
         inverseOutline:
           "border border-paper/40 bg-transparent text-paper hover:border-paper hover:bg-paper hover:text-ink",
         ghost: "border border-transparent bg-transparent text-ink hover:bg-paper-deep",
@@ -49,11 +57,17 @@ const buttonVariants = cva(
         link: "border-b border-ink/25 px-0 text-ink-soft hover:border-ink hover:text-ink",
       },
       size: {
+        /* One floor for every size that carries a box: 48px, which is
+           min-h-12. The comment above used to state that as if it covered the
+           scale and it only ever covered `default` - `sm` was min-h-10 (40px)
+           and `icon` was size-11 (44px), both under the number the comment
+           claimed. `icon` is the WhatsApp button, the one control on the site
+           that is reached mid-scroll with a thumb. */
         default: "min-h-12 px-8 py-3 text-body",
-        sm: "min-h-10 px-5 py-2 text-micro",
+        sm: "min-h-12 px-5 py-2 text-micro",
         /* `link` carries no box, so it carries no box padding either. */
         none: "px-0 py-0",
-        icon: "size-11",
+        icon: "size-12",
       },
     },
     defaultVariants: {
