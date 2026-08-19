@@ -46,9 +46,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="he" dir="rtl" className={`${assistant.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        {/*
+          The skip link broke two of the three stated laws at once, and it
+          broke them in the one place nobody looks: it is invisible until a
+          keyboard user presses Tab on a cold page.
+
+          `text-white` against "never pure white", on `bg-brand-500` against
+          "turquoise as an accent, never a slab" — and brand-500 appeared as a
+          background *nowhere else on the site*, so the first thing the only
+          reader who ever sees this element sees is the one surface that is
+          not the design. It is now the same ink slab and paper text as every
+          other filled control.
+        */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:bg-brand-500 focus:px-4 focus:py-2 focus:text-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:bg-ink focus:px-4 focus:py-2 focus:text-paper"
         >
           דילוג לתוכן הראשי
         </a>
@@ -57,7 +69,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Header site={site} />
         </ChromeGate>
 
-        <main id="main" className="flex-1">
+        {/*
+          tabIndex={-1} is what makes the skip link above actually work.
+
+          Chrome and Firefox implement sequential-focus navigation starting
+          from the fragment target even when that target is not focusable, so
+          the link appeared to work here. Safari has historically not done
+          that: the URL changes, the page scrolls, and the next Tab returns to
+          the top of the document — which strands the reader the link exists
+          to help. Making the target programmatically focusable is the
+          portable behaviour, and -1 keeps <main> out of the tab order itself.
+        */}
+        <main id="main" tabIndex={-1} className="flex-1">
           {children}
         </main>
 
