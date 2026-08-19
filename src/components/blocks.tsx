@@ -330,12 +330,16 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                     size. Everything on the page was set at 300, so the step
                     from a 20px title to 16px body was doing its work on 1.25x
                     of size alone — which reads as mush. */}
+                {/* No `leading-snug`. --text-rise--line-height is 1.2 and the
+                    utility overrode it to 1.375, so the same role measured
+                    1.375 on these card titles and 1.2 on /404's h1 — one role,
+                    two leadings, from a class that was doing nothing the token
+                    was not already doing better. The line-height belongs to
+                    the step, which is the whole point of putting it there. */}
                 <h3
-                  className={`font-medium leading-snug transition-colors ${
-                    "text-rise"
-                  } ${onBrand ? "text-paper" : "text-ink"} ${
-                    card.href ? "group-hover:text-brand-700" : ""
-                  }`}
+                  className={`text-rise font-medium transition-colors ${
+                    onBrand ? "text-paper" : "text-ink"
+                  } ${card.href ? "group-hover:text-brand-700" : ""}`}
                 >
                   {card.title}
                 </h3>
