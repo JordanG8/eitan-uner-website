@@ -144,6 +144,14 @@
   --radius-md: 0px;
   --radius-lg: 0px;
   --radius-xl: 0px;
+  /* The scale above was zeroed and the two classes that do NOT read from it
+     were missed, so the law had a hole in it for seven rounds. A bare
+     `rounded` resolves `var(--radius, 0.25rem)` and --radius was never
+     declared, so it fell through to Tailwind's static 4px; `rounded-full`
+     computed 3.35e7px. Both are live in the editor shell. Declaring the two
+     keys closes the fallback rather than relying on nobody typing the class. */
+  --radius: 0px;
+  --radius-full: 0px;
 
   /* ------------------------------------------------------------------
      shadcn/ui token bridge.
@@ -303,10 +311,69 @@ h3 {
   overflow-wrap: break-word;
 }
 
+/**
+ * Every <button> resolved to `cursor: default`.
+ *
+ * Tailwind v4's Preflight dropped `button { cursor: pointer }` on the grounds
+ * that it is not the UA default. That is true and it is also the wrong call
+ * for a site: every <a> on this page says `pointer`, so the two element types
+ * were disagreeing about what "clickable" looks like — the hamburger, the
+ * `עוד` overflow trigger and both testimonial arrows all read as inert text
+ * while the link beside them read as a control. A reader does not know which
+ * tag a thing is.
+ *
+ * :not(:disabled) so a disabled control keeps saying it cannot be pressed,
+ * and [role="button"] so a div-that-is-a-button (Radix ships several) is
+ * covered by the same rule rather than by a second one later.
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-brand-600);
   outline-offset: 3px;
-  border-radius: 1px;
+  /**
+   * The ring is instant, and it has to be argued for because the default is
+   * not.
+   *
+   * Tailwind v4 includes `outline-color` in the property list that
+   * `transition-colors` emits, and --default-transition-duration is 200ms
+   * globally, so every one of the elements carrying that utility animated its
+   * focus ring from the element's own text colour to brand-600. On paper that
+   * start value is near-paper on several elements — measured, the ring was
+   * rgb(28,28,26) at t=0, still rgb(28,29,28) at 30ms and only reached
+   * rgb(15,110,115) at ~150ms. A focus indicator that arrives a sixth of a
+   * second after the key press is a focus indicator you can outrun by holding
+   * Tab, which is precisely how keyboard users move.
+   *
+   * transition-duration rather than a property-list edit because the list is
+   * emitted by a utility class and cannot be subtracted from; zeroing it here
+   * costs the hover transition *while an element is focused*, which is the
+   * one moment nobody is looking at the hover.
+   *
+   * border-radius is gone. It rounded the element's own box, not the outline
+   * — so it was both a no-op on the ring it was presumably meant to soften
+   * and a 1px violation of the square law on every focusable element.
+   */
+  transition-duration: 0s;
+}
+
+/**
+ * ::selection.
+ *
+ * There was no rule, so dragging across Hebrew body copy painted Chrome's
+ * default #0075FF over a warm paper ground — the one saturated blue anywhere
+ * near this palette. brand-100 is the lightest step that still reads as the
+ * site's turquoise, and it keeps ink at full contrast underneath, so the
+ * selection is legible on paper and on the two near-black bands alike.
+ */
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-ink);
 }
 
 /* Radix primitives set their own focus rings (focus-visible:ring-*). The page
