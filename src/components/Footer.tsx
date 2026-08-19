@@ -33,7 +33,7 @@ export function Footer({ site }: { site: SiteSettings }) {
             <li>
               <a
                 href={`tel:${site.phone}`}
-                className="text-paper/70 transition-colors hover:text-paper"
+                className="text-paper-soft transition-colors hover:text-paper"
               >
                 {site.phoneDisplay}
               </a>
@@ -41,12 +41,12 @@ export function Footer({ site }: { site: SiteSettings }) {
             <li>
               <a
                 href={`mailto:${site.email}`}
-                className="text-paper/70 transition-colors hover:text-paper"
+                className="text-paper-soft transition-colors hover:text-paper"
               >
                 {site.email}
               </a>
             </li>
-            <li className="text-paper/45">{site.location}</li>
+            <li className="text-paper-faint">{site.location}</li>
           </ul>
 
           {site.facebookUrl && (
@@ -54,7 +54,7 @@ export function Footer({ site }: { site: SiteSettings }) {
               href={site.facebookUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="border-b border-paper/40 pb-0.5 text-paper/75 transition-colors hover:border-paper hover:text-paper"
+              className="border-b border-paper/40 pb-0.5 text-paper-soft transition-colors hover:border-paper hover:text-paper"
             >
               פייסבוק
             </a>
@@ -71,7 +71,7 @@ export function Footer({ site }: { site: SiteSettings }) {
         </p>
 
         <Separator className="mt-10" tone="dark" />
-        <div className="flex flex-wrap items-baseline justify-between gap-4 pt-6 text-micro text-paper/40">
+        <div className="flex flex-wrap items-baseline justify-between gap-4 pt-6 text-micro text-paper-faint">
           <p>
             זכויות יוצרים © {new Date().getFullYear()} כל הזכויות שמורות
           </p>
@@ -80,7 +80,7 @@ export function Footer({ site }: { site: SiteSettings }) {
             carrying 18 items. Both are stubs saying the statements are
             pending while the site is in development - see content.ts.
 
-            On the hover value: these were `hover:text-paper/70` against
+            On the hover value: these were `hover:text-paper-soft` against
             siblings that go to full `paper`, so the link both started dimmer
             and stopped short of where every neighbour landed. Measured
             before/after, it was the only link in the row with its own

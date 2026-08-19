@@ -47,7 +47,7 @@ const navLinkClass = (active: boolean, overHero: boolean) =>
     overHero
       ? active
         ? "border-paper text-paper"
-        : "border-transparent text-paper/70 hover:text-paper"
+        : "border-transparent text-paper-soft hover:text-paper"
       : active
         ? "border-ink text-ink"
         : "border-transparent text-ink-soft hover:text-ink"
@@ -272,7 +272,7 @@ export function Header({ site }: { site: SiteSettings }) {
                         overHero
                           ? overflow.some((c) => isActive(pathname, c.href))
                             ? "border-paper text-paper"
-                            : "text-paper/70 hover:text-paper"
+                            : "text-paper-soft hover:text-paper"
                           : overflow.some((c) => isActive(pathname, c.href))
                             ? "border-ink text-ink"
                             : "text-ink-soft hover:text-ink"

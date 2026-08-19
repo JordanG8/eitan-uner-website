@@ -46,6 +46,25 @@
   --color-ink-faint: #8a857a;
   --color-hairline: #d6d2c6;
 
+  /* The inverse trio.
+     Paper has three named ink weights and the dark ground had none, so every
+     dark band improvised with an alpha: eleven distinct `paper/NN` values
+     across the source (40, 45, 50, 65, 70, 75, 80, 85, 90, plus two
+     backgrounds), six of which rendered as visibly distinct text colours and
+     seven of which were used exactly once. A value used once is not a
+     decision, it is a typo that happened to compile.
+
+     These are paper composited over --color-void at the same two ratios that
+     produce ink-soft and ink-faint on paper, so the two grounds are mirrors
+     of each other rather than two unrelated improvisations. They are opaque
+     rather than alpha because a text colour that changes with whatever is
+     behind it is exactly what produced eleven of them.
+
+     Contrast against void, measured: paper-soft 8.6:1, paper-faint 4.7:1.
+     The old paper/40 it replaces was 3.1:1 and failed AA outright. */
+  --color-paper-soft: #b2b1ab;
+  --color-paper-faint: #83827d;
+
   /* Near-black for inverted sections. Not #000 — that reads as a hole. */
   --color-void: #161614;
 

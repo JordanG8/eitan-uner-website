@@ -125,7 +125,7 @@ export function Hero({ block }: { block: HeroBlock }) {
         */}
         <h1 className="text-display font-light text-paper">{block.title}</h1>
 
-        <p className="text-lede mt-8 max-w-(--container-text) text-paper/75">
+        <p className="text-lede mt-8 max-w-(--container-text) text-paper-soft">
           {block.subtitle ?? site.tagline}
         </p>
 
@@ -214,11 +214,11 @@ export function TextImage({
             </>
           )}
           {block.eyebrow && (
-            <p className={`text-lede ${onBrand ? "text-paper/70" : "text-ink-soft"}`}>
+            <p className={`text-lede ${onBrand ? "text-paper-soft" : "text-ink-soft"}`}>
               {block.eyebrow}
             </p>
           )}
-          <div className={`prose-he mt-4 ${onBrand ? "text-paper/85" : "text-ink-soft"}`}>
+          <div className={`prose-he mt-4 ${onBrand ? "text-paper-soft" : "text-ink-soft"}`}>
             {block.body.map((p, i) => (
               <p key={i}>
                 <Inline text={p} />
@@ -249,7 +249,7 @@ export function RichText({ block }: { block: RichTextBlock }) {
       <div
         className={`prose-he text-lede max-w-(--container-text) ${
           block.align === "center" ? "mx-auto text-center" : ""
-        } ${onBrand ? "text-paper/85" : "text-ink-soft"}`}
+        } ${onBrand ? "text-paper-soft" : "text-ink-soft"}`}
       >
         {block.body.map((p, i) => (
           <p key={i}>
@@ -349,7 +349,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                      the same value would not be in Latin. */
                   <p
                     className={`mt-3 text-body ${
-                      onBrand ? "text-paper/65" : "text-ink-soft"
+                      onBrand ? "text-paper-soft" : "text-ink-soft"
                     } ${big ? "max-w-(--container-text)" : ""}`}
                   >
                     {card.body}
@@ -366,7 +366,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                   <span
                     className={`mt-auto inline-block self-start border-b pt-5 pb-0.5 text-body transition-colors ${
                       onBrand
-                        ? "border-paper/40 text-paper/75 group-hover:border-paper group-hover:text-paper"
+                        ? "border-paper/40 text-paper-soft group-hover:border-paper group-hover:text-paper"
                         : "border-ink/25 text-ink-soft group-hover:border-ink group-hover:text-ink"
                     }`}
                   >
@@ -512,7 +512,7 @@ export function Quote({ block }: { block: QuoteBlock }) {
             {block.quote}
           </blockquote>
           {block.attribution && (
-            <p className="mt-10 text-micro tracking-label text-paper/50">
+            <p className="mt-10 text-micro tracking-label text-paper-faint">
               {block.attribution}
             </p>
           )}
@@ -538,7 +538,7 @@ export function Video({ block }: { block: VideoBlock }) {
       {block.body && (
         <div
           className={`prose-he text-lede mb-16 max-w-(--container-text) ${
-            onBrand ? "text-paper/85" : "text-ink-soft"
+            onBrand ? "text-paper-soft" : "text-ink-soft"
           }`}
         >
           {block.body.map((p, i) => (
@@ -650,15 +650,15 @@ export function Contact({ block }: { block: ContactBlock }) {
                   key={r.label}
                   className="grid grid-cols-[6rem_1fr] gap-4 border-b border-paper/20 py-5"
                 >
-                  <dt className="text-micro tracking-label text-paper/40">
+                  <dt className="text-micro tracking-label text-paper-faint">
                     {r.label}
                   </dt>
-                  <dd className="text-body text-paper/80">{r.value}</dd>
+                  <dd className="text-body text-paper-soft">{r.value}</dd>
                 </div>
               ))}
             </dl>
 
-            <ul className="mt-10 space-y-1.5 text-micro text-paper/50">
+            <ul className="mt-10 space-y-1.5 text-micro text-paper-faint">
               {site.roles.map((r) => (
                 <li key={r}>{r}</li>
               ))}

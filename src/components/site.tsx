@@ -77,7 +77,7 @@ export function QuietLink({
   const cls =
     `inline-block self-start border-b pb-0.5 text-body transition-colors ${
       onDark
-        ? "border-paper/40 text-paper/75 hover:border-paper hover:text-paper"
+        ? "border-paper/40 text-paper-soft hover:border-paper hover:text-paper"
         : "border-ink/25 text-ink-soft hover:border-ink hover:text-ink"
     } ${className}`;
 

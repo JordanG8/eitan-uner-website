@@ -177,9 +177,17 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
   });
 
   /* 4 + 5 — header hover diffs, in both header states. */
+  /* Scroll position is re-asserted around every hover. Playwright's hover
+     may scroll to bring an element to a stable position, and the header's
+     whole appearance is a function of scrollY - the first run of this script
+     reported the logo's hover as paper-on-transparent because the page had
+     silently returned to the top between the rest read and the hover read. */
+  let lockedScroll = 0;
   const hoverDiff = async (sel, label) => {
     const el = page.locator(sel).first();
     if ((await el.count()) === 0) return { [label]: "NOT FOUND" };
+    await page.evaluate((y) => window.scrollTo(0, y), lockedScroll);
+    await page.waitForTimeout(350);
     const read = () =>
       el.evaluate((e) => {
         const s = getComputedStyle(e);
@@ -194,6 +202,7 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
       });
     const rest = await read();
     await el.hover({ force: true });
+    await page.evaluate((y) => window.scrollTo(0, y), lockedScroll);
     await page.waitForTimeout(350);
     const hover = await read();
     await page.mouse.move(5, 500);
@@ -201,6 +210,7 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
     return { rest, hover, changed: JSON.stringify(rest) !== JSON.stringify(hover) };
   };
 
+  lockedScroll = 0;
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(500);
   R["4_contact_icons_overHero"] = {
@@ -213,12 +223,15 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
   };
   R["5_logo_overHero"] = await hoverDiff('header a[aria-label="לדף הבית"]', "logo");
 
+  lockedScroll = 1400;
   await page.evaluate(() => window.scrollTo(0, 1400));
   await page.waitForTimeout(600);
   R["4_contact_icons_light"] = {
     tel: await hoverDiff('header a[href^="tel:"]', "tel"),
+    mailto: await hoverDiff('header a[href^="mailto:"]', "mailto"),
   };
   R["5_logo_light"] = await hoverDiff('header a[aria-label="לדף הבית"]', "logo");
+  lockedScroll = 0;
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(400);
 
@@ -253,24 +266,43 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
     return out;
   });
 
-  /* 9 — the paper alpha census, as rendered. */
+  /* 9 — the light-on-dark census.
+     The first version of this check matched on `rgb(239, 237, 230)` and
+     reported ONE distinct value where the source has eleven, because
+     Tailwind v4 serialises an alpha colour as oklab(...) and the regex
+     never fired. Classifying on measured luminance instead of on the
+     serialisation is the fix, and it is round 6's rule again: the
+     instrument was wrong in a way that flattered the subject. */
   R["9_paper_alphas"] = await page.evaluate(() => {
-    const isPaperish = (c) => {
-      const m = c.match(/rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/);
-      if (!m) return false;
-      const [r, g, b] = [+m[1], +m[2], +m[3]];
-      return Math.abs(r - 239) < 3 && Math.abs(g - 237) < 3 && Math.abs(b - 230) < 3;
+    const lum = (c) => {
+      const cv = document.createElement("canvas").getContext("2d");
+      cv.fillStyle = "#000";
+      cv.fillStyle = c;
+      // Round-trips any colour syntax the engine emits into #rrggbb / rgba().
+      const m = cv.fillStyle.match(/^#([0-9a-f]{6})$/i)
+        ? [1, 3, 5].map((i) => parseInt(cv.fillStyle.slice(i, i + 2), 16))
+        : (cv.fillStyle.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+      if (m.length < 3) return null;
+      const f = (v) => {
+        const x = v / 255;
+        return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+      };
+      return 0.2126 * f(m[0]) + 0.7152 * f(m[1]) + 0.0722 * f(m[2]);
     };
     const colors = new Map();
     for (const e of document.querySelectorAll("*")) {
       const r = e.getBoundingClientRect();
       if (r.width === 0 || !(e.textContent || "").trim()) continue;
-      const s = getComputedStyle(e);
-      if (isPaperish(s.color) || s.color.startsWith("rgba(239")) {
-        colors.set(s.color, (colors.get(s.color) ?? 0) + 1);
-      }
+      if (e.children.length && !/^(P|SPAN|A|LI|DT|DD|H1|H2|H3|H4|BLOCKQUOTE|BUTTON)$/.test(e.tagName))
+        continue;
+      const c = getComputedStyle(e).color;
+      const L = lum(c);
+      if (L != null && L > 0.12) colors.set(c, (colors.get(c) ?? 0) + 1);
     }
-    return [...colors.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} x${v}`);
+    return {
+      distinct: colors.size,
+      values: [...colors.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} x${v}`),
+    };
   });
 
   /* 13/14/15 — the keyboard path. */
