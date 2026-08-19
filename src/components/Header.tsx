@@ -2,8 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Logo } from "./Logo";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "./ui/navigation-menu";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "./ui/sheet";
+import { Separator } from "./ui/separator";
 import type { NavItem, SiteSettings } from "@/lib/types";
 
 function isActive(pathname: string, href: string) {
@@ -11,78 +27,34 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-/** Desktop "עוד" dropdown. Opens on hover and on click, closes on Escape. */
-function MoreMenu({ item, pathname }: { item: NavItem; pathname: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+/** useLayoutEffect, without the server warning. The measurement genuinely has
+ *  to happen before paint — running it in useEffect shows one frame of all
+ *  eighteen links overflowing the bar. */
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onClick);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onClick);
-    };
-  }, []);
+/** gap-4 on the nav list, in px. Kept in one place because the measurement
+ *  arithmetic below has to agree with the CSS exactly or the last item
+ *  flickers in and out on resize. */
+const NAV_GAP = 16;
 
-  const childActive = item.children?.some((c) => isActive(pathname, c.href));
-
-  return (
-    <div
-      ref={ref}
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1.5 px-3 py-2 text-[0.9rem] transition-colors ${
-          childActive ? "text-ink" : "text-ink-soft hover:text-ink"
-        }`}
-      >
-        {item.label}
-        <svg
-          viewBox="0 0 20 20"
-          className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M5 7l5 6 5-6z" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute end-0 top-full z-50 min-w-[16rem] overflow-hidden border border-hairline bg-paper py-1 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.45)]">
-          {item.children?.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href}
-              onClick={() => setOpen(false)}
-              className={`block px-4 py-2.5 text-[0.9rem] transition-colors hover:bg-paper-deep ${
-                isActive(pathname, child.href) ? "text-ink" : "text-ink-soft"
-              }`}
-            >
-              {child.label}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+/**
+ * A link in the bar. Shared by the inline row and by the hidden measuring row,
+ * which is the only way the two can be guaranteed to be the same width.
+ */
+const navLinkClass = (active: boolean, overHero: boolean) =>
+  `block border-b-2 py-2 text-micro whitespace-nowrap transition-colors ${
+    overHero
+      ? active
+        ? "border-paper text-paper"
+        : "border-transparent text-paper/70 hover:text-paper"
+      : active
+        ? "border-ink text-ink"
+        : "border-transparent text-ink-soft hover:text-ink"
+  }`;
 
 export function Header({ site }: { site: SiteSettings }) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   /**
    * Over a full-bleed hero the header goes transparent and inverts.
@@ -144,60 +116,122 @@ export function Header({ site }: { site: SiteSettings }) {
     };
   }, [pathname]);
 
-  // Lock body scroll behind the open drawer.
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
+  /**
+   * Every destination the site has, as one flat row.
+   *
+   * content.ts groups thirteen of the eighteen pages under a hardcoded "עוד",
+   * and that grouping was being rendered as a dropdown at every width — at
+   * 3440px the bar was hiding thirteen links behind a menu with roughly two
+   * thousand pixels of empty bar beside it. content.ts is frozen, so the
+   * grouping stays in the data; it just stops being treated as a layout
+   * decision. The bar decides what collapses, and it decides by measuring.
+   */
+  const destinations: NavItem[] = site.nav
+    .flatMap((n) => (n.children ? [{ label: n.label, href: n.href }, ...n.children] : [n]))
+    .filter((n) => n.href !== "#");
 
-  const flat: NavItem[] = site.nav.flatMap((n) =>
-    n.children ? [{ label: n.label, href: n.href }, ...n.children] : [n]
-  );
+  /** The label content.ts already uses for the group, reused for the overflow
+   *  trigger so the word a reader sees never changes. */
+  const overflowLabel =
+    site.nav.find((n) => n.children?.length)?.label ?? "עוד";
+
+  /* ---------------------------------------------------------- priority+ */
+
+  const navRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLUListElement>(null);
+  const measureTriggerRef = useRef<HTMLSpanElement>(null);
+  const [visibleCount, setVisibleCount] = useState(destinations.length);
+  /**
+   * The server renders all eighteen links — they should be in the HTML for a
+   * crawler and for a reader whose JS has not arrived — so before the first
+   * measurement the row is deliberately over-full and the wrapper clips it.
+   * Once measured it stops clipping, which it has to, or it would clip the
+   * overflow menu it just created.
+   */
+  const [measured, setMeasured] = useState(false);
+
+  /**
+   * Fit as many links in the bar as actually fit, and collapse only the rest.
+   *
+   * Widths come from a hidden row rendered with the identical classes rather
+   * than from the live row, for a reason worth writing down: the live row only
+   * contains the items that are currently visible, so measuring it can tell
+   * you an item fits but never that a hidden one would — which turns the
+   * layout into a ratchet that can shed items but never take them back on
+   * resize. The hidden row always holds all eighteen.
+   */
+  const fit = useCallback(() => {
+    const nav = navRef.current;
+    const row = measureRef.current;
+    if (!nav || !row) return;
+
+    const widths = Array.from(row.children).map(
+      (c) => (c as HTMLElement).getBoundingClientRect().width
+    );
+    const triggerW = measureTriggerRef.current
+      ? measureTriggerRef.current.getBoundingClientRect().width
+      : 72;
+    const available = nav.clientWidth;
+
+    const runningTotal = (n: number) =>
+      widths.slice(0, n).reduce((a, w) => a + w, 0) + Math.max(0, n - 1) * NAV_GAP;
+
+    if (runningTotal(widths.length) <= available) {
+      setVisibleCount(widths.length);
+    } else {
+      // Something has to collapse, so the trigger is now real and has to be
+      // paid for out of the same budget.
+      const budget = available - triggerW - NAV_GAP;
+      let n = 0;
+      while (n < widths.length && runningTotal(n + 1) <= budget) n += 1;
+      setVisibleCount(n);
+    }
+    setMeasured(true);
+  }, []);
+
+  useIsoLayoutEffect(() => {
+    fit();
+    const nav = navRef.current;
+    if (!nav) return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(nav);
+    // Assistant is loaded with display:swap, so the first measurement happens
+    // against the fallback metrics and every label changes width when the real
+    // face lands. Without this the bar settles one item wrong.
+    document.fonts?.ready.then(fit).catch(() => {});
+    return () => ro.disconnect();
+  }, [fit]);
+
+  const inline = destinations.slice(0, visibleCount);
+  const overflow = destinations.slice(visibleCount);
 
   return (
     <header
       ref={headerRef}
       data-over-hero={overHero ? "" : undefined}
-      className={`sticky top-0 z-40 transition-colors duration-300 ${
+      className={`sticky top-0 z-40 transition-colors ${
         overHero
-          ? "border-b border-paper/15 bg-transparent text-paper"
+          ? "border-b border-paper/20 bg-transparent text-paper"
           : "border-b border-hairline bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75"
       }`}
     >
-      <div // px-6 / lg:px-10 to match Section and the hero. The header was on
-        // px-4 / lg:px-6, which put the logo 16px outside the axis every other
-        // element on the page shares — measurably, not impressionistically.
-        className="mx-auto flex h-auto max-w-(--container-content) items-center justify-between gap-4 px-6 py-3 lg:px-10">
-        {/* Primary nav (desktop) — right side in RTL */}
-        <nav className="hidden items-center gap-1 lg:me-auto lg:flex" aria-label="ניווט ראשי">
-          {site.nav.map((item) =>
-            item.children ? (
-              <MoreMenu key={item.label} item={item} pathname={pathname} />
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`border-b-2 px-3 py-2 text-[0.9rem] transition-colors ${
-                  overHero
-                    ? isActive(pathname, item.href)
-                      ? "border-paper text-paper"
-                      : "border-transparent text-paper/70 hover:text-paper"
-                    : isActive(pathname, item.href)
-                      ? "border-ink text-ink"
-                      : "border-transparent text-ink-soft hover:text-ink"
-                }`}
-              >
-                {item.label}
-              </Link>
-            )
-          )}
-        </nav>
+      <div
+        /*
+          px-6 / lg:px-10 to match Section and the hero. The header was on
+          px-4 / lg:px-6, which put the logo 16px outside the axis every other
+          element on the page shares — measurably, not impressionistically.
 
-        {/* Logo — centred on desktop, leading on mobile */}
+          --container-shell equals --container-content (1240px) up to 2xl, so
+          that alignment holds at every width anyone actually browses at. Above
+          1536px it widens to 1800px, which is the only honest way to answer
+          "there is ample room at 3440px": there is, but it was all sitting in
+          the margins of a 1240px text column. The bar borrows the margin the
+          reading measure cannot use. See GAUNTLET.md round 7.
+        */
+        className="mx-auto flex max-w-(--container-shell) items-center gap-6 px-6 py-3 lg:px-10"
+      >
         {/*
-          Ranged to the reading edge, not centred.
+          Logo ranged to the reading edge, not centred.
 
           It used to be absolutely centred while the nav, the headline, the
           tagline and the CTAs all ranged to the inline-start edge. Two blind
@@ -210,13 +244,105 @@ export function Header({ site }: { site: SiteSettings }) {
           <Logo inverted={overHero} />
         </Link>
 
+        {/* Primary nav (desktop) — right side in RTL */}
+        <div
+          ref={navRef}
+          data-measured={measured || undefined}
+          className="relative hidden min-w-0 flex-1 overflow-hidden data-measured:overflow-visible lg:block"
+        >
+          <NavigationMenu aria-label="ניווט ראשי">
+            <NavigationMenuList>
+                {inline.map((item) => (
+                  <NavigationMenuItem key={item.href}>
+                    <NavigationMenuLink asChild active={isActive(pathname, item.href)}>
+                      <Link
+                        href={item.href}
+                        className={navLinkClass(isActive(pathname, item.href), overHero)}
+                      >
+                        {item.label}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                ))}
+
+                {overflow.length > 0 && (
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger
+                      className={
+                        overHero
+                          ? overflow.some((c) => isActive(pathname, c.href))
+                            ? "border-paper text-paper"
+                            : "text-paper/70 hover:text-paper"
+                          : overflow.some((c) => isActive(pathname, c.href))
+                            ? "border-ink text-ink"
+                            : "text-ink-soft hover:text-ink"
+                      }
+                    >
+                      {overflowLabel}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul>
+                        {overflow.map((child) => (
+                          <li key={child.href}>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                href={child.href}
+                                className={`block px-4 py-2.5 text-micro hover:bg-paper-deep ${
+                                  isActive(pathname, child.href)
+                                    ? "text-ink"
+                                    : "text-ink-soft"
+                                }`}
+                              >
+                                {child.label}
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                )}
+            </NavigationMenuList>
+          </NavigationMenu>
+
+          {/* The ruler.
+              Clipped to the wrapper's own box so an 1800px-wide measuring row
+              can never hand the document a horizontal scrollbar, and
+              `visibility:hidden` so the probe's visibility test skips every
+              one of these — they are measurements, not content. `w-max` plus
+              `shrink-0` is load-bearing: inside a clipped parent the default
+              flex-shrink would squeeze the labels and the ruler would report
+              widths narrower than the real row. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none invisible absolute inset-0 overflow-hidden"
+          >
+            <ul ref={measureRef} className="flex w-max flex-nowrap gap-4">
+              {destinations.map((item) => (
+                <li key={item.href} className={`shrink-0 ${navLinkClass(false, false)}`}>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+            <span
+              ref={measureTriggerRef}
+              className="inline-flex w-max shrink-0 items-center gap-1.5 py-2 text-micro whitespace-nowrap"
+            >
+              {overflowLabel}
+              <svg viewBox="0 0 20 20" className="size-3" fill="currentColor">
+                <path d="M5 7l5 6 5-6z" />
+              </svg>
+            </span>
+          </div>
+        </div>
+
         {/* Contact shortcuts (desktop) */}
         {/* Hidden while the header floats over the hero: the fold reads best
             with one focal path, and a blind panel named "logo, nav, phone icon,
             two CTAs" competing as the reason it looked assembled. They fade
             back in as soon as the header lands on paper. */}
         <div
-          className={`hidden items-center gap-3 lg:flex ${
+          className={`hidden shrink-0 items-center gap-3 lg:flex ${
             overHero ? "pointer-events-none opacity-0" : "text-ink-soft"
           }`}
           aria-hidden={overHero || undefined}
@@ -226,7 +352,7 @@ export function Header({ site }: { site: SiteSettings }) {
             aria-label={`התקשרו ל${site.phoneDisplay}`}
             className="p-1.5 transition-colors hover:text-ink"
           >
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.2 2.3z" />
             </svg>
           </a>
@@ -235,64 +361,62 @@ export function Header({ site }: { site: SiteSettings }) {
             aria-label={`שלחו מייל ל${site.email}`}
             className="p-1.5 transition-colors hover:text-ink"
           >
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.2l-8 5-8-5V6l8 5 8-5v2.2z" />
             </svg>
           </a>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          type="button"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-nav"
-          aria-label={mobileOpen ? "סגירת התפריט" : "פתיחת התפריט"}
-          className={`p-2 lg:hidden ${overHero ? "text-paper" : "text-ink"}`}
-        >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            {mobileOpen ? (
-              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-            ) : (
+        {/* Mobile drawer */}
+        <Sheet>
+          <SheetTrigger
+            aria-label="פתיחת התפריט"
+            className={`ms-auto p-2 transition-colors lg:hidden ${
+              overHero ? "text-paper" : "text-ink"
+            }`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="size-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
               <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
-      </div>
+            </svg>
+          </SheetTrigger>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <nav
-          id="mobile-nav"
-          aria-label="ניווט ראשי"
-          className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-hairline bg-paper lg:hidden"
-        >
-          {flat
-            .filter((i) => i.href !== "#")
-            .map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`block border-b border-hairline px-6 py-4 text-[1rem] ${
-                  isActive(pathname, item.href)
-                    ? "bg-paper-deep text-ink"
-                    : "text-ink-soft"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          <div className="flex flex-col gap-1.5 px-6 py-6 text-[0.9rem]">
-            <a href={`tel:${site.phone}`} className="text-ink-soft">
-              {site.phoneDisplay}
-            </a>
-            <a href={`mailto:${site.email}`} className="text-ink-soft">
-              {site.email}
-            </a>
-          </div>
-        </nav>
-      )}
+          <SheetContent side="end" className="overflow-y-auto">
+            <SheetTitle className="px-6 pt-6">תפריט</SheetTitle>
+            <Separator className="mt-6" />
+            <nav aria-label="ניווט ראשי">
+              {destinations.map((item) => (
+                <SheetClose key={item.href} asChild>
+                  <Link
+                    href={item.href}
+                    className={`block border-b border-hairline px-6 py-4 text-body transition-colors ${
+                      isActive(pathname, item.href)
+                        ? "bg-paper-deep text-ink"
+                        : "text-ink-soft hover:text-ink"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </SheetClose>
+              ))}
+            </nav>
+            <div className="flex flex-col gap-1.5 px-6 py-6 text-micro">
+              <a href={`tel:${site.phone}`} className="text-ink-soft transition-colors hover:text-ink">
+                {site.phoneDisplay}
+              </a>
+              <a href={`mailto:${site.email}`} className="text-ink-soft transition-colors hover:text-ink">
+                {site.email}
+              </a>
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
     </header>
   );
 }
