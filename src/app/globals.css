@@ -219,12 +219,14 @@
   --ramp-display: var(--step-5); /*  48.83 */
   --ramp-section: var(--step-3); /*  31.25 */
   --ramp-title: var(--step-2); /*  25.00 */
+  --band-y: 5.12rem; /*  81.92 */
 }
 @media (min-width: 40rem) {
   :root {
     --ramp-display: var(--step-6); /*  61.04 */
     --ramp-section: var(--step-4); /*  39.06 */
     --ramp-title: var(--step-3); /*  31.25 */
+    --band-y: 6.4rem; /* 102.40 */
   }
 }
 @media (min-width: 48rem) {
@@ -232,6 +234,7 @@
     --ramp-display: var(--step-7); /*  76.29 */
     --ramp-section: var(--step-5); /*  48.83 */
     --ramp-title: var(--step-4); /*  39.06 */
+    --band-y: 8rem; /* 128.00 */
   }
 }
 @media (min-width: 64rem) {
@@ -239,6 +242,7 @@
     --ramp-display: var(--step-8); /*  95.37 */
     --ramp-section: var(--step-6); /*  61.04 */
     --ramp-title: var(--step-5); /*  48.83 */
+    --band-y: 10rem; /* 160.00 */
   }
 }
 @media (min-width: 80rem) {
@@ -251,6 +255,7 @@
     --ramp-display: var(--step-9); /* 119.21 */
     --ramp-section: var(--step-7); /*  76.29 */
     --ramp-title: var(--step-6); /*  61.04 */
+    --band-y: 12.5rem; /* 200.00 */
   }
 }
 
@@ -461,19 +466,37 @@ h3 {
  * Gallery, Quote and Contact — which is the same value written four times and
  * therefore four places for it to drift. It had already drifted once: the
  * heading-to-content gap was mb-16 in five blocks and mb-14 in Video.
+ *
+ * ---------------------------------------------------------------------------
+ * Consolidating it into one class fixed the drift and left the ramp itself
+ * wrong, in the same two ways the type had been wrong before round 7.
+ *
+ * It was 96 / 128 / 160px. Those are ratios of 1.333 then 1.25 — which is to
+ * say they are not a ratio at all, they are +32px twice, an arithmetic
+ * sequence wearing a geometric one's clothes. And its breakpoints were 640 and
+ * 1024 while the type steps at 640, 768, 1024 and 1280, so at 768 every
+ * heading on the page jumped a full 25% and the space around it did not move
+ * at all. Type and space are the same argument about density and they were
+ * being made at different widths.
+ *
+ * --band-y is now declared beside --ramp-display in the same five blocks, on
+ * the same 1.25 ratio and at exactly the same breakpoints:
+ *
+ *     width    band     display   both step at
+ *     base     81.92     48.83
+ *     640     102.40     61.04    40rem
+ *     768     128.00     76.29    48rem
+ *     1024    160.00     95.37    64rem
+ *     1280    200.00    119.21    80rem
+ *
+ * Anchored at 1024 rather than at either end, which is why 768 and 1024 keep
+ * the values they ship today (128 and 160) and only the two ends move: mobile
+ * tightens 96 -> 82, and above 1280 the band finally opens to 200 instead of
+ * stopping where 1024 stopped. The widest viewports were the ones with room
+ * to spare and they were the ones being given the least.
  */
 .band {
-  padding-block: 6rem;
-}
-@media (min-width: 40rem) {
-  .band {
-    padding-block: 8rem;
-  }
-}
-@media (min-width: 64rem) {
-  .band {
-    padding-block: 10rem;
-  }
+  padding-block: var(--band-y);
 }
 
 /**
