@@ -1,0 +1,1108 @@
+/* ==========================================================================
+   פוטודוקותרפיה — the scrolling homepage
+   (branch: design/photodocutherapy-scroll)
+
+   Read src/components/ScrollStory.tsx first; it carries the argument for why
+   this page exists in this shape. This file carries two things:
+
+     PART ONE   the static design. Eight full-bleed editorial acts, stacked.
+                Complete, finished, and the only thing a browser without
+                scroll-driven animations — or a reader who has asked for less
+                motion — will ever see. It is not a fallback in the apologetic
+                sense; it is the page, at rest.
+
+     PART TWO   the choreography, entirely inside one
+                `@supports (animation-timeline: view())` +
+                `prefers-reduced-motion: no-preference` block. It pins each
+                act, cross-fades its beats, and morphs the one recurring
+                object — a white photographic print — down the whole page.
+
+   Every value here resolves to a token declared in globals.css: the ramp
+   (--step-*, --ramp-*), the palette (--color-*), the two durations. The one
+   new token family is --pdt-*, declared once at the top of PART ONE, because
+   this page has structural measurements (the pin height of an act, the width
+   of a print) that the rest of the site has no use for.
+
+   TRAP, recorded so the next person does not spend an evening on it:
+   `overflow: hidden` creates a scroll container, and a scroll container
+   between an act and its descendants silently re-anchors `view()` to the
+   wrong scroller — the animations simply never run. Every clip in this file
+   is `overflow: clip`, which does not.
+   ========================================================================== */
+
+.pdt {
+  /* Act geometry. --beats is set per act from the component. */
+  --pdt-pin: 100svh;
+  --pdt-beat: 105vh;
+
+  /* The print. Real prints have a deeper bottom margin than the other three
+     sides; that asymmetry is most of why the object reads as a physical
+     object rather than a div with a white border. */
+  --pdt-print-pad: clamp(0.55rem, 1.6vw, 1.1rem);
+  --pdt-print-foot: clamp(1.5rem, 4.2vw, 3rem);
+  --pdt-print-paper: #f4f2ec;
+
+  /* Scrims. Named because the same two values are used on five acts, and the
+     last thing this page needs is nine improvised rgba() blacks. */
+  --pdt-scrim-soft: color-mix(in oklab, var(--color-void) 55%, transparent);
+  --pdt-scrim-hard: color-mix(in oklab, var(--color-void) 78%, transparent);
+
+  --pdt-gutter: clamp(1.5rem, 5vw, 5rem);
+
+  /* The river's card pitch. Declared here because two very distant rules need
+     to agree on it: the print's width, and the keyframe that computes how far
+     the track has to travel to show the last card. They disagreed once, and
+     the symptom was a river that stopped two cards early on a phone. */
+  --pdt-river-card: 19rem;
+  --pdt-river-gap: clamp(1rem, 2.6vw, 2.25rem);
+
+  background: var(--color-void);
+  color: var(--color-paper);
+}
+
+/* ==========================================================================
+   PART ONE — the page at rest
+   ========================================================================== */
+
+.pdt-dark {
+  position: relative;
+  background: var(--color-void);
+}
+
+/* ------------------------------------------------------------------- rail */
+
+/**
+ * The turquoise through-line: one accent, drawn once, the whole way down.
+ *
+ * Sticky rather than fixed. A fixed element cannot see an ancestor's named
+ * timeline without `timeline-scope`, which is the least-supported corner of
+ * this spec; a sticky element inside .pdt-dark is in the same containing
+ * block as everything else and needs no scope at all. It also disappears on
+ * its own at the ask, which is correct — the narrative is what it measures.
+ */
+.pdt-rail {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
+  block-size: 2px;
+  inline-size: 100%;
+  background: color-mix(in oklab, var(--color-paper) 12%, transparent);
+  /* Removes the 2px from flow so it does not push the first act down. */
+  margin-block-end: -2px;
+  pointer-events: none;
+}
+
+.pdt-rail-fill {
+  display: block;
+  block-size: 100%;
+  inline-size: 100%;
+  transform-origin: right center; /* RTL: the line grows leftwards. */
+  background: var(--color-brand-500);
+}
+[dir="ltr"] .pdt-rail-fill {
+  transform-origin: left center;
+}
+
+/* ------------------------------------------------------------------- acts */
+
+.pdt-act {
+  position: relative;
+  overflow: clip;
+}
+
+.pdt-stage {
+  position: relative;
+  min-block-size: 100svh;
+  display: grid;
+  align-content: center;
+  gap: clamp(2rem, 5vw, 4rem);
+  padding: clamp(6rem, 14vh, 11rem) var(--pdt-gutter);
+  overflow: clip;
+}
+
+/**
+ * Full-bleed photographs sit behind the stage's content, not in its flow.
+ *
+ * `grid-area` is deliberately left at `auto` here, and every rule that sets a
+ * grid area on a stage's children explicitly excludes this element. An
+ * absolutely positioned grid item whose placement is *definite* takes that
+ * grid area as its containing block; one whose placement is `auto` takes the
+ * grid container's padding box. The first spelling inset all five full-bleed
+ * photographs by the stage padding, which rendered as a black band across the
+ * top and bottom of every photographic act and was easy to read as a
+ * deliberate letterbox rather than the bug it was.
+ */
+.pdt-bleed {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: clip;
+}
+
+.pdt-bleed-img {
+  object-fit: cover;
+  object-position: center;
+}
+
+/* The scrim that makes display type survive on a photograph. Two stops, not
+   a wash: the top and bottom carry the type, the middle stays a photograph. */
+.pdt-bleed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--pdt-scrim-hard) 0%,
+    var(--pdt-scrim-soft) 34%,
+    var(--pdt-scrim-soft) 62%,
+    var(--pdt-scrim-hard) 100%
+  );
+}
+
+/* ------------------------------------------------------------------- copy */
+
+/**
+ * The measure is set in `em` on the *line*, not in `ch` on the column.
+ *
+ * It was `max-inline-size: 22ch` on this element for exactly one build, and
+ * the result was a column 176px wide holding 61px type: every beat rendered
+ * one word per line, the whole way down the page. `ch` resolves against the
+ * font-size of the element it is declared on, and this element sits at the
+ * 16px body size while everything visible inside it is at a display step.
+ * Anything that means "about twenty characters of the text you can see" has
+ * to be declared where that text's font-size is.
+ */
+.pdt-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 6vw, 5rem);
+  inline-size: 100%;
+  margin-inline: auto;
+}
+
+.pdt-copy--memory,
+.pdt-copy--room,
+.pdt-copy--host {
+  margin-inline: 0;
+}
+
+.pdt-panel {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.pdt-panel--start {
+  text-align: start;
+}
+
+.pdt-panel--start .pdt-lines {
+  margin-inline: 0 auto;
+}
+
+.pdt-kicker {
+  font-size: var(--step--1);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-label);
+  font-weight: 500;
+  color: var(--color-brand-300);
+}
+
+.pdt-kicker--ink {
+  color: var(--color-brand-700);
+}
+
+/**
+ * The narrative voice.
+ *
+ * Large and light — the site's first law. Each authored line is its own
+ * display line rather than a wrapped paragraph, because these are spoken
+ * beats and the line break is the punctuation. `text-wrap: balance` catches
+ * the case where one beat is long enough to wrap anyway at 375px.
+ */
+.pdt-lines {
+  display: flex;
+  flex-direction: column;
+  /* --pdt-measure is in em, so one number reads correctly on all three of the
+     ramp steps this page sets narrative type at. */
+  max-inline-size: min(100%, var(--pdt-measure, 17em));
+  margin-inline: auto;
+  font-size: var(--ramp-section);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  color: var(--color-paper);
+  text-wrap: balance;
+}
+
+.pdt-line + .pdt-line {
+  margin-block-start: 0.08em;
+}
+
+/* The second and later lines of a beat step back, so a three-line beat reads
+   as one sentence arriving rather than three competing headlines. */
+.pdt-line:not(:first-child) {
+  color: var(--color-paper-soft);
+}
+
+/* ------------------------------------------------------------------ print */
+
+.pdt-print {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  inline-size: min(var(--pdt-print-w, 30rem), 86vw);
+  padding: var(--pdt-print-pad);
+  padding-block-end: var(--pdt-print-foot);
+  background: var(--pdt-print-paper);
+  box-shadow:
+    0 1px 1px rgb(0 0 0 / 0.32),
+    0 18px 44px -12px rgb(0 0 0 / 0.6);
+}
+
+.pdt-print-window {
+  position: relative;
+  aspect-ratio: var(--ratio, 4 / 3);
+  overflow: clip;
+  background: var(--color-ink);
+}
+
+.pdt-print-img {
+  object-fit: cover;
+}
+
+/* The single word under a print in the river. Positioned in the print's own
+   bottom margin — the place a person writes on the back of a photograph. */
+.pdt-word {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: var(--pdt-print-pad);
+  block-size: var(--pdt-print-foot);
+  display: grid;
+  place-items: center;
+  font-size: var(--step-1);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+/* --------------------------------------------------------- I. the memory */
+
+/**
+ * The banded stage: subject above, words below, never on top of each other.
+ *
+ * Three acts want this shape, and the first build had all three improvising
+ * it with `align-self` inside a single stacked cell — which held while the
+ * copy was short and collided the moment a beat ran to four lines. The
+ * opening act was the worst of them: the words crossed the faces in the
+ * photograph the act is entirely about.
+ *
+ * A photograph a reader is being asked to *feel something about* cannot have
+ * type across it. That is not a legibility rule, it is the argument of the
+ * page.
+ */
+.pdt-stage--band {
+  padding-block: clamp(5rem, 11vh, 7.5rem) clamp(2.5rem, 7vh, 5rem);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-content: stretch;
+  justify-items: center;
+  gap: clamp(1.5rem, 4vh, 3rem);
+  text-align: center;
+}
+
+.pdt-stage--band > .pdt-copy {
+  align-self: end;
+}
+
+.pdt-act--memory .pdt-stage {
+  justify-items: center;
+  text-align: center;
+}
+
+/* The words in the banded acts sit over the foot of a photograph, so the
+   ground under them is darkened rather than the type being given a halo. */
+.pdt-stage--band::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: 46%;
+  z-index: 1;
+  background: linear-gradient(to top, var(--color-void) 12%, transparent 100%);
+  pointer-events: none;
+}
+
+.pdt-print--memory {
+  /* Portrait, so the height cap has to be tighter than a landscape print\'s
+     for the same row: 19rem of this image is 25rem tall before its foot. */
+  --pdt-print-w: min(19rem, 30vh);
+  align-self: center;
+  rotate: -2.1deg;
+}
+
+/**
+ * Film grain behind the opening act.
+ *
+ * It does the job a photograph would otherwise have to do — giving the black
+ * a surface, so the first print reads as sitting *on* something — without
+ * putting a second photograph in front of the one the act is about.
+ *
+ * feTurbulence rather than the repeating-conic-gradient version this started
+ * as. Conic gradients repeated from a point produce rays, and rays across a
+ * 1440px black field are a visible starburst behind the reader's first
+ * photograph: a moire, not a texture. Fractal noise has no centre and no
+ * period, which is the whole property wanted here.
+ */
+.pdt-memory-field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  pointer-events: none;
+}
+
+/* ------------------------------------------ II. the vista, and the turn */
+
+/**
+ * The whole argument of the page, in one filter declaration that changes.
+ *
+ * At rest — no scroll timelines, or a reader who asked for less motion — the
+ * photograph shows in colour, because the static page cannot stage a reveal
+ * and a grey photograph with no turn coming is just a badly graded picture.
+ * The choreographed version below starts it grey and blooms at --turn.
+ */
+.pdt-bleed--vista .pdt-bleed-img {
+  filter: contrast(1.04) saturate(1.12) brightness(0.9);
+}
+
+/* ------------------------------------------------------------ IV. the word */
+
+/* Act IV's word sits in the band's upper row, its gloss in the lower. */
+.pdt-act--define .pdt-term {
+  align-self: end;
+}
+
+.pdt-bleed--define .pdt-bleed-img {
+  filter: grayscale(0.72) brightness(0.5);
+}
+
+.pdt-term {
+  position: relative;
+  z-index: 2;
+  font-size: var(--ramp-display);
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+  font-weight: 300;
+  color: var(--color-paper);
+}
+
+.pdt-copy--define .pdt-lines {
+  --pdt-measure: 21em;
+  font-size: var(--ramp-title);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+
+.pdt-copy--define .pdt-line:not(:first-child) {
+  color: var(--color-paper);
+}
+
+/* --------------------------------------------------------- V. the table */
+
+.pdt-scatter {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  align-self: center;
+  inline-size: min(38rem, 100%);
+  /* Belt and braces with the vh caps above: whatever the prints compute to,
+     the scatter may not exceed the row it was given. */
+  max-block-size: 100%;
+}
+
+/**
+ * Sized against the height available, not only the width.
+ *
+ * The upper row of a banded stage is `1fr`, and a print sized only in rem
+ * grows straight through it and back over the words on any viewport shorter
+ * than about 900px — which is most laptops. The scatter is *two* prints deep
+ * once the small one is tucked under the large one, so the cap has to leave
+ * room for both: at 40vh this print is ~30vh tall with its foot, the small
+ * one adds ~11vh past it, and the pair clears a 900px stage with the band
+ * still at its designed size.
+ */
+.pdt-print--room-a {
+  --pdt-print-w: min(26rem, 40vh);
+  rotate: 1.4deg;
+}
+
+.pdt-print--room-b {
+  --pdt-print-w: min(9rem, 14vh);
+  rotate: -5.5deg;
+  margin-block-start: -14%;
+  margin-inline-start: auto;
+  margin-inline-end: -4%;
+}
+
+/* ------------------------------------------------------- VI. the river */
+
+.pdt-act--river {
+  background: var(--color-void);
+}
+
+.pdt-stage--river {
+  align-content: center;
+  gap: clamp(2rem, 5vw, 3.5rem);
+  padding-inline: 0;
+}
+
+.pdt-river-head {
+  padding-inline: var(--pdt-gutter);
+}
+
+.pdt-river-title {
+  font-size: var(--ramp-section);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  color: var(--color-paper);
+  margin-block-start: clamp(0.5rem, 1.5vw, 1rem);
+}
+
+.pdt-river {
+  display: flex;
+  gap: var(--pdt-river-gap);
+  padding-inline: var(--pdt-gutter);
+  list-style: none;
+  /* At rest this is a normal horizontal scroller — a real, usable control
+     with momentum on touch. The enhancement replaces the reader's gesture
+     with the page's, and switches this off. */
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: inline mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-600) transparent;
+  padding-block-end: 1rem;
+}
+
+.pdt-river-item {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+}
+
+.pdt-print--river {
+  --pdt-print-w: var(--pdt-river-card);
+}
+
+.pdt-river-item:nth-child(odd) .pdt-print--river {
+  rotate: -1.2deg;
+}
+.pdt-river-item:nth-child(even) .pdt-print--river {
+  rotate: 1.6deg;
+}
+
+/* --------------------------------------------------------- VII. the host */
+
+.pdt-host {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+  inline-size: min(var(--container-content), 100%);
+  margin-inline: auto;
+}
+
+.pdt-host-figure {
+  justify-self: center;
+  inline-size: min(26rem, 72vw, 46vh);
+}
+
+.pdt-host-img {
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.pdt-host-name {
+  font-size: var(--ramp-section);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  color: var(--color-paper);
+  margin-block: 0.4em 0;
+}
+
+.pdt-copy--host {
+  margin-block-start: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.pdt-copy--host .pdt-lines {
+  --pdt-measure: 26em;
+  font-size: var(--text-rise);
+  line-height: 1.6;
+  letter-spacing: 0;
+}
+
+.pdt-copy--host .pdt-line:not(:first-child) {
+  color: var(--color-paper-soft);
+}
+
+@media (min-width: 48rem) {
+  .pdt-host {
+    /* Narrower than the site container: at 1240px the two halves drifted so
+       far apart that the portrait and the words stopped reading as one
+       composition and became two objects sharing a screen. */
+    inline-size: min(66rem, 100%);
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(2.5rem, 5vw, 4.5rem);
+  }
+  .pdt-host-figure {
+    justify-self: start;
+  }
+}
+
+/* ---------------------------------------------------------- VIII. the ask */
+
+/**
+ * The only act on paper, and that is the point: the narrative was a dark
+ * room, and this is walking back out of it. It is also the only act with a
+ * control in it — one primary action, no competing buttons.
+ */
+.pdt-ask {
+  position: relative;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding-block: var(--band-y);
+  padding-inline: var(--pdt-gutter);
+}
+
+.pdt-ask-inner {
+  inline-size: min(var(--container-content), 100%);
+  margin-inline: auto;
+  max-inline-size: 46rem;
+}
+
+.pdt-ask-title {
+  font-size: var(--ramp-section);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 300;
+  color: var(--color-ink);
+  margin-block-start: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.pdt-ask-body {
+  margin-block-start: clamp(1.5rem, 3.5vw, 2.5rem);
+  max-inline-size: var(--container-text);
+  font-size: var(--text-lede);
+  line-height: 1.6;
+  color: var(--color-ink-soft);
+}
+
+.pdt-ask-body > * + * {
+  margin-block-start: 1.1rem;
+}
+
+/* ==========================================================================
+   PART TWO — the choreography
+
+   Everything below runs only where scroll-driven animations exist AND the
+   reader has not asked for less motion. Nothing below adds content, removes
+   content, or changes a word; strip this block and PART ONE stands.
+   ========================================================================== */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Each act becomes a scroll runway with a pinned stage. Its length is a
+       function of how many beats of copy it holds, so a two-beat act is not
+       given the same distance as a four-beat one. */
+    .pdt-act {
+      block-size: calc(var(--pdt-pin) + var(--beats, 2) * var(--pdt-beat));
+      view-timeline-name: --act;
+      view-timeline-axis: block;
+    }
+
+    .pdt-stage {
+      position: sticky;
+      inset-block-start: 0;
+      block-size: 100svh;
+      min-block-size: 0;
+    }
+
+    /* Stacked, not stepped: under the enhancement the elements of a plain
+       stage occupy the same cell and the choreography separates them in time
+       instead of in space. The banded stages keep their two rows, and the
+       full-bleed photograph is excluded from placement in both — see the
+       containing-block note on .pdt-bleed. */
+    .pdt-stage > *:not(.pdt-bleed) {
+      grid-area: 1 / 1;
+    }
+
+    .pdt-stage {
+      align-content: stretch;
+      justify-items: stretch;
+    }
+
+    .pdt-stage--band > *:not(.pdt-bleed) {
+      grid-area: auto;
+    }
+
+    /* ------------------------------------------------------------ the rail */
+
+    .pdt-rail-fill {
+      scale: 0 1;
+      animation: pdt-rail linear both;
+      animation-timeline: --story;
+      animation-range: contain 0% contain 100%;
+    }
+
+    .pdt-dark {
+      view-timeline-name: --story;
+      view-timeline-axis: block;
+    }
+
+    @keyframes pdt-rail {
+      to {
+        scale: 1 1;
+      }
+    }
+
+    /* ----------------------------------------------------------- the beats */
+
+    /**
+     * Each beat owns a slice of its act's pin. --r0/--r1 are written by the
+     * component (see Panel in ScrollStory.tsx) rather than computed here,
+     * because `animation-range` with an unregistered custom property inside
+     * `calc()` is the one corner of this spec engines still disagree on.
+     */
+    .pdt-copy {
+      display: grid;
+      align-content: center;
+      justify-content: inherit;
+      block-size: 100%;
+      gap: 0;
+    }
+
+    .pdt-copy > .pdt-panel {
+      grid-area: 1 / 1;
+      opacity: 0;
+      animation: pdt-beat linear both;
+      animation-timeline: --act;
+      animation-range: contain var(--r0) contain var(--r1);
+    }
+
+    @keyframes pdt-beat {
+      0% {
+        opacity: 0;
+        translate: 0 1.6rem;
+      }
+      16% {
+        opacity: 1;
+        translate: 0 0;
+      }
+      74% {
+        opacity: 1;
+        translate: 0 0;
+      }
+      100% {
+        opacity: 0;
+        translate: 0 -1.6rem;
+      }
+    }
+
+    /* The very first beat of the page is already on screen when the page
+       loads; it must not fade in from nothing at scroll position zero. */
+    .pdt-copy > .pdt-panel[data-first] {
+      animation-name: pdt-beat-first;
+    }
+
+    @keyframes pdt-beat-first {
+      0%,
+      74% {
+        opacity: 1;
+        translate: 0 0;
+      }
+      100% {
+        opacity: 0;
+        translate: 0 -1.6rem;
+      }
+    }
+
+    /* -------------------------------------------------- I. the print grows */
+
+    /**
+     * The motif's first move. It arrives small, tilted and slightly askew —
+     * the way a photograph sits when someone has just put it down — and over
+     * the act it straightens and comes forward, as if being picked up.
+     */
+    .pdt-print--memory {
+      justify-self: center;
+      align-self: center;
+      animation: pdt-print-lift linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 100%;
+    }
+
+    @keyframes pdt-print-lift {
+      from {
+        scale: 0.62;
+        rotate: -4.4deg;
+        translate: 0 3vh;
+      }
+      to {
+        scale: 1.02;
+        rotate: 0.4deg;
+        translate: 0 -2vh;
+      }
+    }
+
+    /* The copy in act I sits over the print rather than beside it, so the
+       print is what the eye lands on and the words arrive on top of it. */
+    .pdt-copy--memory {
+      justify-self: center;
+      align-self: end;
+      justify-items: center;
+      text-align: center;
+      block-size: auto;
+      padding-block-end: clamp(1rem, 4vh, 3rem);
+    }
+
+    .pdt-memory-field {
+      animation: pdt-drift linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 100%;
+    }
+
+    @keyframes pdt-drift {
+      to {
+        background-position: 140px 110px;
+      }
+    }
+
+    /* ------------------------------------------------ II. the grade turns */
+
+    /**
+     * The turn, as one uninterrupted shot.
+     *
+     * Grey and receding while the reader is being shown somebody else\'s
+     * sunset; blooming into colour and leaning in from the moment the copy
+     * says "but if you climbed the hill". Two animations on one element,
+     * split at --turn, which the component computes from where the authored
+     * copy actually changes — so re-cutting the words in the editor moves the
+     * colour with them instead of leaving it stranded a beat late.
+     *
+     * `linear` is right here and would be wrong almost anywhere else: the
+     * timeline is the reader\'s own hand. Easing a scroll-linked animation
+     * makes the page appear to accelerate away from the gesture driving it.
+     */
+    .pdt-bleed--vista .pdt-bleed-img {
+      animation:
+        pdt-recede linear both,
+        pdt-bloom linear both;
+      animation-timeline: --act, --act;
+      animation-range:
+        contain 0% contain calc(var(--turn, 0.5) * 100%),
+        contain calc(var(--turn, 0.5) * 100%) contain 100%;
+    }
+
+    @keyframes pdt-recede {
+      from {
+        scale: 1.12;
+        filter: grayscale(1) contrast(0.92) brightness(0.8);
+      }
+      to {
+        scale: 1.03;
+        filter: grayscale(1) contrast(0.84) brightness(0.6);
+      }
+    }
+
+    @keyframes pdt-bloom {
+      0% {
+        scale: 1.03;
+        filter: grayscale(1) contrast(0.84) brightness(0.6);
+      }
+      62% {
+        scale: 1.09;
+        filter: grayscale(0) contrast(1.04) saturate(1.16) brightness(0.94);
+      }
+      100% {
+        scale: 1.13;
+        filter: grayscale(0) contrast(1.04) saturate(1.16) brightness(0.94);
+      }
+    }
+
+    /* ------------------------------------------------ IV. the word arrives */
+
+    .pdt-term {
+      justify-self: center;
+      align-self: end;
+      animation: pdt-term-in linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 34%;
+    }
+
+    @keyframes pdt-term-in {
+      from {
+        opacity: 0;
+        letter-spacing: 0.06em;
+      }
+      to {
+        opacity: 1;
+        letter-spacing: -0.03em;
+      }
+    }
+
+    .pdt-copy--define {
+      justify-self: center;
+      align-self: start;
+      justify-items: center;
+      text-align: center;
+      block-size: auto;
+    }
+
+    .pdt-bleed--define .pdt-bleed-img {
+      animation: pdt-define-push linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 100%;
+    }
+
+    @keyframes pdt-define-push {
+      from {
+        scale: 1.12;
+      }
+      to {
+        scale: 1;
+      }
+    }
+
+    /* ------------------------------------------- V. one print becomes many */
+
+    .pdt-scatter {
+      justify-self: center;
+      align-self: center;
+      inline-size: min(38rem, 84vw);
+      max-block-size: 100%;
+    }
+
+    .pdt-print--room-a,
+    .pdt-print--room-b {
+      animation: linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 100%;
+    }
+
+    .pdt-print--room-a {
+      animation-name: pdt-fan-a;
+    }
+    .pdt-print--room-b {
+      animation-name: pdt-fan-b;
+    }
+
+    @keyframes pdt-fan-a {
+      from {
+        rotate: 0deg;
+        translate: 0 4vh;
+        scale: 0.94;
+      }
+      to {
+        rotate: 2.6deg;
+        translate: -3% -1vh;
+        scale: 1;
+      }
+    }
+
+    @keyframes pdt-fan-b {
+      from {
+        rotate: 0deg;
+        translate: 12% 6vh;
+        scale: 0.8;
+        opacity: 0;
+      }
+      35% {
+        opacity: 1;
+      }
+      to {
+        rotate: -7deg;
+        translate: 0 0;
+        scale: 1;
+        opacity: 1;
+      }
+    }
+
+    .pdt-copy--room {
+      justify-self: center;
+      align-self: end;
+      justify-items: center;
+      text-align: center;
+      block-size: auto;
+      padding-block-end: clamp(1rem, 4vh, 3rem);
+    }
+
+    /* ------------------------------------------------ VI. the river travels */
+
+    /**
+     * Horizontal travel driven by vertical scroll.
+     *
+     * The sign is flipped through --dir (globals.css) because the track is
+     * laid out RTL: in Hebrew the next card is to the *left*, so "forward"
+     * here is the opposite translation from the LTR version of this effect.
+     * --cards comes from the component; the travel is the track's overflow.
+     */
+    /* --cards sets how long the act is, and nothing else: the travel is
+       measured from layout (see @keyframes pdt-river). Adding a seventh
+       feeling in the editor lengthens the runway on its own. */
+    .pdt-act--river {
+      block-size: calc(var(--pdt-pin) + var(--cards, 6) * 42vh);
+    }
+
+    .pdt-stage--river {
+      align-content: center;
+      justify-items: stretch;
+      gap: clamp(2rem, 5vw, 3.5rem);
+    }
+
+    .pdt-stage--river > *:not(.pdt-bleed) {
+      grid-area: auto;
+    }
+
+    .pdt-river {
+      overflow-x: clip;
+      scroll-snap-type: none;
+      padding-block-end: 0;
+      animation: pdt-river linear both;
+      animation-timeline: --act;
+      animation-range: contain 4% contain 96%;
+    }
+
+    @keyframes pdt-river {
+      from {
+        translate: 0 0;
+      }
+      to {
+        /**
+         * Exactly the track's own overflow past the viewport, and nothing to
+         * keep in step by hand.
+         *
+         * A percentage in `translate` resolves against the element's own
+         * border box, and the track's border box IS the full row of cards:
+         * it is a flex container of `flex: 0 0 auto` items, so its automatic
+         * minimum size is its min-content width and it overflows the stage
+         * rather than being stretched to it. `100% - 100vw` is therefore the
+         * distance from "first card at the leading edge" to "last card at
+         * the trailing edge", measured by layout.
+         *
+         * This replaces an arithmetic version that restated the card width,
+         * the gap and the gutter — three numbers declared elsewhere that had
+         * to agree with this keyframe forever, and were already ~50px out.
+         * The sign comes from --dir (globals.css): the track is laid out RTL,
+         * so its overflow is to the left and "forward" is a positive
+         * translation, the opposite of the LTR version of this effect.
+         */
+        translate: calc(var(--dir) * -1 * (100% - 100vw)) 0;
+      }
+    }
+
+    .pdt-river-head {
+      animation: pdt-beat-first linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 100%;
+    }
+
+    /* ------------------------------------------------------- VII. the host */
+
+    .pdt-act--host .pdt-stage {
+      align-content: center;
+    }
+
+    .pdt-host {
+      place-self: center;
+    }
+
+    .pdt-host-figure {
+      animation: pdt-host-in linear both;
+      animation-timeline: --act;
+      animation-range: contain 0% contain 50%;
+    }
+
+    @keyframes pdt-host-in {
+      from {
+        opacity: 0;
+        translate: 0 4vh;
+      }
+      to {
+        opacity: 1;
+        translate: 0 0;
+      }
+    }
+
+    .pdt-copy--host {
+      block-size: auto;
+    }
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Narrow viewports.
+
+   Two things break on a phone if left alone, and both are geometry rather
+   than styling, so they are fixed outside the enhancement block: display
+   type set for a 1440px stage overruns a 375px one, and a print sized in rem
+   stops being a print and becomes a wall.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 40rem) {
+  .pdt-lines {
+    font-size: var(--step-4);
+  }
+
+  .pdt-copy--define .pdt-lines,
+  .pdt-copy--host .pdt-lines {
+    font-size: var(--text-lede);
+  }
+
+  /* A banded stage on a phone is mostly band: the subject gets what is left,
+     which on a 375x667 screen is not much, and a print that does not fit is
+     worse than a small one. */
+  .pdt-print--room-a {
+    --pdt-print-w: min(17rem, 42vh);
+  }
+
+  .pdt-print--room-b {
+    --pdt-print-w: min(7rem, 17vh);
+  }
+
+  /**
+   * Clear the WhatsApp button.
+   *
+   * It is a fixed, site-wide element at the bottom of the inline-start edge,
+   * and on a phone the narrative's centred copy band runs straight under it —
+   * a floating green circle sitting on the word the whole beat turns on. The
+   * band gives up the height instead.
+   */
+  .pdt-stage--band > .pdt-copy,
+  .pdt-copy--memory,
+  .pdt-copy--room {
+    padding-block-end: 4.5rem;
+  }
+
+  .pdt-print--memory {
+    --pdt-print-w: 13rem;
+  }
+
+  .pdt-print--room-a {
+    --pdt-print-w: 17rem;
+  }
+
+  .pdt-print--room-b {
+    --pdt-print-w: 7rem;
+  }
+
+  .pdt {
+    --pdt-river-card: 13.5rem;
+  }
+}

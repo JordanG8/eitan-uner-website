@@ -7,12 +7,15 @@ import {
   Logos,
   Quote,
   RichText,
+  ScrollStory,
   TextImage,
   Video,
 } from "@/components/blocks";
 import { Testimonials } from "@/components/Testimonials";
+import { scrollStory } from "@/lib/content";
 import { CLIENT_LOGOS } from "./assets";
 import { MediaField } from "./MediaField";
+import { scrollStoryToPuckProps } from "./seed";
 
 /**
  * Puck configuration.
@@ -71,6 +74,40 @@ const paragraphsField = {
 /** Puck arrays hold objects; the block components want plain strings. */
 const toStrings = (rows?: { text?: string }[]) =>
   (rows ?? []).map((r) => r?.text ?? "").filter(Boolean);
+
+/**
+ * A run of narrative beats for the scrolling homepage.
+ *
+ * Each beat is one held moment: a small turquoise label, and up to a few
+ * display lines. The lines are separate rows rather than one textarea because
+ * on that page the line break *is* the punctuation — it decides where the
+ * reader pauses — and a wrapped paragraph cannot express it.
+ */
+const beatsField = (label: string) =>
+  ({
+    type: "array",
+    label,
+    getItemSummary: (item: any) =>
+      (item?.lines?.[0]?.text || "בית").slice(0, 32),
+    arrayFields: {
+      kicker: { type: "text", label: "תווית קטנה (לא חובה)" },
+      lines: {
+        type: "array",
+        label: "שורות",
+        getItemSummary: (item: any) => (item?.text || "שורה").slice(0, 32),
+        arrayFields: { text: { type: "text", label: "שורה" } },
+      },
+    },
+  }) as any;
+
+/** Puck arrays hold objects at every level; the block wants plain strings. */
+const toBeats = (rows?: { kicker?: string; lines?: { text?: string }[] }[]) =>
+  (rows ?? [])
+    .map((r) => ({
+      kicker: r?.kicker || undefined,
+      lines: toStrings(r?.lines),
+    }))
+    .filter((b) => b.lines.length > 0);
 
 const bgField = (withBrand = true) =>
   ({
@@ -316,6 +353,116 @@ export const config: Config = {
             _type: "logos",
             ...props,
             logos: (logos ?? []).map((r: any) => r?.image).filter((i: any) => i?.src),
+          }}
+        />
+      ),
+    },
+
+    /* ------------------------------------------------------------------ */
+    /**
+     * The scrolling homepage.
+     *
+     * Every photograph and every word is editable; the choreography is not.
+     * That is the same "blocks, not a canvas" rule the rest of this config
+     * follows, applied to a longer form — Eitan recasts the film, he does not
+     * re-cut it, and so he cannot land on a version of this page that does
+     * not work.
+     */
+    "סיפור נגלל": {
+      label: "עמוד הבית הנגלל",
+      fields: {
+        memory: {
+          type: "object",
+          label: "א׳ — התמונה הישנה",
+          objectFields: {
+            image: imageField("התצלום"),
+            panels: beatsField("הבתים"),
+          },
+        } as any,
+        vista: {
+          type: "object",
+          label: "ב׳+ג׳ — הנוף, פעמיים",
+          objectFields: {
+            image: imageField("התצלום (מופיע פעמיים)"),
+            cold: beatsField("בתים — לפני"),
+            warm: beatsField("בתים — אחרי"),
+          },
+        } as any,
+        define: {
+          type: "object",
+          label: "ד׳ — המילה",
+          objectFields: {
+            image: imageField("רקע"),
+            term: { type: "text", label: "המילה" },
+            panels: beatsField("הבתים"),
+          },
+        } as any,
+        room: {
+          type: "object",
+          label: "ה׳ — השולחן",
+          objectFields: {
+            image: imageField("תצלום ראשי"),
+            inset: imageField("תצלום קטן"),
+            panels: beatsField("הבתים"),
+          },
+        } as any,
+        feelings: {
+          type: "object",
+          label: "ו׳ — רצועת הרגשות",
+          objectFields: {
+            kicker: { type: "text", label: "תווית קטנה" },
+            title: { type: "text", label: "כותרת" },
+            items: {
+              type: "array",
+              label: "תמונות ומילים",
+              getItemSummary: (item: any) => item?.word || "מילה",
+              arrayFields: {
+                image: imageField("תצלום"),
+                word: { type: "text", label: "מילה אחת" },
+              },
+            },
+          },
+        } as any,
+        host: {
+          type: "object",
+          label: "ז׳ — מי מנחה",
+          objectFields: {
+            image: imageField("דיוקן"),
+            role: { type: "text", label: "תווית קטנה" },
+            name: { type: "text", label: "שם" },
+            panels: beatsField("הבתים"),
+          },
+        } as any,
+        ask: {
+          type: "object",
+          label: "ח׳ — הקריאה לפעולה",
+          objectFields: {
+            kicker: { type: "text", label: "תווית קטנה" },
+            title: { type: "text", label: "כותרת" },
+            body: paragraphsField,
+            ctas: ctasField,
+          },
+        } as any,
+      },
+      defaultProps: scrollStoryToPuckProps(scrollStory) as any,
+      render: ({ memory, vista, define, room, feelings, host, ask }: any) => (
+        <ScrollStory
+          block={{
+            _type: "scrollStory",
+            memory: { ...memory, panels: toBeats(memory?.panels) },
+            vista: {
+              ...vista,
+              cold: toBeats(vista?.cold),
+              warm: toBeats(vista?.warm),
+            },
+            define: { ...define, panels: toBeats(define?.panels) },
+            room: { ...room, panels: toBeats(room?.panels) },
+            feelings: {
+              ...feelings,
+              items: (feelings?.items ?? []).filter((i: any) => i?.image?.src),
+            },
+            host: { ...host, panels: toBeats(host?.panels) },
+            ask: { ...ask, body: toStrings(ask?.body) },
           }}
         />
       ),

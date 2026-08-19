@@ -11,12 +11,15 @@ import type {
   LogosBlock,
   QuoteBlock,
   RichTextBlock,
+  ScrollStoryBlock,
   TestimonialsBlock,
   TextImageBlock,
   VideoBlock,
 } from "@/lib/types";
 import { Button, CtaRow, Inline, QuietLink, Rule, Section, SectionHeading } from "./site";
 import { Separator } from "./ui/separator";
+import { ScrollStory } from "./ScrollStory";
+
 import { Testimonials } from "./Testimonials";
 
 /**
@@ -26,6 +29,13 @@ import { Testimonials } from "./Testimonials";
  * Every prop signature is unchanged, because the Puck editor imports these
  * same components and content.ts is frozen. What changed is the design.
  */
+
+/**
+ * Re-exported so src/puck/config.tsx has exactly one import surface for block
+ * renderers. The narrative homepage lives in its own file because it is four
+ * hundred lines of one idea, but it is a block like any other.
+ */
+export { ScrollStory } from "./ScrollStory";
 
 /* -------------------------------------------------------------------- hero */
 
@@ -714,6 +724,8 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
     <>
       {blocks.map((block, i) => {
         switch (block._type) {
+          case "scrollStory":
+            return <ScrollStory key={i} block={block as ScrollStoryBlock} />;
           case "hero":
             return <Hero key={i} block={block} />;
           case "textImage":

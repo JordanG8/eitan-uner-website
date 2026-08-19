@@ -1,6 +1,6 @@
 import type { Data } from "@measured/puck";
 import { pages } from "@/lib/content";
-import type { Block } from "@/lib/types";
+import type { Block, ScrollStoryBlock } from "@/lib/types";
 
 /**
  * Converts a page from content.ts into Puck's data shape, so the editor opens on
@@ -8,6 +8,7 @@ import type { Block } from "@/lib/types";
  */
 
 const COMPONENT_FOR: Record<string, string> = {
+  scrollStory: "סיפור נגלל",
   hero: "כותרת ראשית",
   textImage: "טקסט ותמונה",
   richText: "קטע טקסט",
@@ -25,8 +26,38 @@ const COMPONENT_FOR: Record<string, string> = {
 /** Puck array items are objects, so string[] bodies become [{text}]. */
 const wrap = (body?: string[]) => (body ?? []).map((text) => ({ text }));
 
+/**
+ * The scrolling homepage's beats, in Puck's shape.
+ *
+ * Puck array items are always objects, and this block nests arrays two deep —
+ * beats, each holding lines — so the string[] of a line run becomes
+ * [{text}] one level further in than anywhere else on the site. Written once
+ * here and inverted once in to-blocks.ts; nothing else needs to know.
+ */
+const wrapBeats = (beats?: { kicker?: string; lines: string[] }[]) =>
+  (beats ?? []).map((b) => ({ kicker: b.kicker ?? "", lines: wrap(b.lines) }));
+
+/** The narrative block as Puck props — also the editor's default props. */
+export function scrollStoryToPuckProps(b: ScrollStoryBlock) {
+  return {
+    memory: { ...b.memory, panels: wrapBeats(b.memory.panels) },
+    vista: {
+      ...b.vista,
+      cold: wrapBeats(b.vista.cold),
+      warm: wrapBeats(b.vista.warm),
+    },
+    define: { ...b.define, panels: wrapBeats(b.define.panels) },
+    room: { ...b.room, panels: wrapBeats(b.room.panels) },
+    feelings: b.feelings,
+    host: { ...b.host, panels: wrapBeats(b.host.panels) },
+    ask: { ...b.ask, body: wrap(b.ask.body) },
+  };
+}
+
 function toPuckProps(block: Block): Record<string, unknown> {
   const b = block as any;
+  if (b._type === "scrollStory") return scrollStoryToPuckProps(b as ScrollStoryBlock);
+
   const props: Record<string, unknown> = { ...b };
   delete props._type;
 

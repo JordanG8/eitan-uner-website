@@ -136,7 +136,54 @@ export interface ContactBlock {
   title?: string;
 }
 
+/* --------------------------------------------------- the scroll narrative */
+
+/**
+ * One photograph in the river of feelings — a print with a single word under
+ * it. The word is the whole caption on purpose: naming a feeling in one word
+ * is the exercise the workshop actually runs.
+ */
+export interface FeelingCard {
+  image: ImageRef;
+  word: string;
+}
+
+/** One beat of copy held over a stage. Each line is its own display line. */
+export interface StoryPanel {
+  kicker?: string;
+  lines: string[];
+}
+
+/**
+ * The homepage argument, told by scrolling.
+ *
+ * This block is deliberately not a generic "scenes" array. The choreography —
+ * a single photographic print that grows, loses its border, turns from grey to
+ * colour, multiplies across a table and finally becomes a row of feelings — is
+ * fixed, and it is the argument. Eitan swaps the photographs and edits the
+ * words; he does not re-cut the film. That is the same "blocks, not a canvas"
+ * rule the rest of the site is built on, applied to a longer form.
+ */
+export interface ScrollStoryBlock {
+  _type: "scrollStory";
+  /** Act I — the print you already own, before anyone taught you a word for it. */
+  memory: { image: ImageRef; panels: StoryPanel[] };
+  /** Acts II & III — the same vista twice: once as a postcard, once as yours. */
+  vista: { image: ImageRef; cold: StoryPanel[]; warm: StoryPanel[] };
+  /** Act IV — the word, finally. */
+  define: { image: ImageRef; term: string; panels: StoryPanel[] };
+  /** Act V — the table. The one print becomes many. */
+  room: { image: ImageRef; inset: ImageRef; panels: StoryPanel[] };
+  /** Act VI — what comes out of it, one word per photograph. */
+  feelings: { kicker?: string; title: string; items: FeelingCard[] };
+  /** Act VII — who is in the room with them. */
+  host: { image: ImageRef; name: string; role: string; panels: StoryPanel[] };
+  /** Act VIII — the ask. The only act on paper. */
+  ask: { kicker?: string; title: string; body: string[]; ctas?: Cta[] };
+}
+
 export type Block =
+  | ScrollStoryBlock
   | HeroBlock
   | TextImageBlock
   | RichTextBlock

@@ -1,4 +1,4 @@
-import type { Page, SiteSettings, Story } from "./types";
+import type { Page, ScrollStoryBlock, SiteSettings, Story } from "./types";
 
 /**
  * Site content, transcribed from the original site123 screenshots.
@@ -155,6 +155,94 @@ const img = {
     alt: "נערה בשמלה לבנה על גדת נחל",
     width: 3200,
     height: 2131,
+  },
+};
+
+/* ------------------------------------------------- the scroll narrative */
+
+/**
+ * The eight photographs the homepage argument is built on, re-ingested from
+ * Eitan's originals at full resolution (see public/images/pdt/). They were
+ * chosen for what they are evidence *of*, not for polish: a print worn at the
+ * corners, a workshop table, a man with a camera tattoo. The one thing the
+ * page cannot afford is a stock photograph, because the whole claim is that a
+ * photograph belongs to whoever took it.
+ */
+const pdt = {
+  /** A family snapshot mounted on a scrap of weathered board. Act I is this
+   *  object; it is why the act needed no styling to feel like an artefact. */
+  printFamily: {
+    src: "/images/pdt/print-family.webp",
+    alt: "תצלום משפחתי ישן בשחור-לבן, אם וששה ילדים, מודבק על לוח עץ בלוי",
+    width: 2600,
+    height: 3467,
+  },
+  /** Dusk over still water. Shown twice, identically, on purpose. */
+  vista: {
+    src: "/images/pdt/vista-dusk.webp",
+    alt: "דמדומים ורודים מעל מים שקטים, גבעות כהות באופק",
+    width: 3600,
+    height: 2391,
+  },
+  tableKids: {
+    src: "/images/pdt/table-kids.webp",
+    alt: "ילדים סביב שולחן מכוסה תצלומים, כל אחד מחזיק תמונה מול פניו",
+    width: 2000,
+    height: 1500,
+  },
+  tableTeens: {
+    src: "/images/pdt/table-teens.webp",
+    alt: "בני נוער רכונים מעל שולחן ארוך ובוחרים מתוך עשרות תצלומים",
+    width: 1500,
+    height: 2000,
+  },
+  deadSea: {
+    src: "/images/pdt/deadsea.webp",
+    alt: "עמודי מים מתפרצים בים המלח, דמויות קטנות צופות מהחוף",
+    width: 2320,
+    height: 1565,
+  },
+  eitan: {
+    src: "/images/pdt/eitan-camera.webp",
+    alt: "איתן אונר בחולצה אדומה על רקע שחור, מצלמה מול עינו וקעקוע מצלמה על זרועו",
+    width: 1038,
+    height: 2048,
+  },
+  feelLove: {
+    src: "/images/pdt/feel-love.webp",
+    alt: "שתי ידיים שלובות זו בזו, טבעת נישואין על אצבע",
+    width: 821,
+    height: 1080,
+  },
+  feelFear: {
+    src: "/images/pdt/feel-fear.webp",
+    alt: "שלושה ילדים על סלעים בים בזמן שגל מתנפץ מעליהם",
+    width: 2600,
+    height: 1679,
+  },
+  feelGrief: {
+    src: "/images/pdt/feel-grief.webp",
+    alt: "גבר בכיפה מרכין את ראשו ומכסה את פניו בידו, דגל ישראל מאחוריו",
+    width: 1920,
+    height: 1080,
+  },
+  feelQuiet: {
+    src: "/images/pdt/feel-quiet.webp",
+    alt: "ידיים מבוגרות רוקמות בחוט על בד",
+    width: 3200,
+    height: 2125,
+  },
+  feelJoy: {
+    src: "/images/pdt/feel-joy.webp",
+    alt: "קבוצת אנשים רוקדים עם ידיים מורמות באוהל",
+    width: 1690,
+    height: 1080,
+  },
+  feelHope: {
+    src: "/images/pdt/feel-hope.webp",
+    alt: "אישה מבוגרת בצעיף אדום פורשת ידיים בהופעה, בלון אדום מעליה",
+    width: 1920,
+    height: 1080,
   },
 };
 
@@ -383,6 +471,164 @@ const testimonials = [
 
 /* -------------------------------------------------------------------- pages */
 
+/**
+ * The homepage argument, as one block.
+ *
+ * Lifted out of `pages` and exported because three places need the same
+ * object and none of them should own a second copy: the page itself, the Puck
+ * editor's default props (src/puck/config.tsx), and the seed that opens the
+ * editor on Eitan's real page rather than a blank one.
+ */
+export const scrollStory: ScrollStoryBlock = {
+  _type: "scrollStory",
+
+  /* I — a photograph the reader already has a feeling about, before
+     anyone has explained anything to them. This is the method's own
+     opening move, run on the reader instead of described to them. */
+  memory: {
+    image: pdt.printFamily,
+    panels: [
+      {
+        lines: [
+          "זוכרים את התמונה ההיא",
+          "שאמא שלכם צילמה אתכם בה, כשהייתם קטנים?",
+        ],
+      },
+      {
+        lines: [
+          "אולי בפולארויד. אולי בשחור־לבן.",
+          "מה קורה לכם עכשיו, כשאתם מסתכלים בה?",
+        ],
+      },
+    ],
+  },
+
+  /* II & III — the same file twice. The turn is that nothing about the
+     photograph changes; only who took it. */
+  vista: {
+    image: pdt.vista,
+    cold: [
+      {
+        kicker: "ועכשיו נסו את זו",
+        lines: [
+          "השקיעה הכי מרהיבה שראיתם,",
+          "מההר הכי גבוה שיש.",
+        ],
+      },
+      {
+        lines: ["יפה, נכון?", "וזה בערך כל מה שקרה לכם."],
+      },
+    ],
+    warm: [
+      {
+        lines: [
+          "אבל אם אתם עליתם על ההר.",
+          "אם אתם חיכיתם לאור.",
+          "אם אתם לחצתם על הכפתור —",
+        ],
+      },
+      {
+        lines: [
+          "אז זו כבר לא תמונה של שקיעה.",
+          "זו תמונה שלכם.",
+          "והיא מספרת עליכם בלי מילה אחת.",
+        ],
+      },
+    ],
+  },
+
+  /* IV — only now does the word appear. Naming it earlier would have
+     made it a service being sold; naming it here makes it the name of
+     something the reader has just done. */
+  define: {
+    image: pdt.deadSea,
+    term: "פוטודוקותרפיה",
+    panels: [
+      {
+        lines: [
+          "לצלם את מה שאין לו שם.",
+          "להביט במה שצילמתם.",
+          "ולגלות שידעתם את זה כל הזמן.",
+        ],
+      },
+      {
+        lines: ["לא צריך לדעת לצלם.", "צריך רק להסכים להסתכל."],
+      },
+    ],
+  },
+
+  /* V — the room, so that "workshop" is a thing the reader can picture
+     rather than a word on a price list. */
+  room: {
+    image: pdt.tableKids,
+    inset: pdt.tableTeens,
+    panels: [
+      {
+        kicker: "איך זה עובד בפועל",
+        lines: ["מפזרים תמונות על שולחן.", "כל אחד בוחר אחת."],
+      },
+      {
+        lines: [
+          "ואז מסבירים למה דווקא אותה.",
+          "זה החלק שבו מתחיל להיפתח משהו.",
+        ],
+      },
+    ],
+  },
+
+  /* VI — the evidence. Six photographs, one word each, because naming a
+     feeling in a single word is the exercise the room actually runs. */
+  feelings: {
+    kicker: "מה יוצא מזה",
+    title: "וזה מה שעולה מהשולחן",
+    items: [
+      { image: pdt.feelLove, word: "אהבה" },
+      { image: pdt.feelFear, word: "פחד" },
+      { image: pdt.feelGrief, word: "אובדן" },
+      { image: pdt.feelQuiet, word: "שקט" },
+      { image: pdt.feelJoy, word: "שמחה" },
+      { image: pdt.feelHope, word: "תקווה" },
+    ],
+  },
+
+  /* VII — who is in the room. Deliberately no numbers: nothing here
+     claims a client count or a year total that is not on record. */
+  host: {
+    image: pdt.eitan,
+    role: "מי עומד מאחורי זה",
+    name: "איתן אונר",
+    panels: [
+      {
+        lines: [
+          "צלם, מנחה, ופוטודוקותרפיסט.",
+          "אני לא מלמד אנשים לצלם יפה. אני מלמד אותם להסתכל.",
+        ],
+      },
+      {
+        lines: [
+          "עשיתי את זה בבתי ספר, בארגונים,",
+          "במרכזי שיקום, ובחדרים שבהם קשה מאוד לדבר.",
+        ],
+      },
+    ],
+  },
+
+  /* VIII — the only act on paper, and the only one with a control in
+     it. One primary action; the second is a quiet outline. */
+  ask: {
+    kicker: "לארגונים ולצוותים",
+    title: "להביא את פוטודוקותרפיה אל הצוות שלכם",
+    body: [
+      "סדנה או הרצאה שבה כל אחד בצוות מגיע עם התמונות שכבר יש לו בטלפון — ויוצא עם משהו שלא ידע להגיד עליו קודם.",
+      "מתאים לימי גיבוש, להכשרות צוות, לקבוצות טיפוליות ולמסגרות חינוכיות. אורך המפגש, גודל הקבוצה והמיקום נסגרים מראש.",
+    ],
+    ctas: [
+      { label: "לתיאום סדנה או הרצאה", href: "/צרו-קשר", tone: "solid" },
+      { label: "עוד על השיטה", href: "/פוטודוקותרפיה", tone: "outline" },
+    ],
+  },
+};
+
 export const pages: Page[] = [
   /* ---------------------------------------------------------------- home */
   {
@@ -392,65 +638,18 @@ export const pages: Page[] = [
       "איתן אונר — צלם ופוטודוקותרפיסט. סדנאות פוטודוקותרפיה, פוטותרפיה, וידאותרפיה, " +
       "צילום חברתי, הרצאות ותיעוד. ריפוי והשראה דרך העדשה.",
     blocks: [
-      {
-        _type: "hero",
-        title: "פוטודוקותרפיה",
-        image: img.hero,
-        backdrop: img.heroBackdrop,
-        imageSide: "end",
-        background: "brand",
-        ctas: [
-          { label: "על פוטותרפיה", href: "/פוטודוקותרפיה", tone: "solidWhite" },
-          { label: "לרכישת תמונות", href: "/תמונות-לרכישה", tone: "outlineWhite" },
-        ],
-      },
-      {
-        _type: "textImage",
-        title: "ריפוי והשראה דרך העדשה",
-        eyebrow: "תרפיה אמנותית",
-        image: img.hands,
-        imageSide: "end",
-        body: [],
-        ctas: [
-          { label: "סיפורים מאחורי המצלמה", href: "/סיפורים-מאחורי-המצלמה", tone: "solid" },
-          { label: "תערוכות", href: "/תערוכות", tone: "outline" },
-        ],
-      },
-      {
-        _type: "textImage",
-        title: "פוטודוקותרפיה",
-        image: img.whiteDress,
-        imageSide: "end",
-        body: [
-          "חוויה סוחפת במנעד של רגשות.",
-          "הפתיחות בפני החברים גורמת לאחר לשתף את היקר לו מכל.",
-        ],
-        ctas: [{ label: "קרא עוד", href: "/פוטודוקותרפיה", tone: "outline" }],
-      },
-      {
-        _type: "quote",
-        quote: "״אתה לא רק מצלם תמונה – אתה יוצר אותה״",
-        attribution: "אנסל אדמס",
-        ctas: [
-          { label: "תמונות לרכישה", href: "/תמונות-לרכישה", tone: "outlineWhite" },
-          { label: "להתרשמות בפורטפוליו", href: "/תיק-עבודות", tone: "outlineWhite" },
-        ],
-      },
-      {
-        _type: "cardGrid",
-        title: "סיפורים מאחורי המצלמה",
-        cards: storyCards.slice(0, 4),
-        columns: 4,
-        variant: "plain",
-      },
-      {
-        _type: "cardGrid",
-        title: "עדות 710",
-        cards: edutCards,
-        columns: 3,
-        variant: "overlay",
-        background: "brand",
-      },
+      /**
+       * The homepage is one argument, told by scrolling. See
+       * src/components/ScrollStory.tsx — the eight acts below are its script,
+       * and the choreography that carries them is fixed in CSS.
+       *
+       * The blocks this replaced (a hero, two textImage bands, a pull-quote
+       * and two card grids) are not lost: every one of those destinations is
+       * still in the nav and still has its own page. What they were doing on
+       * the homepage was competing with each other, which is exactly what a
+       * page whose job is to explain one idea cannot afford.
+       */
+      scrollStory,
       {
         _type: "cardGrid",
         title: "הרצאות",
