@@ -47,7 +47,7 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
 
   /* 12 — tap targets at 375. Named by their accessible name so the report
      survives a class change. */
-  R["12_tap_targets_375"] = await page.evaluate(() => {
+  R["12_tap_targets_375"] = await page.evaluate(async () => {
     const wanted = [
       'header button[aria-label="פתיחת התפריט"]',
       'a[href="/תמונות-לרכישה"]',
@@ -62,8 +62,37 @@ const px = (v) => Math.round(parseFloat(v) * 100) / 100;
     for (const sel of wanted) {
       const el = document.querySelector(sel);
       if (!el) { out[sel] = "NOT FOUND"; continue; }
+      /* behavior:"instant" and a frame to settle: html has
+         scroll-behavior:smooth, so a plain scrollIntoView animates and every
+         rect read straight after it is stale - which made elementFromPoint
+         return null and reported five fixed targets as 0x0. */
+      el.scrollIntoView({ block: "center", behavior: "instant" });
+      await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
       const r = el.getBoundingClientRect();
-      out[sel] = `${Math.round(r.width)}x${Math.round(r.height)}`;
+      /*
+       * The box is not the target. `.tap-hit` grows the pointer area with an
+       * ::after overlay precisely so the visible box can stay its own size,
+       * and getBoundingClientRect cannot see that - it would report the two
+       * ruled CTA links as unfixed when they are not.
+       *
+       * So: probe elementFromPoint outward from the centre, in both axes, and
+       * report the span that actually resolves to this element (or to
+       * something inside it). That is the number a thumb experiences.
+       */
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const owns = (x, y) => {
+        const hit = document.elementFromPoint(x, y);
+        return !!hit && (hit === el || el.contains(hit) || hit.parentElement === el);
+      };
+      const reach = (dx, dy) => {
+        let n = 0;
+        while (n < 200 && owns(cx + dx * (n + 1), cy + dy * (n + 1))) n += 1;
+        return n;
+      };
+      const hitW = owns(cx, cy) ? reach(1, 0) + reach(-1, 0) + 1 : 0;
+      const hitH = owns(cx, cy) ? reach(0, 1) + reach(0, -1) + 1 : 0;
+      out[sel] = `box ${Math.round(r.width)}x${Math.round(r.height)} / hit ${hitW}x${hitH}`;
     }
     return out;
   });
