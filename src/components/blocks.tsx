@@ -10,12 +10,14 @@ import type {
   LogosBlock,
   QuoteBlock,
   RichTextBlock,
+  ScrollStoryBlock,
   TestimonialsBlock,
   TextImageBlock,
   VideoBlock,
 } from "@/lib/types";
 import { CtaRow, Inline, Rule, Section, SectionHeading } from "./ui";
 import { Testimonials } from "./Testimonials";
+import { ScrollStory } from "./ScrollStory";
 
 /* -------------------------------------------------------------------- hero */
 
@@ -449,6 +451,8 @@ export function Blocks({ blocks }: { blocks: Block[] }) {
     <>
       {blocks.map((block, i) => {
         switch (block._type) {
+          case "scrollStory":
+            return <ScrollStory key={i} block={block as ScrollStoryBlock} />;
           case "hero":
             return <Hero key={i} block={block} />;
           case "textImage":

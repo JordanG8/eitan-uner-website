@@ -127,7 +127,30 @@ export interface ContactBlock {
   title?: string;
 }
 
+export interface StoryPanel {
+  kicker?: string;
+  lines: string[];
+}
+
+export interface FeelingCard {
+  image: ImageRef;
+  word: string;
+}
+
+/** A fixed cinematic homepage sequence driven by native CSS scroll timelines. */
+export interface ScrollStoryBlock {
+  _type: "scrollStory";
+  memory: { image: ImageRef; panels: StoryPanel[] };
+  vista: { image: ImageRef; cold: StoryPanel[]; warm: StoryPanel[] };
+  define: { image: ImageRef; term: string; panels: StoryPanel[] };
+  room: { image: ImageRef; inset: ImageRef; panels: StoryPanel[] };
+  feelings: { kicker?: string; title: string; items: FeelingCard[] };
+  host: { image: ImageRef; name: string; role: string; panels: StoryPanel[] };
+  ask: { kicker?: string; title: string; body: string[]; ctas?: Cta[] };
+}
+
 export type Block =
+  | ScrollStoryBlock
   | HeroBlock
   | TextImageBlock
   | RichTextBlock

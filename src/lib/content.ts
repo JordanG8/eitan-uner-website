@@ -1,4 +1,4 @@
-import type { Page, SiteSettings, Story } from "./types";
+import type { Page, ScrollStoryBlock, SiteSettings, Story } from "./types";
 
 /**
  * Site content, transcribed from the original site123 screenshots.
@@ -107,6 +107,51 @@ const img = {
     width: 1400,
     height: 930,
   },
+};
+
+const pdt = {
+  printFamily: {
+    src: "/images/pdt/print-family.webp",
+    alt: "תצלום משפחתי ישן בשחור-לבן, אם וששה ילדים, מודבק על לוח עץ בלוי",
+    width: 2600,
+    height: 3467,
+  },
+  vista: {
+    src: "/images/pdt/vista-dusk.webp",
+    alt: "דמדומים ורודים מעל מים שקטים, גבעות כהות באופק",
+    width: 3600,
+    height: 2391,
+  },
+  tableKids: {
+    src: "/images/pdt/table-kids.webp",
+    alt: "ילדים סביב שולחן מכוסה תצלומים, כל אחד מחזיק תמונה מול פניו",
+    width: 2000,
+    height: 1500,
+  },
+  tableTeens: {
+    src: "/images/pdt/table-teens.webp",
+    alt: "בני נוער רכונים מעל שולחן ארוך ובוחרים מתוך עשרות תצלומים",
+    width: 1500,
+    height: 2000,
+  },
+  deadSea: {
+    src: "/images/pdt/deadsea.webp",
+    alt: "עמודי מים מתפרצים בים המלח, דמויות קטנות צופות מהחוף",
+    width: 2320,
+    height: 1565,
+  },
+  eitan: {
+    src: "/images/pdt/eitan-camera.webp",
+    alt: "איתן אונר בחולצה אדומה על רקע שחור, מצלמה מול עינו וקעקוע מצלמה על זרועו",
+    width: 1038,
+    height: 2048,
+  },
+  feelLove: { src: "/images/pdt/feel-love.webp", alt: "שתי ידיים שלובות זו בזו", width: 821, height: 1080 },
+  feelFear: { src: "/images/pdt/feel-fear.webp", alt: "ילדים על סלעים בים בזמן שגל מתנפץ", width: 2600, height: 1679 },
+  feelGrief: { src: "/images/pdt/feel-grief.webp", alt: "גבר מרכין את ראשו ודגל ישראל מאחוריו", width: 1920, height: 1080 },
+  feelQuiet: { src: "/images/pdt/feel-quiet.webp", alt: "ידיים מבוגרות רוקמות בחוט על בד", width: 3200, height: 2125 },
+  feelJoy: { src: "/images/pdt/feel-joy.webp", alt: "קבוצת אנשים רוקדים עם ידיים מורמות", width: 1690, height: 1080 },
+  feelHope: { src: "/images/pdt/feel-hope.webp", alt: "אישה בצעיף אדום פורשת ידיים בהופעה", width: 1920, height: 1080 },
 };
 
 const storyImg = {
@@ -334,6 +379,77 @@ const testimonials = [
 
 /* -------------------------------------------------------------------- pages */
 
+export const scrollStory: ScrollStoryBlock = {
+  _type: "scrollStory",
+  memory: {
+    image: pdt.printFamily,
+    panels: [
+      { lines: ["זוכרים את התמונה ההיא", "שאמא שלכם צילמה אתכם בה, כשהייתם קטנים?"] },
+      { lines: ["אולי בפולארויד. אולי בשחור־לבן.", "מה קורה לכם עכשיו, כשאתם מסתכלים בה?"] },
+    ],
+  },
+  vista: {
+    image: pdt.vista,
+    cold: [
+      { kicker: "ועכשיו נסו את זו", lines: ["השקיעה הכי מרהיבה שראיתם,", "מההר הכי גבוה שיש."] },
+      { lines: ["יפה, נכון?", "וזה בערך כל מה שקרה לכם."] },
+    ],
+    warm: [
+      { lines: ["אבל אם אתם עליתם על ההר.", "אם אתם חיכיתם לאור.", "אם אתם לחצתם על הכפתור —"] },
+      { lines: ["אז זו כבר לא תמונה של שקיעה.", "זו תמונה שלכם.", "והיא מספרת עליכם בלי מילה אחת."] },
+    ],
+  },
+  define: {
+    image: pdt.deadSea,
+    term: "פוטודוקותרפיה",
+    panels: [
+      { lines: ["לצלם את מה שאין לו שם.", "להביט במה שצילמתם.", "ולגלות שידעתם את זה כל הזמן."] },
+      { lines: ["לא צריך לדעת לצלם.", "צריך רק להסכים להסתכל."] },
+    ],
+  },
+  room: {
+    image: pdt.tableKids,
+    inset: pdt.tableTeens,
+    panels: [
+      { kicker: "איך זה עובד בפועל", lines: ["מפזרים תמונות על שולחן.", "כל אחד בוחר אחת."] },
+      { lines: ["ואז מסבירים למה דווקא אותה.", "זה החלק שבו מתחיל להיפתח משהו."] },
+    ],
+  },
+  feelings: {
+    kicker: "מה יוצא מזה",
+    title: "וזה מה שעולה מהשולחן",
+    items: [
+      { image: pdt.feelLove, word: "אהבה" },
+      { image: pdt.feelFear, word: "פחד" },
+      { image: pdt.feelGrief, word: "אובדן" },
+      { image: pdt.feelQuiet, word: "שקט" },
+      { image: pdt.feelJoy, word: "שמחה" },
+      { image: pdt.feelHope, word: "תקווה" },
+    ],
+  },
+  host: {
+    image: pdt.eitan,
+    role: "מי עומד מאחורי זה",
+    name: "איתן אונר",
+    panels: [
+      { lines: ["צלם, מנחה, ופוטודוקותרפיסט.", "אני לא מלמד אנשים לצלם יפה. אני מלמד אותם להסתכל."] },
+      { lines: ["עשיתי את זה בבתי ספר, בארגונים,", "במרכזי שיקום, ובחדרים שבהם קשה מאוד לדבר."] },
+    ],
+  },
+  ask: {
+    kicker: "לארגונים ולצוותים",
+    title: "להביא את פוטודוקותרפיה אל הצוות שלכם",
+    body: [
+      "סדנה או הרצאה שבה כל אחד בצוות מגיע עם התמונות שכבר יש לו בטלפון — ויוצא עם משהו שלא ידע להגיד עליו קודם.",
+      "מתאים לימי גיבוש, להכשרות צוות, לקבוצות טיפוליות ולמסגרות חינוכיות. אורך המפגש, גודל הקבוצה והמיקום נסגרים מראש.",
+    ],
+    ctas: [
+      { label: "לתיאום סדנה או הרצאה", href: "/צרו-קשר", tone: "solid" },
+      { label: "עוד על השיטה", href: "/פוטודוקותרפיה", tone: "outline" },
+    ],
+  },
+};
+
 export const pages: Page[] = [
   /* ---------------------------------------------------------------- home */
   {
@@ -343,67 +459,7 @@ export const pages: Page[] = [
       "איתן אונר — צלם ופוטודוקותרפיסט. סדנאות פוטודוקותרפיה, פוטותרפיה, וידאותרפיה, " +
       "צילום חברתי, הרצאות ותיעוד. ריפוי והשראה דרך העדשה.",
     blocks: [
-      {
-        _type: "hero",
-        title: "פוטודוקותרפיה",
-        subtitle: "הצילום כדרך לעצור, להתבונן ולתת מקום לסיפור שנמצא בפנים.",
-        image: img.hero,
-        imageSide: "end",
-        background: "brand",
-        ctas: [
-          { label: "על פוטותרפיה", href: "/פוטודוקותרפיה", tone: "solidWhite" },
-          { label: "לרכישת תמונות", href: "/תמונות-לרכישה", tone: "outlineWhite" },
-        ],
-      },
-      {
-        _type: "textImage",
-        title: "ריפוי והשראה דרך העדשה",
-        eyebrow: "תרפיה אמנותית",
-        image: img.hands,
-        imageSide: "end",
-        body: [
-          "דרך צילום, שיחה והתבוננות נוצרת חוויה שמחברת בין אנשים, זיכרונות ורגשות — בלי צורך בניסיון קודם בצילום.",
-        ],
-        ctas: [
-          { label: "סיפורים מאחורי המצלמה", href: "/סיפורים-מאחורי-המצלמה", tone: "solid" },
-          { label: "תערוכות", href: "/תערוכות", tone: "outline" },
-        ],
-      },
-      {
-        _type: "textImage",
-        title: "פוטודוקותרפיה",
-        image: img.cameras,
-        imageSide: "end",
-        body: [
-          "חוויה סוחפת במנעד של רגשות.",
-          "הפתיחות בפני החברים גורמת לאחר לשתף את היקר לו מכל.",
-        ],
-        ctas: [{ label: "קרא עוד", href: "/פוטודוקותרפיה", tone: "outline" }],
-      },
-      {
-        _type: "quote",
-        quote: "״אתה לא רק מצלם תמונה – אתה יוצר אותה״",
-        attribution: "אנסל אדמס",
-        ctas: [
-          { label: "תמונות לרכישה", href: "/תמונות-לרכישה", tone: "outlineWhite" },
-          { label: "להתרשמות בפורטפוליו", href: "/תיק-עבודות", tone: "outlineWhite" },
-        ],
-      },
-      {
-        _type: "cardGrid",
-        title: "סיפורים מאחורי המצלמה",
-        cards: storyCards.slice(0, 4),
-        columns: 4,
-        variant: "plain",
-      },
-      {
-        _type: "cardGrid",
-        title: "עדות 710",
-        cards: edutCards,
-        columns: 3,
-        variant: "overlay",
-        background: "brand",
-      },
+      scrollStory,
       {
         _type: "cardGrid",
         title: "הרצאות",
