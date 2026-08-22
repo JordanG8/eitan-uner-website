@@ -1,211 +1,249 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "./Logo";
-import type { NavItem, SiteSettings } from "@/lib/types";
+import type { SiteSettings } from "@/lib/types";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
-/** Desktop "עוד" dropdown. Opens on hover and on click, closes on Escape. */
-function MoreMenu({ item, pathname }: { item: NavItem; pathname: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    function onClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onClick);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onClick);
-    };
-  }, []);
-
-  const childActive = item.children?.some((c) => isActive(pathname, c.href));
-
+function MenuGlyph({ open }: { open: boolean }) {
   return (
-    <div
-      ref={ref}
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1 rounded-full px-3 py-2 text-[15px] font-semibold transition-colors ${
-          childActive ? "bg-brand-50 text-brand-800" : "text-ink hover:bg-brand-50 hover:text-brand-700"
+    <span className="relative block h-5 w-7" aria-hidden="true">
+      <span
+        className={`absolute start-0 top-0.5 h-0.5 w-7 rounded-full bg-current transition-transform duration-500 ${
+          open ? "translate-y-2 rotate-45" : ""
         }`}
-      >
-        {item.label}
-        <svg
-          viewBox="0 0 20 20"
-          className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`}
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path d="M5 7l5 6 5-6z" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="absolute end-0 top-[calc(100%+0.75rem)] z-50 min-w-[16rem] overflow-hidden rounded-2xl border border-hairline bg-surface/95 p-2 shadow-[0_22px_55px_rgb(18_42_43_/_0.16)] backdrop-blur-xl">
-          {item.children?.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href}
-              onClick={() => setOpen(false)}
-              className={`block rounded-xl px-4 py-2.5 text-[15px] transition-colors hover:bg-brand-50 ${
-                isActive(pathname, child.href)
-                  ? "text-brand-600 font-semibold"
-                  : "text-ink"
-              }`}
-            >
-              {child.label}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
+      />
+      <span
+        className={`absolute start-0 top-[9px] h-0.5 rounded-full bg-current transition-all duration-300 ${
+          open ? "w-0 opacity-0" : "w-5 opacity-100"
+        }`}
+      />
+      <span
+        className={`absolute start-0 top-[17px] h-0.5 w-7 rounded-full bg-current transition-transform duration-500 ${
+          open ? "-translate-y-2 -rotate-45" : ""
+        }`}
+      />
+    </span>
   );
 }
 
 export function Header({ site }: { site: SiteSettings }) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
-  // Lock body scroll behind the open drawer.
+  const primary = site.nav.filter((item) => item.href !== "#" && !item.children);
+  const secondary = site.nav.flatMap((item) => item.children ?? []);
+
+  const closeMenu = (restoreFocus = true) => {
+    setMenuOpen(false);
+    if (restoreFocus) requestAnimationFrame(() => menuButtonRef.current?.focus());
+  };
+
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    if (menuOpen) requestAnimationFrame(() => closeButtonRef.current?.focus());
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!menuOpen) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeMenu();
+        return;
+      }
+      if (event.key !== "Tab" || !overlayRef.current) return;
+
+      const focusable = Array.from(
+        overlayRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKeyDown);
     };
-  }, [mobileOpen]);
-
-  const flat: NavItem[] = site.nav.flatMap((n) =>
-    n.children ? [{ label: n.label, href: n.href }, ...n.children] : [n]
-  );
+  }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline/80 bg-surface/90 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/80">
-      <div className="mx-auto flex min-h-[5.25rem] max-w-(--container-content) items-center justify-between gap-4 px-5 lg:px-8">
-        {/* Primary nav (desktop) — right side in RTL */}
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="ניווט ראשי">
-          {site.nav.map((item) =>
-            item.children ? (
-              <MoreMenu key={item.label} item={item} pathname={pathname} />
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-colors ${
-                  isActive(pathname, item.href)
-                    ? "bg-brand-800 text-white"
-                    : "text-ink hover:bg-brand-50 hover:text-brand-700"
-                }`}
-              >
-                {item.label}
-              </Link>
-            )
-          )}
-        </nav>
-
-        {/* Logo — centred on desktop, leading on mobile */}
-        <Link
-          href="/"
-          className="order-first shrink-0 lg:order-none lg:absolute lg:left-1/2 lg:-translate-x-1/2"
-          aria-label="לדף הבית"
-        >
-          <Logo />
-        </Link>
-
-        {/* Contact shortcuts (desktop) */}
-        <div className="hidden items-center gap-2 lg:flex">
-          <a
-            href={`tel:${site.phone}`}
-            aria-label={`התקשרו ל${site.phoneDisplay}`}
-            className="flex min-h-11 items-center gap-2 rounded-full bg-brand-800 px-4 text-[14px] font-semibold text-white shadow-[0_8px_24px_rgb(11_52_54_/_0.16)] transition-all hover:-translate-y-0.5 hover:bg-brand-900"
+    <>
+      <header className="sticky top-0 z-40 border-b border-hairline/80 bg-surface/92">
+        <div className="relative mx-auto flex min-h-[5.5rem] max-w-(--container-content) items-center justify-between gap-4 px-5 lg:min-h-[6rem] lg:px-8">
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-expanded={menuOpen}
+            aria-controls="site-menu"
+            aria-label="פתיחת התפריט"
+            className="group flex min-h-13 items-center gap-3 rounded-full bg-brand-900 px-4 text-white shadow-[0_10px_30px_rgb(11_52_54_/_0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-800 sm:px-5"
           >
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
-              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.2 2.3z" />
-            </svg>
-            <span>דברו איתי</span>
-          </a>
-          <a
-            href={`mailto:${site.email}`}
-            aria-label={`שלחו מייל ל${site.email}`}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-50"
+            <MenuGlyph open={false} />
+            <span className="hidden text-[15px] font-bold sm:inline">תפריט</span>
+          </button>
+
+          <Link
+            href="/"
+            className="absolute left-1/2 -translate-x-1/2"
+            aria-label="לדף הבית"
           >
-            <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
-              <path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.2l-8 5-8-5V6l8 5 8-5v2.2z" />
+            <Logo />
+          </Link>
+
+          <a
+            href={site.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden min-h-12 items-center gap-2 rounded-full border border-brand-200 bg-white px-5 text-[14px] font-bold text-brand-800 transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:bg-brand-50 sm:flex"
+          >
+            <span>בואו נדבר</span>
+            <svg viewBox="0 0 20 20" className="h-4 w-4 rotate-180" fill="currentColor" aria-hidden="true">
+              <path d="M7 4l6 6-6 6z" />
             </svg>
           </a>
         </div>
+      </header>
 
-        {/* Mobile toggle */}
-        <button
-          type="button"
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-nav"
-          aria-label={mobileOpen ? "סגירת התפריט" : "פתיחת התפריט"}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline text-brand-800 lg:hidden"
-        >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            {mobileOpen ? (
-              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-            ) : (
-              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
-      </div>
+      <div
+        ref={overlayRef}
+        id="site-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="תפריט האתר"
+        aria-hidden={!menuOpen}
+        data-open={menuOpen ? "true" : "false"}
+        className="menu-overlay fixed inset-0 z-[100] bg-brand-900 text-white"
+      >
+        <div className="flex h-full flex-col">
+          <div className="mx-auto flex min-h-[5.5rem] w-full max-w-[1600px] items-center justify-between border-b border-white/10 px-5 lg:min-h-[6.5rem] lg:px-10">
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={() => closeMenu()}
+              aria-label="סגירת התפריט"
+              className="group flex min-h-13 items-center gap-3 rounded-full bg-white px-4 text-brand-900 transition-transform hover:scale-[1.03] sm:px-5"
+            >
+              <MenuGlyph open />
+              <span className="hidden text-[15px] font-bold sm:inline">סגירה</span>
+            </button>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <nav
-          id="mobile-nav"
-          aria-label="ניווט ראשי"
-          className="max-h-[calc(100vh-5.25rem)] overflow-y-auto border-t border-hairline bg-surface px-3 py-3 lg:hidden"
-        >
-          {flat
-            .filter((i) => i.href !== "#")
-            .map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={`block rounded-xl px-4 py-3 text-[16px] font-semibold ${
-                  isActive(pathname, item.href)
-                    ? "bg-brand-800 text-white"
-                    : "text-ink hover:bg-brand-50"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-brand-50 px-5 py-4 text-[15px]">
-            <a href={`tel:${site.phone}`} className="text-brand-600">
-              {site.phoneDisplay}
-            </a>
-            <a href={`mailto:${site.email}`} className="text-brand-600">
-              {site.email}
-            </a>
+            <Link href="/" onClick={() => closeMenu(false)} aria-label="לדף הבית" className="rounded-xl bg-white px-4 py-2">
+              <Logo compact />
+            </Link>
+
+            <p className="hidden text-[13px] font-bold tracking-[0.12em] text-white/45 sm:block">
+              צילום · רגש · סיפור
+            </p>
           </div>
-        </nav>
-      )}
-    </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto grid min-h-full max-w-[1600px] lg:grid-cols-[1.12fr_.88fr]">
+              <nav aria-label="ניווט ראשי" className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14 lg:py-12 xl:px-20">
+                <p className="mb-5 text-[12px] font-bold tracking-[0.16em] text-accent-soft/70">עמודים ראשיים</p>
+                <ol>
+                  {primary.map((item, index) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => closeMenu(false)}
+                        aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                        className={`menu-primary-link group grid grid-cols-[2.3rem_1fr_auto] items-center gap-3 border-b border-white/12 py-3 sm:grid-cols-[3rem_1fr_auto] sm:py-4 ${
+                          isActive(pathname, item.href) ? "is-active" : ""
+                        }`}
+                      >
+                        <span className="text-[11px] font-bold tabular-nums text-accent-soft/50">0{index + 1}</span>
+                        <span className="text-[clamp(2rem,4.4vw,4.75rem)] font-bold leading-none tracking-[-0.045em] transition-transform duration-500 group-hover:-translate-x-2">
+                          {item.label}
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 transition-all duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-brand-900 sm:h-12 sm:w-12">
+                          <svg viewBox="0 0 20 20" className="h-4 w-4 rotate-180" fill="currentColor" aria-hidden="true">
+                            <path d="M7 4l6 6-6 6z" />
+                          </svg>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              </nav>
+
+              <aside className="menu-side relative overflow-hidden border-t border-white/10 bg-[#082a2c] px-5 py-10 sm:px-10 lg:border-t-0 lg:border-r lg:px-12 lg:py-12">
+                <Image
+                  src="/images/eitan-crouching.webp"
+                  alt="איתן אונר מצלם בשטח"
+                  fill
+                  sizes="(max-width: 1024px) 0px, 44vw"
+                  className="menu-side-image object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,42,44,.84)_0%,rgba(8,42,44,.95)_58%,#082a2c_100%)]" aria-hidden="true" />
+
+                <div className="relative flex min-h-full flex-col">
+                  <p className="text-[12px] font-bold tracking-[0.16em] text-accent-soft/70">גלו עוד</p>
+                  <nav aria-label="עמודים נוספים" className="mt-6">
+                    <ul className="grid grid-cols-1 gap-x-7 sm:grid-cols-2">
+                      {secondary.map((item) => (
+                        <li key={item.href} className="border-b border-white/10">
+                          <Link
+                            href={item.href}
+                            onClick={() => closeMenu(false)}
+                            aria-current={isActive(pathname, item.href) ? "page" : undefined}
+                            className={`group flex items-center justify-between gap-3 py-3 text-[15px] font-semibold transition-colors hover:text-accent-soft ${
+                              isActive(pathname, item.href) ? "text-accent-soft" : "text-white/75"
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            <span className="text-accent opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">←</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+
+                  <div className="mt-auto pt-10">
+                    <p className="text-[12px] font-bold tracking-[0.16em] text-white/35">מתחילים שיחה</p>
+                    <div className="mt-4 flex flex-wrap gap-3">
+                      <a
+                        href={site.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-full bg-accent px-5 py-2.5 text-[14px] font-bold text-brand-900 transition-transform hover:-translate-y-0.5"
+                      >
+                        WhatsApp
+                      </a>
+                      <a
+                        href={`tel:${site.phone}`}
+                        className="rounded-full border border-white/20 px-5 py-2.5 text-[14px] font-bold text-white transition-colors hover:bg-white/10"
+                      >
+                        {site.phoneDisplay}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
