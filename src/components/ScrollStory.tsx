@@ -70,9 +70,8 @@ function Panel({
   first?: boolean;
   align?: "center" | "start";
 }) {
-  /* A two-percent overlap is enough to avoid a blank frame at the handoff,
-     but too short for both authored beats to read as simultaneous copy. */
-  const rangeOverlap = 0.02;
+  /* Adjacent beats meet at one boundary without sharing visible runway. */
+  const rangeOverlap = 0;
   const style: Vars = {
     "--r0": `${(Math.max(0, (index - rangeOverlap) / count) * 100).toFixed(3)}%`,
     "--r1": `${(Math.min(1, (index + 1 + rangeOverlap) / count) * 100).toFixed(3)}%`,
