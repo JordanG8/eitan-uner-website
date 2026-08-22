@@ -70,9 +70,13 @@ function Panel({
   first?: boolean;
   align?: "center" | "start";
 }) {
+  /* Slightly overlap adjacent ranges. The overlap creates a cross-fade and,
+     more importantly, a small hold zone around each authored boundary so a
+     one-pixel reverse scroll cannot make both beats chatter. */
+  const rangeOverlap = 0.08;
   const style: Vars = {
-    "--r0": `${((index / count) * 100).toFixed(3)}%`,
-    "--r1": `${(((index + 1) / count) * 100).toFixed(3)}%`,
+    "--r0": `${(Math.max(0, (index - rangeOverlap) / count) * 100).toFixed(3)}%`,
+    "--r1": `${(Math.min(1, (index + 1 + rangeOverlap) / count) * 100).toFixed(3)}%`,
   };
 
   return (
@@ -343,8 +347,7 @@ export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
               <Image
                 src={host.image.src}
                 alt={host.image.alt}
-                width={host.image.width ?? 1038}
-                height={host.image.height ?? 2048}
+                fill
                 sizes="(max-width: 768px) 68vw, 34vw"
                 className="pdt-host-img"
               />

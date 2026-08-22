@@ -137,6 +137,7 @@
   gap: clamp(2rem, 5vw, 4rem);
   padding: clamp(6rem, 14vh, 11rem) var(--pdt-gutter);
   overflow: clip;
+  contain: layout paint style;
 }
 
 /**
@@ -279,6 +280,7 @@
   box-shadow:
     0 1px 1px rgb(0 0 0 / 0.32),
     0 18px 44px -12px rgb(0 0 0 / 0.6);
+  contain: layout paint;
 }
 
 .pdt-print-window {
@@ -376,7 +378,8 @@
  */
 .pdt-memory-field {
   position: absolute;
-  inset: 0;
+  /* Overscan lets the compositor move the texture without exposing an edge. */
+  inset: -140px;
   z-index: 0;
   opacity: 0.14;
   mix-blend-mode: overlay;
@@ -538,13 +541,16 @@
 }
 
 .pdt-host-figure {
+  position: relative;
   justify-self: center;
   inline-size: min(26rem, 72vw, 46vh);
+  aspect-ratio: 1 / 1;
+  overflow: clip;
 }
 
 .pdt-host-img {
-  inline-size: 100%;
-  block-size: auto;
+  object-fit: cover;
+  object-position: center 22%;
 }
 
 .pdt-host-name {
@@ -720,11 +726,11 @@
         opacity: 0;
         translate: 0 1.6rem;
       }
-      16% {
+      14% {
         opacity: 1;
         translate: 0 0;
       }
-      74% {
+      82% {
         opacity: 1;
         translate: 0 0;
       }
@@ -742,7 +748,7 @@
 
     @keyframes pdt-beat-first {
       0%,
-      74% {
+      82% {
         opacity: 1;
         translate: 0 0;
       }
@@ -799,7 +805,7 @@
 
     @keyframes pdt-drift {
       to {
-        background-position: 140px 110px;
+        translate: 140px 110px;
       }
     }
 
@@ -910,15 +916,25 @@
 
     .pdt-print--room-a,
     .pdt-print--room-b {
+      /* These explicit zero-percent values are present before the view
+         timeline is resolved. Without them, the static finished composition
+         can paint for one frame before the animation snaps back to its start. */
       animation: linear both;
       animation-timeline: --act;
-      animation-range: contain 0% contain 100%;
+      animation-range: contain 5% contain 88%;
     }
 
     .pdt-print--room-a {
+      rotate: 0deg;
+      translate: 0 4vh;
+      scale: 0.94;
       animation-name: pdt-fan-a;
     }
     .pdt-print--room-b {
+      rotate: 0deg;
+      translate: 12% 6vh;
+      scale: 0.8;
+      opacity: 0;
       animation-name: pdt-fan-b;
     }
 
@@ -1043,17 +1059,20 @@
     }
 
     .pdt-host-figure {
+      opacity: 0;
+      translate: 0 4vh;
       animation: pdt-host-in linear both;
       animation-timeline: --act;
-      animation-range: contain 0% contain 50%;
+      animation-range: contain 6% contain 52%;
     }
 
     @keyframes pdt-host-in {
-      from {
+      0% {
         opacity: 0;
         translate: 0 4vh;
       }
-      to {
+      72%,
+      100% {
         opacity: 1;
         translate: 0 0;
       }
