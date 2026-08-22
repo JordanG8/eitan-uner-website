@@ -44,13 +44,14 @@ export default async function ContentPage({
   return (
     <>
       {page.showTitleBanner && (
-        <div className="border-b border-hairline bg-white py-14 sm:py-16">
-          <div className="mx-auto max-w-(--container-content) px-4 lg:px-6">
+        <div className="page-banner py-16 sm:py-22">
+          <div className="relative z-10 mx-auto max-w-(--container-content) px-5 lg:px-8">
             <div className="text-center">
-              <h1 className="text-4xl font-normal text-ink sm:text-5xl">{page.title}</h1>
+              <p className="mb-4 text-[13px] font-bold tracking-[0.12em] text-accent-soft">איתן אונר · פוטודוקותרפיה</p>
+              <h1 className="text-4xl font-bold text-white sm:text-6xl">{page.title}</h1>
               <div className="mt-4 flex items-center justify-center gap-2">
-                <span className="h-px w-24 bg-brand-300" aria-hidden="true" />
-                <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
+                <span className="h-px w-16 bg-white/35" aria-hidden="true" />
+                <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
               </div>
             </div>
           </div>

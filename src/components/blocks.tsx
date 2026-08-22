@@ -25,10 +25,10 @@ export function Hero({ block }: { block: HeroBlock }) {
   // where every photo sat on the original site.
   const imageLast = (block.imageSide ?? "end") === "end";
   return (
-    <section className={onBrand ? "bg-brand-500" : "bg-white"}>
-      <div className="mx-auto grid min-h-[26rem] max-w-[1600px] items-stretch lg:grid-cols-2">
+    <section className="bg-surface px-0 pb-8 pt-0 sm:px-5 sm:pb-12 sm:pt-5 lg:px-8">
+      <div className="hero-shell mx-auto grid min-h-[38rem] max-w-[1480px] items-stretch sm:rounded-[2rem] lg:min-h-[42rem] lg:grid-cols-[1.08fr_.92fr]">
         <div
-          className={`relative min-h-[20rem] lg:min-h-[34rem] ${
+          className={`hero-media relative min-h-[24rem] lg:min-h-[42rem] ${
             imageLast ? "lg:order-last" : ""
           }`}
         >
@@ -38,13 +38,14 @@ export function Hero({ block }: { block: HeroBlock }) {
             fill
             priority
             sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-cover object-top"
+            className="object-cover object-top transition-transform duration-1000 hover:scale-[1.015]"
           />
         </div>
 
-        <div className="flex flex-col justify-center px-6 py-14 text-center sm:px-12 lg:py-20">
+        <div className="relative flex flex-col justify-center px-7 py-14 text-start sm:px-12 lg:px-16 lg:py-20">
+          <p className="eyebrow-label">איתן אונר · צלם ופוטודוקותרפיסט</p>
           <h1
-            className={`text-4xl font-bold sm:text-5xl lg:text-6xl ${
+            className={`mt-6 max-w-[9ch] text-[3.25rem] font-bold sm:text-6xl lg:text-[5.4rem] ${
               onBrand ? "text-white" : "text-ink"
             }`}
           >
@@ -52,12 +53,15 @@ export function Hero({ block }: { block: HeroBlock }) {
           </h1>
           {block.subtitle && (
             <p
-              className={`mt-5 text-lg ${onBrand ? "text-white/90" : "text-ink-soft"}`}
+              className={`mt-6 max-w-xl text-lg leading-relaxed sm:text-xl ${onBrand ? "text-white/78" : "text-ink-soft"}`}
             >
               {block.subtitle}
             </p>
           )}
-          <CtaRow ctas={block.ctas} align="center" />
+          <CtaRow ctas={block.ctas} />
+          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[13px] font-semibold text-white/60">
+            <span>סדנאות</span><span>הרצאות</span><span>צילום חברתי</span>
+          </div>
         </div>
       </div>
     </section>
@@ -71,24 +75,24 @@ export function TextImage({ block }: { block: TextImageBlock }) {
   const onBrand = bg === "brand";
   return (
     <Section background={bg}>
-      <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+      <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-24">
         <div className={(block.imageSide ?? "end") === "end" ? "lg:order-last" : ""}>
-          <div className="relative aspect-4/3 w-full overflow-hidden">
+          <div className="photo-frame relative aspect-4/3 w-full overflow-hidden rounded-[1.75rem] bg-brand-100">
             <Image
               src={block.image.src}
               alt={block.image.alt}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
+              className="object-cover transition-transform duration-700 hover:scale-[1.025]"
             />
           </div>
         </div>
 
-        <div>
+        <div className="max-w-xl">
           {block.title && (
             <>
               <h2
-                className={`text-3xl font-bold sm:text-4xl ${
+                className={`text-3xl font-bold sm:text-[2.85rem] ${
                   onBrand ? "text-white" : "text-brand-600"
                 }`}
               >
@@ -98,7 +102,7 @@ export function TextImage({ block }: { block: TextImageBlock }) {
             </>
           )}
           {block.eyebrow && (
-            <p className={`text-lg ${onBrand ? "text-white/90" : "text-ink-soft"}`}>
+            <p className={`text-lg font-semibold ${onBrand ? "text-accent-soft" : "text-brand-700"}`}>
               {block.eyebrow}
             </p>
           )}
@@ -165,18 +169,18 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
         </div>
       )}
 
-      <div className={`grid gap-7 ${cols}`}>
+      <div className={`grid gap-6 lg:gap-8 ${cols}`}>
         {block.cards.map((card, i) => {
           const inner = (
             <>
               {card.image && (
-                <div className="relative aspect-square w-full overflow-hidden bg-surface-alt">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-alt">
                   <Image
                     src={card.image.src}
                     alt={card.image.alt}
                     fill
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    className="object-cover transition-transform duration-700 group-hover:scale-[1.055]"
                   />
                 </div>
               )}
@@ -185,7 +189,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                 /* Text sits on turquoise beneath the image. The original used a
                    fixed height with an inner scrollbar here; letting the card grow
                    to fit its text reads far better, especially on mobile. */
-                <div className="flex flex-1 flex-col bg-brand-500 p-6 text-white">
+                <div className="flex flex-1 flex-col bg-brand-800 p-6 text-white">
                   <h3 className="text-xl font-bold">{card.title}</h3>
                   {card.body && (
                     <p className="mt-3 text-[15px] leading-relaxed text-white/95">
@@ -194,13 +198,13 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                   )}
                 </div>
               ) : (
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-bold text-brand-600">{card.title}</h3>
+                <div className="flex flex-1 flex-col p-6">
+                  <h3 className="text-xl font-bold text-brand-800">{card.title}</h3>
                   {card.body && (
                     <p className="mt-2 text-[15px] text-ink-soft">{card.body}</p>
                   )}
                   {card.href && (
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-[15px] font-medium text-brand-600">
+                    <span className="mt-5 inline-flex items-center gap-1.5 text-[15px] font-semibold text-brand-700">
                       {card.linkLabel ?? "קרא עוד"}
                       <svg
                         viewBox="0 0 20 20"
@@ -219,8 +223,8 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
 
           const shell = `group flex flex-col overflow-hidden ${
             block.variant === "overlay"
-              ? "shadow-sm"
-              : "border border-hairline bg-white transition-shadow hover:shadow-lg"
+              ? "rounded-[1.5rem] shadow-[0_16px_45px_rgb(18_42_43_/_0.14)]"
+              : "rounded-[1.5rem] border border-hairline/80 bg-white shadow-[0_10px_35px_rgb(18_42_43_/_0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgb(18_42_43_/_0.12)]"
           }`;
 
           return card.href ? (
@@ -249,16 +253,16 @@ export function Gallery({ block }: { block: GalleryBlock }) {
         </div>
       )}
       {/* CSS columns give the masonry look of the original without JS */}
-      <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 [&>*]:mb-4">
+      <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-5">
         {block.images.map((im, i) => (
-          <figure key={i} className="break-inside-avoid overflow-hidden bg-surface-alt">
+          <figure key={i} className="break-inside-avoid overflow-hidden rounded-2xl bg-surface-alt shadow-[0_10px_30px_rgb(18_42_43_/_0.08)]">
             <Image
               src={im.src}
               alt={im.alt}
               width={im.width ?? 1200}
               height={im.height ?? 900}
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="h-auto w-full transition-transform duration-500 hover:scale-[1.02]"
+              className="h-auto w-full transition-transform duration-700 hover:scale-[1.035]"
             />
           </figure>
         ))}
@@ -277,11 +281,11 @@ export function Logos({ block }: { block: LogosBlock }) {
           <SectionHeading>{block.title}</SectionHeading>
         </div>
       )}
-      <ul className="grid grid-cols-2 justify-items-center gap-5 sm:grid-cols-3 lg:grid-cols-5">
+      <ul className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {block.logos.map((logo, i) => (
           <li
             key={i}
-            className="flex aspect-square w-full max-w-[11rem] items-center justify-center bg-brand-500 p-4"
+            className="flex aspect-square w-full max-w-[11rem] items-center justify-center rounded-2xl border border-hairline bg-white p-5 shadow-[0_8px_25px_rgb(18_42_43_/_0.06)] transition-transform hover:-translate-y-1"
           >
             <Image
               src={logo.src}
@@ -303,8 +307,8 @@ export function Logos({ block }: { block: LogosBlock }) {
 export function Quote({ block }: { block: QuoteBlock }) {
   return (
     <Section background="brand">
-      <div className="mx-auto max-w-4xl text-center">
-        <blockquote className="text-3xl font-bold leading-snug text-white sm:text-4xl">
+      <div className="lens-field mx-auto max-w-5xl rounded-[2rem] border border-white/10 bg-white/5 px-7 py-14 text-center sm:px-14 sm:py-20">
+        <blockquote className="relative text-3xl font-bold leading-snug text-white sm:text-5xl">
           {block.quote}
         </blockquote>
         {block.attribution && (
@@ -374,7 +378,7 @@ export function Contact({ block }: { block: ContactBlock }) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Map sits on the left, details on the right — as in the original. */}
-        <div className="overflow-hidden border border-hairline bg-white lg:order-last">
+        <div className="overflow-hidden rounded-[1.5rem] border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] lg:order-last">
           <iframe
             title="מפה — תל יוסף"
             src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
@@ -384,7 +388,7 @@ export function Contact({ block }: { block: ContactBlock }) {
           />
         </div>
 
-        <div className="border border-hairline bg-white p-7">
+        <div className="rounded-[1.5rem] border border-hairline bg-white p-7 shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] sm:p-9">
           <p className="text-lg font-semibold text-ink">{site.location}</p>
 
           <ul className="mt-6 space-y-3 text-[15px]">

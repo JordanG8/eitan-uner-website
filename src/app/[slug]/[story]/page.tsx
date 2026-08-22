@@ -46,19 +46,20 @@ export default async function StoryPage({
   if (!doc) notFound();
 
   return (
-    <article className="bg-white py-14 sm:py-16">
+    <article className="bg-surface py-16 sm:py-24">
       <div className="mx-auto max-w-3xl px-4 lg:px-6">
         <header className="text-center">
-          <h1 className="text-3xl font-normal text-ink sm:text-4xl">{doc.title}</h1>
+          <p className="mb-4 text-[13px] font-bold tracking-[0.12em] text-brand-600">סיפור מאחורי המצלמה</p>
+          <h1 className="text-4xl font-bold text-ink sm:text-5xl">{doc.title}</h1>
           <div className="mt-4 flex items-center justify-center gap-2">
-            <span className="h-px w-24 bg-brand-300" aria-hidden="true" />
-            <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden="true" />
+            <span className="h-px w-16 bg-accent" aria-hidden="true" />
+            <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
           </div>
           {doc.date && <p className="mt-6 text-[14px] text-ink-soft">{doc.date}</p>}
         </header>
 
         {doc.image && (
-          <div className="relative mt-8 aspect-16/9 w-full overflow-hidden bg-surface-alt">
+          <div className="photo-frame relative mt-10 aspect-16/9 w-full overflow-hidden rounded-[2rem] bg-surface-alt">
             <Image
               src={doc.image.src}
               alt={doc.image.alt}
@@ -70,7 +71,7 @@ export default async function StoryPage({
           </div>
         )}
 
-        <div className="prose-he mt-10 text-ink">
+        <div className="prose-he mt-12 text-ink">
           {doc.body.map((p, i) => (
             <p key={i}>
               <Inline text={p} />
@@ -100,7 +101,7 @@ export default async function StoryPage({
             {doc.tags.map((t) => (
               <li
                 key={t}
-                className="bg-brand-500 px-3 py-1.5 text-[13px] font-medium text-white"
+                className="rounded-full bg-brand-50 px-3 py-1.5 text-[13px] font-semibold text-brand-700"
               >
                 {t}
               </li>

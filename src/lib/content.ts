@@ -346,6 +346,7 @@ export const pages: Page[] = [
       {
         _type: "hero",
         title: "פוטודוקותרפיה",
+        subtitle: "הצילום כדרך לעצור, להתבונן ולתת מקום לסיפור שנמצא בפנים.",
         image: img.hero,
         imageSide: "end",
         background: "brand",
@@ -360,7 +361,9 @@ export const pages: Page[] = [
         eyebrow: "תרפיה אמנותית",
         image: img.hands,
         imageSide: "end",
-        body: [],
+        body: [
+          "דרך צילום, שיחה והתבוננות נוצרת חוויה שמחברת בין אנשים, זיכרונות ורגשות — בלי צורך בניסיון קודם בצילום.",
+        ],
         ctas: [
           { label: "סיפורים מאחורי המצלמה", href: "/סיפורים-מאחורי-המצלמה", tone: "solid" },
           { label: "תערוכות", href: "/תערוכות", tone: "outline" },

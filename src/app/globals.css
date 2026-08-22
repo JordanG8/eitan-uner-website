@@ -2,30 +2,32 @@
 
 /* ---------------------------------------------------------------
    Eitan Uner — Photodocutherapy
-   Palette sampled directly from the original site123 screenshots.
+   A warm, editorial system: deep photographic greens, paper-like
+   surfaces and a restrained sunlit accent.
    --------------------------------------------------------------- */
 @theme {
-  /* Signature turquoise — sampled #14888D from section fills & buttons */
-  --color-brand-50: #eef7f7;
-  --color-brand-100: #d3e9ea;
-  --color-brand-200: #a7d3d5;
-  --color-brand-300: #6bb4b7;
-  --color-brand-400: #44a0a4;
-  --color-brand-500: #14888d;
-  --color-brand-600: #0c898e;
-  --color-brand-700: #0d7378;
-  --color-brand-800: #0a5c60;
-  --color-brand-900: #084a4d;
+  --color-brand-50: #edf7f5;
+  --color-brand-100: #d6ebe7;
+  --color-brand-200: #a9d6d0;
+  --color-brand-300: #74b8b1;
+  --color-brand-400: #3d9993;
+  --color-brand-500: #167f7d;
+  --color-brand-600: #0e6a69;
+  --color-brand-700: #0d5858;
+  --color-brand-800: #104849;
+  --color-brand-900: #0b3436;
 
-  --color-ink: #1a1a1a;
-  --color-ink-soft: #4a4a4a;
-  --color-surface: #ffffff;
-  --color-surface-alt: #eff3f6;
-  --color-hairline: #e2e8ec;
+  --color-accent: #d99a58;
+  --color-accent-soft: #f3dfc9;
+  --color-ink: #122a2b;
+  --color-ink-soft: #506364;
+  --color-surface: #fbfaf7;
+  --color-surface-alt: #f1eee7;
+  --color-hairline: #deddd7;
 
   --font-sans: var(--font-assistant), system-ui, sans-serif;
 
-  --container-content: 1200px;
+  --container-content: 1240px;
 }
 
 :root {
@@ -46,11 +48,16 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-brand-900);
+}
+
 /* Hebrew headings read better slightly tighter than the Latin default */
 h1, h2, h3, h4 {
-  line-height: 1.2;
+  line-height: 1.12;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
 }
 
 /* Keep long Hebrew words and URLs from forcing horizontal scroll */
@@ -60,9 +67,101 @@ a, p, li, h1, h2, h3 {
 
 /* Visible focus for keyboard users — the original had none */
 :focus-visible {
-  outline: 3px solid var(--color-brand-500);
+  outline: 3px solid var(--color-accent);
   outline-offset: 3px;
   border-radius: 2px;
+}
+
+.hero-shell {
+  isolation: isolate;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, rgb(255 255 255 / 0.1), transparent 28%),
+    linear-gradient(145deg, var(--color-brand-800), var(--color-brand-900));
+  box-shadow: 0 24px 70px rgb(11 52 54 / 0.18);
+}
+
+.hero-shell::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset-inline-end: -7rem;
+  bottom: -10rem;
+  width: 26rem;
+  aspect-ratio: 1;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3rem rgb(255 255 255 / 0.025),
+    0 0 0 6rem rgb(255 255 255 / 0.02);
+}
+
+.hero-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 64%, rgb(11 52 54 / 0.3));
+  pointer-events: none;
+}
+
+.eyebrow-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--color-accent-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.eyebrow-label::before {
+  content: "";
+  width: 2rem;
+  height: 1px;
+  background: var(--color-accent);
+}
+
+.photo-frame {
+  box-shadow: 0 22px 55px rgb(18 42 43 / 0.14);
+}
+
+.lens-field {
+  position: relative;
+  overflow: hidden;
+}
+
+.lens-field::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -8rem;
+  top: 50%;
+  width: 22rem;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3rem rgb(255 255 255 / 0.035), 0 0 0 6rem rgb(255 255 255 / 0.025);
+}
+
+.page-banner {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 25%, rgb(255 255 255 / 0.08), transparent 28%),
+    linear-gradient(135deg, var(--color-brand-800), var(--color-brand-900));
+}
+
+.page-banner::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 8%;
+  bottom: -7rem;
+  width: 15rem;
+  aspect-ratio: 1;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2rem rgb(255 255 255 / 0.025);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -75,6 +174,7 @@ a, p, li, h1, h2, h3 {
 
 /* Rich-text defaults */
 .prose-he > * + * { margin-top: 1.15rem; }
+.prose-he { font-size: 1.05rem; line-height: 1.9; }
 .prose-he strong { font-weight: 700; }
 .prose-he a {
   color: var(--color-brand-600);
@@ -85,3 +185,9 @@ a, p, li, h1, h2, h3 {
 .prose-he ul { padding-inline-start: 1.4rem; list-style: disc; }
 .prose-he ol { padding-inline-start: 1.4rem; list-style: decimal; }
 .prose-he li + li { margin-top: 0.35rem; }
+
+@media (max-width: 1023px) {
+  .hero-media::after {
+    background: linear-gradient(0deg, rgb(11 52 54 / 0.42), transparent 45%);
+  }
+}

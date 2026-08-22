@@ -45,8 +45,8 @@ function MoreMenu({ item, pathname }: { item: NavItem; pathname: string }) {
         aria-expanded={open}
         aria-haspopup="true"
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1 rounded-full px-3 py-2 text-[15px] transition-colors ${
-          childActive ? "text-brand-600 font-semibold" : "text-ink hover:text-brand-600"
+        className={`flex items-center gap-1 rounded-full px-3 py-2 text-[15px] font-semibold transition-colors ${
+          childActive ? "bg-brand-50 text-brand-800" : "text-ink hover:bg-brand-50 hover:text-brand-700"
         }`}
       >
         {item.label}
@@ -61,13 +61,13 @@ function MoreMenu({ item, pathname }: { item: NavItem; pathname: string }) {
       </button>
 
       {open && (
-        <div className="absolute end-0 top-full z-50 min-w-[15rem] overflow-hidden rounded-lg border border-hairline bg-white py-1 shadow-xl">
+        <div className="absolute end-0 top-[calc(100%+0.75rem)] z-50 min-w-[16rem] overflow-hidden rounded-2xl border border-hairline bg-surface/95 p-2 shadow-[0_22px_55px_rgb(18_42_43_/_0.16)] backdrop-blur-xl">
           {item.children?.map((child) => (
             <Link
               key={child.href}
               href={child.href}
               onClick={() => setOpen(false)}
-              className={`block px-4 py-2 text-[15px] transition-colors hover:bg-brand-50 ${
+              className={`block rounded-xl px-4 py-2.5 text-[15px] transition-colors hover:bg-brand-50 ${
                 isActive(pathname, child.href)
                   ? "text-brand-600 font-semibold"
                   : "text-ink"
@@ -99,8 +99,8 @@ export function Header({ site }: { site: SiteSettings }) {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b border-hairline bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-      <div className="mx-auto flex h-auto max-w-(--container-content) items-center justify-between gap-4 px-4 py-3 lg:px-6">
+    <header className="sticky top-0 z-40 border-b border-hairline/80 bg-surface/90 backdrop-blur-xl supports-[backdrop-filter]:bg-surface/80">
+      <div className="mx-auto flex min-h-[5.25rem] max-w-(--container-content) items-center justify-between gap-4 px-5 lg:px-8">
         {/* Primary nav (desktop) — right side in RTL */}
         <nav className="hidden items-center gap-1 lg:flex" aria-label="ניווט ראשי">
           {site.nav.map((item) =>
@@ -110,10 +110,10 @@ export function Header({ site }: { site: SiteSettings }) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-full px-4 py-2 text-[15px] transition-colors ${
+                className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-colors ${
                   isActive(pathname, item.href)
-                    ? "bg-brand-500 font-semibold text-white"
-                    : "text-ink hover:text-brand-600"
+                    ? "bg-brand-800 text-white"
+                    : "text-ink hover:bg-brand-50 hover:text-brand-700"
                 }`}
               >
                 {item.label}
@@ -132,20 +132,21 @@ export function Header({ site }: { site: SiteSettings }) {
         </Link>
 
         {/* Contact shortcuts (desktop) */}
-        <div className="hidden items-center gap-3 text-brand-600 lg:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <a
             href={`tel:${site.phone}`}
             aria-label={`התקשרו ל${site.phoneDisplay}`}
-            className="rounded p-1.5 transition-colors hover:text-brand-800"
+            className="flex min-h-11 items-center gap-2 rounded-full bg-brand-800 px-4 text-[14px] font-semibold text-white shadow-[0_8px_24px_rgb(11_52_54_/_0.16)] transition-all hover:-translate-y-0.5 hover:bg-brand-900"
           >
             <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.2 2.3z" />
             </svg>
+            <span>דברו איתי</span>
           </a>
           <a
             href={`mailto:${site.email}`}
             aria-label={`שלחו מייל ל${site.email}`}
-            className="rounded p-1.5 transition-colors hover:text-brand-800"
+            className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-50"
           >
             <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
               <path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.2l-8 5-8-5V6l8 5 8-5v2.2z" />
@@ -160,7 +161,7 @@ export function Header({ site }: { site: SiteSettings }) {
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
           aria-label={mobileOpen ? "סגירת התפריט" : "פתיחת התפריט"}
-          className="rounded-md p-2 text-brand-600 lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline text-brand-800 lg:hidden"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             {mobileOpen ? (
@@ -177,7 +178,7 @@ export function Header({ site }: { site: SiteSettings }) {
         <nav
           id="mobile-nav"
           aria-label="ניווט ראשי"
-          className="max-h-[calc(100vh-5rem)] overflow-y-auto border-t border-hairline bg-white lg:hidden"
+          className="max-h-[calc(100vh-5.25rem)] overflow-y-auto border-t border-hairline bg-surface px-3 py-3 lg:hidden"
         >
           {flat
             .filter((i) => i.href !== "#")
@@ -186,16 +187,16 @@ export function Header({ site }: { site: SiteSettings }) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`block border-b border-hairline px-5 py-3.5 text-[16px] ${
+                className={`block rounded-xl px-4 py-3 text-[16px] font-semibold ${
                   isActive(pathname, item.href)
-                    ? "bg-brand-50 font-semibold text-brand-700"
-                    : "text-ink"
+                    ? "bg-brand-800 text-white"
+                    : "text-ink hover:bg-brand-50"
                 }`}
               >
                 {item.label}
               </Link>
             ))}
-          <div className="flex flex-col gap-1 px-5 py-4 text-[15px]">
+          <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-brand-50 px-5 py-4 text-[15px]">
             <a href={`tel:${site.phone}`} className="text-brand-600">
               {site.phoneDisplay}
             </a>
