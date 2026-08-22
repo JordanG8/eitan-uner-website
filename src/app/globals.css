@@ -37,6 +37,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -223,6 +224,7 @@ a, p, li, h1, h2, h3 {
 }
 
 @media (max-width: 1023px) {
+  html { scroll-padding-top: 5.5rem; }
   .menu-side-image { display: none; }
 }
 

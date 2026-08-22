@@ -70,10 +70,9 @@ function Panel({
   first?: boolean;
   align?: "center" | "start";
 }) {
-  /* Slightly overlap adjacent ranges. The overlap creates a cross-fade and,
-     more importantly, a small hold zone around each authored boundary so a
-     one-pixel reverse scroll cannot make both beats chatter. */
-  const rangeOverlap = 0.08;
+  /* A two-percent overlap is enough to avoid a blank frame at the handoff,
+     but too short for both authored beats to read as simultaneous copy. */
+  const rangeOverlap = 0.02;
   const style: Vars = {
     "--r0": `${(Math.max(0, (index - rangeOverlap) / count) * 100).toFixed(3)}%`,
     "--r1": `${(Math.min(1, (index + 1 + rangeOverlap) / count) * 100).toFixed(3)}%`,
@@ -207,6 +206,7 @@ export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
      authored runs, handed to CSS so the bloom is timed to the words rather
      than to a number someone has to remember to keep in step. */
   const turn = vista.cold.length / Math.max(vistaPanels.length, 1);
+  const turnEnd = Math.min(turn + 0.22, 1);
 
   return (
     <div className="pdt">
@@ -258,7 +258,10 @@ export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
         <Act
           name="vista"
           beats={vistaPanels.length}
-          vars={{ "--turn": turn.toFixed(4) }}
+          vars={{
+            "--turn-start": `${(turn * 100).toFixed(3)}%`,
+            "--turn-end": `${(turnEnd * 100).toFixed(3)}%`,
+          }}
         >
           <Bleed image={vista.image} className="pdt-bleed--vista" />
           <div className="pdt-copy">

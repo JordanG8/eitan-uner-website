@@ -6,7 +6,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
 import { ChromeGate } from "@/components/ChromeGate";
-import { SmoothScroll } from "@/components/SmoothScroll";
 
 /**
  * Assistant — a Hebrew-first family, and the closest good match to the original
@@ -47,7 +46,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="he" dir="rtl" className={`${assistant.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-surface">
-        <SmoothScroll />
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-3 focus:bg-brand-500 focus:px-4 focus:py-2 focus:text-white"
