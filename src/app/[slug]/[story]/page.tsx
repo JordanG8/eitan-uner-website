@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Inline } from "@/components/ui";
+import { CtaRow, Inline } from "@/components/ui";
 import { getAllStorySlugs, getStoryBySlug } from "@/lib/fetch";
 
 /** The only parent segment that has children. */
@@ -20,16 +20,19 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string; story: string }>;
 }): Promise<Metadata> {
-  const { story } = await params;
+  const { slug, story } = await params;
+  if (decodeURIComponent(slug) !== STORIES_SLUG) return {};
   const doc = await getStoryBySlug(decodeURIComponent(story));
   if (!doc) return {};
   return {
     title: doc.title,
     description: doc.body?.[0]?.slice(0, 160),
+    alternates: { canonical: `/${STORIES_SLUG}/${doc.slug}` },
     openGraph: {
       title: doc.title,
       description: doc.body?.[0]?.slice(0, 160),
       images: doc.image ? [{ url: doc.image.src }] : undefined,
+      url: `/${STORIES_SLUG}/${doc.slug}`,
     },
   };
 }
@@ -44,6 +47,10 @@ export default async function StoryPage({
 
   const doc = await getStoryBySlug(decodeURIComponent(story));
   if (!doc) notFound();
+  const slugs = await getAllStorySlugs();
+  const nextSlug = slugs[(slugs.indexOf(doc.slug) + 1) % slugs.length];
+  const nextStory = nextSlug !== doc.slug ? await getStoryBySlug(nextSlug) : undefined;
+  const isWorkshop = doc.tags?.some((tag) => ["פוטודוקותרפיה", "פוטותרפיה", "סדנאות"].includes(tag));
 
   return (
     <article className="bg-surface py-16 sm:py-24">
@@ -55,18 +62,21 @@ export default async function StoryPage({
             <span className="h-px w-16 bg-accent" aria-hidden="true" />
             <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
           </div>
-          {doc.date && <p className="mt-6 text-[14px] text-ink-soft">{doc.date}</p>}
+          {/* Legacy day/month dates have no verified year. Keep them in the
+              source for editorial review without implying a recent event. */}
+          {doc.date && /\d{4}/.test(doc.date) && <p className="mt-6 text-[14px] text-ink-soft">{doc.date}</p>}
         </header>
 
         {doc.image && (
-          <div className="photo-frame relative mt-10 aspect-16/9 w-full overflow-hidden rounded-[2rem] bg-surface-alt">
+          <div className="photo-frame mt-10 overflow-hidden rounded-[2rem] bg-surface-alt">
             <Image
               src={doc.image.src}
               alt={doc.image.alt}
-              fill
-              priority
+              width={doc.image.width ?? 1200}
+              height={doc.image.height ?? 900}
+              preload
               sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover"
+              className="h-auto max-h-[75svh] w-full object-contain"
             />
           </div>
         )}
@@ -109,7 +119,15 @@ export default async function StoryPage({
           </ul>
         ) : null}
 
-        <div className="mt-12 border-t border-hairline pt-8">
+        <section className="mt-12 rounded-2xl border border-hairline bg-surface-alt p-6">
+          <h2 className="text-2xl text-brand-800">{isWorkshop ? "מהסיפור למפגש שלכם" : "יש סיפור שתרצו לתעד?"}</h2>
+          <p className="mt-3 text-ink-soft">{isWorkshop ? "לפרטים על עבודה עם צילום, קלפי תמונות ושיתוף בקבוצה, ולתיאום מפגש שמתאים לכם." : "אפשר לדבר עם איתן על צילום ותיעוד, ולברר יחד את אופי המפגש."}</p>
+          <CtaRow ctas={[
+            { label: "לשיחה עם איתן", href: "/צרו-קשר" },
+            { label: isWorkshop ? "על סדנאות פוטודוקותרפיה" : "לצפייה בתיק העבודות", href: isWorkshop ? "/פוטודוקותרפיה" : "/תיק-עבודות", tone: "outline" },
+          ]} />
+        </section>
+        <nav aria-label="סיפורים נוספים" className="mt-10 flex flex-wrap justify-between gap-6 border-t border-hairline pt-8">
           <Link
             href={`/${STORIES_SLUG}`}
             className="inline-flex items-center gap-2 text-[15px] font-medium text-brand-600 hover:text-brand-800"
@@ -119,7 +137,8 @@ export default async function StoryPage({
             </svg>
             חזרה לכל הסיפורים
           </Link>
-        </div>
+          {nextStory && <Link href={`/${STORIES_SLUG}/${nextStory.slug}`} className="text-base font-semibold text-brand-700 underline underline-offset-4">הסיפור הבא: {nextStory.title} ←</Link>}
+        </nav>
       </div>
     </article>
   );

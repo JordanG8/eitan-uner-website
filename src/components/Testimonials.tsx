@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { TestimonialsBlock } from "@/lib/types";
 import { Section, SectionHeading } from "./ui";
 
@@ -28,96 +28,34 @@ function Stars({ rating = 5 }: { rating?: number }) {
 }
 
 export function Testimonials({ block }: { block: TestimonialsBlock }) {
-  const [i, setI] = useState(0);
+  const [index, setIndex] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const quoteId = useId();
   const items = block.items;
   if (!items.length) return null;
+  const item = items[index % items.length];
+  const long = item.quote.length > 280;
+  const excerpt = item.quote.slice(0, 280).replace(/\s+\S*$/, "");
+  const select = (value: number) => { setIndex((value + items.length) % items.length); setExpanded(false); };
 
-  const item = items[i];
-  const go = (delta: number) => setI((prev) => (prev + delta + items.length) % items.length);
-
-  return (
-    <Section background="white">
-      {block.title && (
-        <div className="mb-12">
-          <SectionHeading>{block.title}</SectionHeading>
-        </div>
-      )}
-
-      <div className="relative mx-auto max-w-4xl rounded-[2rem] border border-hairline bg-white px-2 py-12 shadow-[0_18px_55px_rgb(18_42_43_/_0.08)] sm:px-8">
-        {items.length > 1 && (
-          <>
-            {/* In RTL, "previous" sits on the right */}
-            <button
-              type="button"
-              onClick={() => go(-1)}
-              aria-label="המלצה קודמת"
-              className="absolute end-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-hairline bg-surface text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700 sm:end-6"
-            >
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden="true">
-                <path d="M9 6l6 6-6 6z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => go(1)}
-              aria-label="ההמלצה הבאה"
-              className="absolute start-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-hairline bg-surface text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700 sm:start-6"
-            >
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor" aria-hidden="true">
-                <path d="M15 6l-6 6 6 6z" />
-              </svg>
-            </button>
-          </>
-        )}
-
-        <figure className="px-12 text-center sm:px-16">
-          {item.avatar ? (
-            <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-full">
-              <Image src={item.avatar.src} alt={item.avatar.alt} fill className="object-cover" />
-            </div>
-          ) : (
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-800 text-accent-soft shadow-[0_10px_25px_rgb(18_42_43_/_0.18)]">
-              <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor" aria-hidden="true">
-                <path d="M7.5 5C5 5 3 7.2 3 10c0 2.6 1.9 4.7 4.3 4.9-.3 1.7-1.4 3-3 3.6V21c3.6-.8 6.2-4 6.2-8.4V10C10.5 7.2 9.5 5 7.5 5zm11 0C16 5 14 7.2 14 10c0 2.6 1.9 4.7 4.3 4.9-.3 1.7-1.4 3-3 3.6V21c3.6-.8 6.2-4 6.2-8.4V10c0-2.8-1-5-3-5z" />
-              </svg>
-            </div>
-          )}
-
-          <blockquote className="mt-8 whitespace-pre-line text-[17px] leading-[1.9] text-ink sm:text-lg">
-            {item.quote}
-          </blockquote>
-
-          <Stars rating={item.rating} />
-
-          <figcaption className="mt-5">
-            <span className="block text-[16px] font-medium text-brand-600">
-              {item.author}
-            </span>
-            {item.role && (
-              <span className="mt-1 block text-[13px] italic text-ink-soft">
-                {item.role}
-              </span>
-            )}
-          </figcaption>
-        </figure>
-
-        {items.length > 1 && (
-          <div className="mt-8 flex justify-center gap-2">
-            {items.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setI(idx)}
-                aria-label={`המלצה ${idx + 1}`}
-                aria-current={idx === i}
-                className={`h-2 rounded-full transition-all ${
-                  idx === i ? "w-6 bg-brand-500" : "w-2 bg-brand-200 hover:bg-brand-300"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </Section>
-  );
+  return <Section background="white">
+    {block.title && <div className="mb-10"><SectionHeading>{block.title}</SectionHeading></div>}
+    <div role="region" aria-label="המלצות משתתפים" aria-roledescription="קרוסלה" className="mx-auto max-w-4xl rounded-[2rem] border border-hairline bg-white px-5 py-8 shadow-[0_18px_55px_rgb(18_42_43_/_0.08)] sm:px-12 sm:py-12">
+      <figure className="text-center">
+        {item.avatar ? <Image src={item.avatar.src} alt={item.avatar.alt} width={96} height={96} className="mx-auto h-24 w-24 rounded-full object-cover" /> : <span aria-hidden="true" className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-800 text-5xl text-accent-soft">״</span>}
+        <blockquote id={quoteId} className="mt-6 min-h-40 whitespace-pre-line text-[17px] leading-[1.85] text-ink sm:min-h-32 sm:text-lg">
+          {long && !expanded ? `${excerpt}…` : item.quote}
+        </blockquote>
+        {long && <button type="button" aria-expanded={expanded} aria-controls={quoteId} onClick={() => setExpanded(!expanded)} className="mt-3 min-h-11 px-3 font-semibold text-brand-700 underline underline-offset-4">{expanded ? "סגירת ההמלצה המלאה" : "לקריאת ההמלצה המלאה"}</button>}
+        <Stars rating={item.rating} />
+        <figcaption className="mt-5"><span className="block text-base font-semibold text-brand-700">{item.author}</span>{item.role && <span className="mt-1 block text-sm text-ink-soft">{item.role}</span>}</figcaption>
+      </figure>
+      <p className="mt-6 text-center text-sm text-ink-soft" role="status" aria-live="polite" aria-atomic="true">המלצה {index + 1} מתוך {items.length}<span className="sr-only"> — {item.author}</span></p>
+      {items.length > 1 && <div className="mt-2 flex flex-wrap items-center justify-center gap-2" aria-label="בחירת המלצה">
+        <button type="button" onClick={() => select(index - 1)} aria-label="המלצה קודמת" className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline text-xl text-brand-700">→</button>
+        {items.map((_, i) => <button key={i} type="button" onClick={() => select(i)} aria-label={`המלצה ${i + 1}`} aria-current={i === index ? "true" : undefined} className="flex h-11 w-11 items-center justify-center rounded-full"><span aria-hidden="true" className={`h-2 rounded-full ${i === index ? "w-6 bg-brand-600" : "w-2 bg-brand-300"}`} /></button>)}
+        <button type="button" onClick={() => select(index + 1)} aria-label="ההמלצה הבאה" className="flex h-11 w-11 items-center justify-center rounded-full border border-hairline text-xl text-brand-700">←</button>
+      </div>}
+    </div>
+  </Section>;
 }

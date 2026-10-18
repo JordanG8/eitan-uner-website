@@ -56,6 +56,9 @@ export interface RichTextBlock {
   align?: "start" | "center";
   background?: "white" | "alt" | "brand";
   maxWidth?: "narrow" | "wide";
+  format?: "paragraphs" | "questions";
+  facts?: { label: string; value: string }[];
+  ctas?: Cta[];
 }
 
 export interface Card {
@@ -83,6 +86,7 @@ export interface GalleryBlock {
   title?: string;
   images: ImageRef[];
   background?: "white" | "alt";
+  purpose?: "portfolio" | "prints";
 }
 
 export interface Testimonial {
@@ -118,6 +122,7 @@ export interface VideoBlock {
   title?: string;
   body?: string[];
   youtubeUrl: string;
+  duration?: string;
   poster?: ImageRef;
   background?: "white" | "brand";
 }
@@ -125,6 +130,7 @@ export interface VideoBlock {
 export interface ContactBlock {
   _type: "contact";
   title?: string;
+  headingLevel?: 1 | 2;
 }
 
 export interface StoryPanel {

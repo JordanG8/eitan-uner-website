@@ -31,6 +31,7 @@
    ========================================================================== */
 
 .pdt {
+  container: photo-story / inline-size;
   /* Compatibility layer for the current site's warmer visual system. The
      branch used a stricter token ramp; keeping the aliases local prevents the
      scroll story from changing the rest of the redesigned site. */
@@ -296,16 +297,14 @@
   object-fit: cover;
 }
 
-/* The single word under a print in the river. Positioned in the print's own
-   bottom margin — the place a person writes on the back of a photograph. */
+/* Captions participate in layout, including when the reader enlarges text. */
 .pdt-word {
-  position: absolute;
-  inset-block-end: 0;
-  inset-inline: var(--pdt-print-pad);
-  block-size: var(--pdt-print-foot);
+  min-block-size: var(--pdt-print-foot);
+  padding-block: 0.35em 0.15em;
   display: grid;
   place-items: center;
   font-size: var(--step-1);
+  line-height: 1.4;
   font-weight: 300;
   letter-spacing: -0.01em;
   color: var(--color-ink);
@@ -328,7 +327,7 @@
  */
 .pdt-stage--band {
   padding-block: clamp(5rem, 11vh, 7.5rem) clamp(2.5rem, 7vh, 5rem);
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
   align-content: stretch;
   justify-items: center;
   gap: clamp(1.5rem, 4vh, 3rem);
@@ -533,6 +532,7 @@
 
 .pdt-print--river {
   --pdt-print-w: var(--pdt-river-card);
+  padding-block-end: var(--pdt-print-pad);
 }
 
 .pdt-river-item:nth-child(odd) .pdt-print--river {
@@ -656,7 +656,10 @@
    ========================================================================== */
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
+  /* Container rem units follow enlarged text too. Small/short viewports and
+     enlarged text keep the complete, natural-height editorial layout. */
+  @container photo-story (min-width: 64rem) {
+  @media (prefers-reduced-motion: no-preference) and (min-height: 50rem) {
     /* Each act becomes a scroll runway with a pinned stage. Its length is a
        function of how many beats of copy it holds, so a two-beat act is not
        given the same distance as a four-beat one. */
@@ -689,6 +692,10 @@
 
     .pdt-stage--band > *:not(.pdt-bleed) {
       grid-area: auto;
+    }
+
+    .pdt-stage--band {
+      grid-template-rows: minmax(0, 1fr) auto;
     }
 
     /* ------------------------------------------------------------ the rail */
@@ -912,7 +919,11 @@
       justify-self: center;
       align-self: center;
       inline-size: min(38rem, 84vw);
-      max-block-size: 100%;
+      max-block-size: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(2rem, 4vw, 4rem);
     }
 
     .pdt-print--room-a,
@@ -932,6 +943,7 @@
       animation-name: pdt-fan-a;
     }
     .pdt-print--room-b {
+      margin: 0;
       rotate: 0deg;
       translate: 12% 6vh;
       scale: 0.8;
@@ -1083,6 +1095,20 @@
       block-size: auto;
     }
   }
+  }
+}
+
+@media (max-width: 63.99rem), (max-height: 49.99rem) {
+  .pdt-stage {
+    min-block-size: auto;
+    padding-block: 4rem;
+  }
+  .pdt-stage--band > .pdt-copy {
+    padding-block-end: 0;
+  }
+  .pdt-scatter {
+    max-block-size: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -1131,7 +1157,7 @@
   .pdt-stage--band > .pdt-copy,
   .pdt-copy--memory,
   .pdt-copy--room {
-    padding-block-end: 4.5rem;
+    padding-block-end: 0;
   }
 
   .pdt-print--memory {
