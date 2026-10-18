@@ -43,8 +43,8 @@ export default async function ContentPage({
 
   return (
     <>
-      {page.showTitleBanner && (
-        <div className="page-banner py-16 sm:py-22">
+      {page.showTitleBanner && page.slug !== "צרו-קשר" && (
+        <div className="page-banner py-10 sm:py-16">
           <div className="relative z-10 mx-auto max-w-(--container-content) px-5 lg:px-8">
             <div className="text-center">
               <p className="mb-4 text-[13px] font-bold tracking-[0.12em] text-accent-soft">איתן אונר · פוטודוקותרפיה</p>
@@ -57,7 +57,7 @@ export default async function ContentPage({
           </div>
         </div>
       )}
-      <Blocks blocks={page.blocks} />
+      <Blocks blocks={page.slug === "צרו-קשר" ? page.blocks.map((block) => block._type === "contact" ? { ...block, headingLevel: 1 as const } : block) : page.blocks} />
     </>
   );
 }

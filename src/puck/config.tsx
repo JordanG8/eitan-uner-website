@@ -152,6 +152,16 @@ export const config: Config = {
       fields: {
         title: { type: "text", label: "כותרת הקטע" },
         body: paragraphsField,
+        format: {
+          type: "select", label: "סוג הטקסט",
+          options: [{ label: "פסקאות", value: "paragraphs" }, { label: "שאלות ותשובות (השאלה בין **)", value: "questions" }],
+        },
+        facts: {
+          type: "array", label: "פרטים בקצרה",
+          getItemSummary: (item: any) => item?.label || "פרט",
+          arrayFields: { label: { type: "text", label: "כותרת" }, value: { type: "textarea", label: "תיאור" } },
+        },
+        ctas: ctasField,
         align: {
           type: "radio",
           label: "יישור",
@@ -232,6 +242,10 @@ export const config: Config = {
       label: "גלריית תמונות",
       fields: {
         title: { type: "text", label: "כותרת הקטע" },
+        purpose: {
+          type: "radio", label: "מטרת הגלריה",
+          options: [{ label: "תיק עבודות", value: "portfolio" }, { label: "תמונות לרכישה", value: "prints" }],
+        },
         images: {
           type: "array",
           label: "תמונות",
@@ -338,6 +352,7 @@ export const config: Config = {
         title: { type: "text", label: "כותרת הקטע" },
         body: paragraphsField,
         youtubeUrl: { type: "text", label: "כתובת יוטיוב" },
+        duration: { type: "text", label: "משך הסרטון (לדוגמה 5:13)" },
         background: {
           type: "radio",
           label: "רקע",

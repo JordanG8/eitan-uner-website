@@ -35,14 +35,14 @@ function MenuGlyph({ open }: { open: boolean }) {
 }
 
 export function Header({ site }: { site: SiteSettings }) {
-  const pathname = usePathname();
+  const pathname = decodeURIComponent(usePathname());
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const primary = site.nav.filter((item) => item.href !== "#" && !item.children);
-  const secondary = site.nav.flatMap((item) => item.children ?? []);
+  const groups = site.nav.filter((item) => item.children?.length);
 
   const closeMenu = (restoreFocus = true) => {
     setMenuOpen(false);
@@ -96,7 +96,7 @@ export function Header({ site }: { site: SiteSettings }) {
             onClick={() => setMenuOpen(true)}
             aria-expanded={menuOpen}
             aria-controls="site-menu"
-            aria-label="פתיחת התפריט"
+            aria-label="תפריט — פתיחה"
             className="group flex min-h-13 items-center gap-3 rounded-full bg-brand-900 px-4 text-white shadow-[0_10px_30px_rgb(11_52_54_/_0.18)] transition-all hover:-translate-y-0.5 hover:bg-brand-800 sm:px-5"
           >
             <MenuGlyph open={false} />
@@ -106,7 +106,7 @@ export function Header({ site }: { site: SiteSettings }) {
           <Link
             href="/"
             className="absolute left-1/2 -translate-x-1/2"
-            aria-label="לדף הבית"
+            aria-label={`${site.siteName} — לדף הבית`}
           >
             <Logo />
           </Link>
@@ -141,26 +141,26 @@ export function Header({ site }: { site: SiteSettings }) {
               ref={closeButtonRef}
               type="button"
               onClick={() => closeMenu()}
-              aria-label="סגירת התפריט"
+              aria-label="סגירה — תפריט האתר"
               className="group flex min-h-13 items-center gap-3 rounded-full bg-white px-4 text-brand-900 transition-transform hover:scale-[1.03] sm:px-5"
             >
               <MenuGlyph open />
               <span className="hidden text-[15px] font-bold sm:inline">סגירה</span>
             </button>
 
-            <Link href="/" onClick={() => closeMenu(false)} aria-label="לדף הבית" className="rounded-xl bg-white px-4 py-2">
+            <Link href="/" onClick={() => closeMenu(false)} aria-label={`${site.siteName} — לדף הבית`} className="rounded-xl bg-white px-4 py-2">
               <Logo compact />
             </Link>
 
-            <p className="hidden text-[13px] font-bold tracking-[0.12em] text-white/45 sm:block">
+            <p className="hidden text-[13px] font-bold tracking-[0.12em] text-white/80 sm:block">
               צילום · רגש · סיפור
             </p>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="mx-auto grid min-h-full max-w-[1600px] lg:grid-cols-[1.12fr_.88fr]">
-              <nav aria-label="ניווט ראשי" className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14 lg:py-12 xl:px-20">
-                <p className="mb-5 text-[12px] font-bold tracking-[0.16em] text-accent-soft/70">עמודים ראשיים</p>
+              <nav aria-label="ניווט ראשי" className="flex flex-col justify-center px-5 py-7 sm:px-10 lg:px-14 lg:py-12 xl:px-20">
+                <p className="mb-5 text-[12px] font-bold tracking-[0.16em] text-accent-soft">סדנאות, צילום וקשר</p>
                 <ol>
                   {primary.map((item, index) => (
                     <li key={item.href}>
@@ -172,8 +172,8 @@ export function Header({ site }: { site: SiteSettings }) {
                           isActive(pathname, item.href) ? "is-active" : ""
                         }`}
                       >
-                        <span className="text-[11px] font-bold tabular-nums text-accent-soft/50">0{index + 1}</span>
-                        <span className="text-[clamp(2rem,4.4vw,4.75rem)] font-bold leading-none tracking-[-0.045em] transition-transform duration-500 group-hover:-translate-x-2">
+                        <span aria-hidden="true" className="text-[11px] font-bold tabular-nums text-accent-soft">0{index + 1}</span>
+                        <span className="text-[clamp(1.5rem,3vw,3rem)] font-bold leading-none tracking-[-0.045em] transition-transform duration-500 group-hover:-translate-x-2">
                           {item.label}
                         </span>
                         <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 transition-all duration-300 group-hover:border-accent group-hover:bg-accent group-hover:text-brand-900 sm:h-12 sm:w-12">
@@ -198,29 +198,19 @@ export function Header({ site }: { site: SiteSettings }) {
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,42,44,.84)_0%,rgba(8,42,44,.95)_58%,#082a2c_100%)]" aria-hidden="true" />
 
                 <div className="relative flex min-h-full flex-col">
-                  <p className="text-[12px] font-bold tracking-[0.16em] text-accent-soft/70">גלו עוד</p>
-                  <nav aria-label="עמודים נוספים" className="mt-6">
-                    <ul className="grid grid-cols-1 gap-x-7 sm:grid-cols-2">
-                      {secondary.map((item) => (
-                        <li key={item.href} className="border-b border-white/10">
-                          <Link
-                            href={item.href}
-                            onClick={() => closeMenu(false)}
-                            aria-current={isActive(pathname, item.href) ? "page" : undefined}
-                            className={`group flex items-center justify-between gap-3 py-3 text-[15px] font-semibold transition-colors hover:text-accent-soft ${
-                              isActive(pathname, item.href) ? "text-accent-soft" : "text-white/75"
-                            }`}
-                          >
-                            <span>{item.label}</span>
-                            <span className="text-accent opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true">←</span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                  <nav aria-label="עמודים נוספים" className="space-y-7">
+                    {groups.map((group) => <div key={group.label}>
+                      <h2 className="mb-3 text-lg font-semibold text-accent-soft">{group.label}</h2>
+                      <ul className="grid grid-cols-1 gap-x-7 sm:grid-cols-2">
+                        {group.children?.map((item) => <li key={item.href} className="border-b border-white/15">
+                          <Link href={item.href} onClick={() => closeMenu(false)} aria-current={isActive(pathname, item.href) ? "page" : undefined} className="flex min-h-11 items-center py-2 text-base font-semibold text-white/90 transition-colors hover:text-accent-soft">{item.label}</Link>
+                        </li>)}
+                      </ul>
+                    </div>)}
                   </nav>
 
                   <div className="mt-auto pt-10">
-                    <p className="text-[12px] font-bold tracking-[0.16em] text-white/35">מתחילים שיחה</p>
+                    <p className="text-[12px] font-bold tracking-[0.16em] text-white/80">מתחילים שיחה</p>
                     <div className="mt-4 flex flex-wrap gap-3">
                       <a
                         href={site.whatsappUrl}

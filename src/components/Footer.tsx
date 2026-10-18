@@ -4,8 +4,7 @@ import { Logo } from "./Logo";
 
 export function Footer({ site }: { site: SiteSettings }) {
   const links = site.nav.flatMap((n) => (n.children ? n.children : n.href === "#" ? [] : [n]));
-  const primary = site.nav.filter((n) => n.href !== "#");
-  const all = [...primary, ...links];
+  const all = [...new Map(links.map((item) => [item.href, item])).values()];
 
   return (
     <footer className="bg-brand-900 text-white">

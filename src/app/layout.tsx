@@ -63,7 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 
         <ChromeGate>
           <Footer site={site} />
-          <WhatsAppFab url={site.whatsappUrl} />
+          <aside aria-label="יצירת קשר מהירה"><WhatsAppFab url={site.whatsappUrl} /></aside>
         </ChromeGate>
 
         <script

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ImageGallery } from "./ImageGallery";
 import Link from "next/link";
 import { site } from "@/lib/content";
 import type {
@@ -141,11 +142,24 @@ export function RichText({ block }: { block: RichTextBlock }) {
           onBrand ? "text-white/95" : "text-ink"
         }`}
       >
-        {block.body.map((p, i) => (
-          <p key={i}>
-            <Inline text={p} />
-          </p>
-        ))}
+        {block.facts?.length ? (
+          <dl className="mb-8 grid gap-4 rounded-2xl border border-hairline bg-surface-alt p-5 text-ink sm:grid-cols-2 sm:p-7">
+            {block.facts.map((fact) => <div key={fact.label}>
+              <dt className="text-sm font-bold text-brand-700">{fact.label}</dt>
+              <dd className="mt-1 text-base leading-relaxed">{fact.value}</dd>
+            </div>)}
+          </dl>
+        ) : null}
+        {block.facts?.length ? <CtaRow ctas={block.ctas} align={block.align} /> : null}
+        {block.body.map((p, i) => {
+          const question = block.format === "questions" ? p.match(/^\*\*([^*]+)\*\*\s*([\s\S]*)$/) : null;
+          if (question) return <div key={i} className="mb-8 border-b border-hairline pb-6">
+            <h2 className="mb-3 text-2xl font-bold text-brand-800">{question[1]}</h2>
+            <p><Inline text={question[2]} /></p>
+          </div>;
+          return <p key={i}><Inline text={p} /></p>;
+        })}
+        {!block.facts?.length && <CtaRow ctas={block.ctas} align={block.align} />}
       </div>
     </Section>
   );
@@ -154,6 +168,7 @@ export function RichText({ block }: { block: RichTextBlock }) {
 /* ---------------------------------------------------------------- cardGrid */
 
 export function CardGrid({ block }: { block: CardGridBlock }) {
+  const CardHeading = block.title ? "h3" : "h2";
   const bg = block.background ?? "white";
   const onBrand = bg === "brand";
   const cols =
@@ -192,7 +207,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                    fixed height with an inner scrollbar here; letting the card grow
                    to fit its text reads far better, especially on mobile. */
                 <div className="flex flex-1 flex-col bg-brand-800 p-6 text-white">
-                  <h3 className="text-xl font-bold">{card.title}</h3>
+                  <CardHeading className="text-xl font-bold">{card.title}</CardHeading>
                   {card.body && (
                     <p className="mt-3 text-[15px] leading-relaxed text-white/95">
                       {card.body}
@@ -201,7 +216,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col p-6">
-                  <h3 className="text-xl font-bold text-brand-800">{card.title}</h3>
+                  <CardHeading className="text-xl font-bold text-brand-800">{card.title}</CardHeading>
                   {card.body && (
                     <p className="mt-2 text-[15px] text-ink-soft">{card.body}</p>
                   )}
@@ -254,21 +269,7 @@ export function Gallery({ block }: { block: GalleryBlock }) {
           <SectionHeading>{block.title}</SectionHeading>
         </div>
       )}
-      {/* CSS columns give the masonry look of the original without JS */}
-      <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-5">
-        {block.images.map((im, i) => (
-          <figure key={i} className="break-inside-avoid overflow-hidden rounded-2xl bg-surface-alt shadow-[0_10px_30px_rgb(18_42_43_/_0.08)]">
-            <Image
-              src={im.src}
-              alt={im.alt}
-              width={im.width ?? 1200}
-              height={im.height ?? 900}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="h-auto w-full transition-transform duration-700 hover:scale-[1.035]"
-            />
-          </figure>
-        ))}
-      </div>
+      <ImageGallery images={block.images} prints={block.purpose === "prints"} whatsappUrl={site.whatsappUrl} email={site.email} />
     </Section>
   );
 }
@@ -276,6 +277,15 @@ export function Gallery({ block }: { block: GalleryBlock }) {
 /* ------------------------------------------------------------------- logos */
 
 export function Logos({ block }: { block: LogosBlock }) {
+  const projects: Record<string, string> = {
+    "/images/clients/akim.webp": "/סיפורים-מאחורי-המצלמה/מעש-אקים",
+    "/images/clients/beit-ekstein.webp": "/סיפורים-מאחורי-המצלמה/בית-אקשטיין",
+    "/images/clients/photo-israel.webp": "/סיפורים-מאחורי-המצלמה/photo-is-rael-photo-salam",
+    "/images/clients/nof-yam.webp": "/תערוכות",
+    "/images/clients/edut-710.webp": "/עדות-710",
+    "/images/clients/kehilat-or.webp": "/קהילת-אור",
+    "/images/clients/nataraj.webp": "/סיפורים-מאחורי-המצלמה/פסטיבל-נאטראז",
+  };
   return (
     <Section background="white">
       {block.title && (
@@ -287,16 +297,20 @@ export function Logos({ block }: { block: LogosBlock }) {
         {block.logos.map((logo, i) => (
           <li
             key={i}
-            className="flex aspect-square w-full max-w-[11rem] items-center justify-center rounded-2xl border border-hairline bg-white p-5 shadow-[0_8px_25px_rgb(18_42_43_/_0.06)] transition-transform hover:-translate-y-1"
+            className="flex w-full max-w-[13rem] flex-col items-center rounded-2xl border border-hairline bg-white p-3 text-center shadow-[0_8px_25px_rgb(18_42_43_/_0.06)] sm:p-4"
           >
+            <div className="flex aspect-square w-full max-w-36 items-center justify-center overflow-hidden rounded-lg bg-[#15888d] p-2">
             <Image
               src={logo.src}
-              alt={logo.alt}
+              alt=""
               width={160}
               height={160}
-              sizes="176px"
+              sizes="144px"
               className="h-full w-full object-contain"
             />
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-snug text-ink">{logo.alt}</p>
+            {projects[logo.src] && <Link href={projects[logo.src]} className="mt-auto inline-flex min-h-11 items-center pt-3 text-sm font-semibold text-brand-700 underline underline-offset-4">לסיפור ולפרטים ←</Link>}
           </li>
         ))}
       </ul>
@@ -351,7 +365,7 @@ export function Video({ block }: { block: VideoBlock }) {
         <div className="mx-auto aspect-video w-full max-w-3xl overflow-hidden bg-black">
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${id}`}
-            title={block.title ?? "וידאו"}
+            title={block.title || block.body?.[0] || "סרטון צילום ופוטודוקותרפיה עם איתן אונר"}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             loading="lazy"
@@ -359,6 +373,10 @@ export function Video({ block }: { block: VideoBlock }) {
           />
         </div>
       )}
+      <p className={`mx-auto mt-5 max-w-3xl text-center text-base ${onBrand ? "text-white" : "text-brand-700"}`}>
+        {block.duration && <span>משך הסרטון: <bdi>{block.duration}</bdi> · </span>}
+        <a href={block.youtubeUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline underline-offset-4">לצפייה בסרטון ב־YouTube</a>
+      </p>
     </Section>
   );
 }
@@ -371,73 +389,31 @@ function extractYouTubeId(url: string): string | null {
 /* ----------------------------------------------------------------- contact */
 
 export function Contact({ block }: { block: ContactBlock }) {
-  const mapQuery = encodeURIComponent("תל יוסף, ישראל");
+  const Heading = block.headingLevel === 1 ? "h1" : "h2";
+  const mapQuery = encodeURIComponent(site.location);
   return (
-    <Section background="alt" id="צרו-קשר">
-      <div className="mb-12">
-        <SectionHeading>{block.title ?? "צרו קשר"}</SectionHeading>
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* Map sits on the left, details on the right — as in the original. */}
-        <div className="overflow-hidden rounded-[1.5rem] border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] lg:order-last">
-          <iframe
-            title="מפה — תל יוסף"
-            src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`}
-            className="h-80 w-full lg:h-full lg:min-h-[22rem]"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
+    <Section background="alt" id="צרו-קשר" padded={false}>
+      <div className="py-10 sm:py-16">
+        <div className="mb-7 text-center">
+          <Heading className="text-4xl text-ink sm:text-5xl">{block.title ?? "צרו קשר"}</Heading>
+          <p className="mt-4 text-lg text-ink-soft">לתיאום סדנה, הרצאה או צילום — בואו נדבר.</p>
         </div>
-
-        <div className="rounded-[1.5rem] border border-hairline bg-white p-7 shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] sm:p-9">
-          <p className="text-lg font-semibold text-ink">{site.location}</p>
-
-          <ul className="mt-6 space-y-3 text-[15px]">
-            <li className="flex items-center gap-3">
-              <span className="text-brand-600" aria-hidden="true">
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor">
-                  <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.5.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.5.1.4 0 .8-.2 1l-2.2 2.3z" />
-                </svg>
-              </span>
-              <a href={`tel:${site.phone}`} className="text-brand-600 hover:underline">
-                {site.phoneDisplay}
-              </a>
-              <span className="text-ink-soft">— איתן אונר</span>
-            </li>
-
-            <li className="flex items-center gap-3">
-              <span className="text-brand-600" aria-hidden="true">
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor">
-                  <path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4.2l-8 5-8-5V6l8 5 8-5v2.2z" />
-                </svg>
-              </span>
-              <a href={`mailto:${site.email}`} className="text-brand-600 hover:underline">
-                {site.email}
-              </a>
-            </li>
-
-            <li className="flex items-start gap-3">
-              <span className="mt-1 text-brand-600" aria-hidden="true">
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor">
-                  <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 11H7v-2h4V6h2v7z" />
-                </svg>
-              </span>
-              <span className="text-ink-soft">
-                {site.hours.map((h) => (
-                  <span key={h} className="block">
-                    {h}
-                  </span>
-                ))}
-              </span>
-            </li>
-          </ul>
-
-          <ul className="mt-7 border-t border-hairline pt-6 text-[15px] text-ink-soft">
-            {site.roles.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-3xl border border-hairline bg-white p-5 shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] sm:p-9">
+            <div className="grid gap-3">
+              <a href={`tel:${site.phone}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-full bg-brand-700 px-4 py-3 font-semibold text-white">שיחה עם איתן <bdi>{site.phoneDisplay}</bdi></a>
+              <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center justify-center rounded-full border border-brand-300 px-4 py-3 font-semibold text-brand-700">הודעה ב־WhatsApp</a>
+              <a href={`mailto:${site.email}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-full border border-brand-300 px-4 py-3 font-semibold text-brand-700">מייל <bdi className="break-all">{site.email}</bdi></a>
+            </div>
+            <div className="mt-7 border-t border-hairline pt-5">
+              <p className="font-semibold text-ink">{site.location}</p>
+              <p className="mt-3 font-semibold text-ink">שעות מענה</p>
+              <ul className="mt-1 text-ink-soft">{site.hours.map((hours) => <li key={hours}>{hours}</li>)}</ul>
+            </div>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)]">
+            <iframe title="מפה — תל יוסף" src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`} className="h-72 w-full lg:h-full lg:min-h-80" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          </div>
         </div>
       </div>
     </Section>

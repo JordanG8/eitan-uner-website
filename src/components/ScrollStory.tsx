@@ -208,7 +208,7 @@ export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
   const turnEnd = Math.min(turn + 0.22, 1);
 
   return (
-    <div className="pdt">
+    <div className="pdt" id="הסיפור">
       {/*
         The header watches for this attribute to invert itself over a dark
         fold. It wraps only the dark acts, so the header returns to ink on
@@ -326,7 +326,7 @@ export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
               in Hebrew the next card is to the *left*, so "forward" is the
               opposite translation from the LTR version of this effect.
             */}
-            <ul className="pdt-river">
+            <ul className="pdt-river" tabIndex={0} aria-label="גלריית רגשות — אפשר לגלול לצדדים">
               {feelings.items.map((f, i) => (
                 <li key={i} className="pdt-river-item">
                   <Print
@@ -374,7 +374,7 @@ export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
       </div>
 
       {/* ───────────────────────────────────────────────── VIII. the ask */}
-      <section className="pdt-ask">
+      <section className="pdt-ask" id="סדנאות">
         <div className="pdt-ask-inner">
           {ask.kicker ? <p className="pdt-kicker pdt-kicker--ink">{ask.kicker}</p> : null}
           <h2 className="pdt-ask-title">{ask.title}</h2>
