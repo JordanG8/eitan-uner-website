@@ -3,8 +3,9 @@ import type { Page, ScrollStoryBlock, SiteSettings, Story } from "./types";
 /**
  * Site content, transcribed from the original site123 screenshots.
  *
- * This file is the system of record — no external CMS holds it. The Puck editor
- * at /editor composes pages from the same block types defined in types.ts.
+ * This is the seed: src/lib/seed.ts turns it into the Lexical documents a
+ * fresh deployment serves. Once Eitan publishes a page from /editor, the
+ * stored version wins and this file is no longer read for that page.
  *
  * Slugs intentionally reuse the original Hebrew URLs so existing inbound links
  * and Google's index keep resolving after the DNS cutover.

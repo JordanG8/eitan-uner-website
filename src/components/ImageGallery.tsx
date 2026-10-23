@@ -41,7 +41,7 @@ export function ImageGallery({ images, prints = false, whatsappUrl, email }: {
     <p className="mb-6 text-center text-base text-ink-soft">לחצו על צילום לצפייה מלאה ולפרטים{prints ? " על הדפסה ורכישה" : ""}.</p>
     <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-5">
       {images.map((im, i) => <figure key={`${im.src}-${i}`} className="break-inside-avoid rounded-2xl border border-hairline bg-white shadow-[0_10px_30px_rgb(18_42_43_/_0.08)]">
-        <button type="button" className="group block w-full overflow-hidden rounded-t-2xl" aria-label={`הגדלת הצילום: ${im.alt}`} onClick={(event) => { opener.current = event.currentTarget; setIndex(i); }}>
+        <button type="button" className="group block w-full overflow-hidden rounded-t-[calc(1rem*var(--radius-scale))]" aria-label={`הגדלת הצילום: ${im.alt}`} onClick={(event) => { opener.current = event.currentTarget; setIndex(i); }}>
           <Image src={im.src} alt={im.alt} width={im.width ?? 1200} height={im.height ?? 900} sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="h-auto w-full transition-transform duration-500 group-hover:scale-[1.035]" />
         </button>
         <figcaption className="px-4 py-3">

@@ -40,7 +40,7 @@ export function Testimonials({ block }: { block: TestimonialsBlock }) {
 
   return <Section background="white">
     {block.title && <div className="mb-10"><SectionHeading>{block.title}</SectionHeading></div>}
-    <div role="region" aria-label="המלצות משתתפים" aria-roledescription="קרוסלה" className="mx-auto max-w-4xl rounded-[2rem] border border-hairline bg-white px-5 py-8 shadow-[0_18px_55px_rgb(18_42_43_/_0.08)] sm:px-12 sm:py-12">
+    <div role="region" aria-label="המלצות משתתפים" aria-roledescription="קרוסלה" className="mx-auto max-w-4xl rounded-[calc(2rem*var(--radius-scale))] border border-hairline bg-white px-5 py-8 shadow-[0_18px_55px_rgb(18_42_43_/_0.08)] sm:px-12 sm:py-12">
       <figure className="text-center">
         {item.avatar ? <Image src={item.avatar.src} alt={item.avatar.alt} width={96} height={96} className="mx-auto h-24 w-24 rounded-full object-cover" /> : <span aria-hidden="true" className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-800 text-5xl text-accent-soft">״</span>}
         <blockquote id={quoteId} className="mt-6 min-h-40 whitespace-pre-line text-[17px] leading-[1.85] text-ink sm:min-h-32 sm:text-lg">

@@ -1,12 +1,9 @@
 /**
  * Content model.
  *
- * These block types are the whole vocabulary of the site. Every page is a list
- * of blocks, and each block has a fixed, designed layout. Eitan chooses blocks
- * and fills in fields — he never positions anything. That is deliberate: it is
- * what makes it impossible for him to produce a broken page.
- *
- * The Puck config in src/puck/config.tsx mirrors these one-for-one.
+ * The props of the site's designed sections, as their components take them.
+ * In a saved page each section is a Lexical block node (src/lexical/nodes.tsx)
+ * whose props src/blocks/render.tsx converts into these shapes.
  */
 
 export type CtaTone = "solid" | "outline" | "solidWhite" | "outlineWhite";
@@ -27,6 +24,8 @@ export interface ImageRef {
 /** Full-bleed opening band: photo on one side, turquoise on the other. */
 export interface HeroBlock {
   _type: "hero";
+  eyebrow?: string;
+  tags?: string[];
   title: string;
   subtitle?: string;
   image: ImageRef;
@@ -103,10 +102,16 @@ export interface TestimonialsBlock {
   items: Testimonial[];
 }
 
+export interface LogoItem extends ImageRef {
+  href?: string;
+  linkLabel?: string;
+}
+
 export interface LogosBlock {
   _type: "logos";
   title?: string;
-  logos: ImageRef[];
+  logos: LogoItem[];
+  tileColor?: string;
 }
 
 /** Turquoise band with a large centred pull-quote. */
@@ -130,7 +135,9 @@ export interface VideoBlock {
 export interface ContactBlock {
   _type: "contact";
   title?: string;
+  subtitle?: string;
   headingLevel?: 1 | 2;
+  showMap?: boolean;
 }
 
 export interface StoryPanel {
@@ -203,6 +210,7 @@ export interface SiteSettings {
   hours: string[];
   roles: string[];
   facebookUrl?: string;
+  instagramUrl?: string;
   whatsappUrl: string;
   nav: NavItem[];
 }

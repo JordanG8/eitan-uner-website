@@ -27,12 +27,21 @@
   --color-hairline: #deddd7;
 
   --font-sans: var(--font-assistant), system-ui, sans-serif;
+  --font-heading: var(--font-sans);
 
   --container-content: 1240px;
 }
 
 :root {
   color-scheme: light;
+  /* Scales the editor's design panel drives; see ThemeStyle.tsx. */
+  --space-scale: 1;
+  --radius-scale: 1;
+  --radius-button: 9999px;
+  --radius-lg: calc(0.5rem * var(--radius-scale));
+  --radius-xl: calc(0.75rem * var(--radius-scale));
+  --radius-2xl: calc(1rem * var(--radius-scale));
+  --radius-3xl: calc(1.5rem * var(--radius-scale));
 }
 
 .gallery-dialog {
@@ -70,7 +79,8 @@ body {
 }
 
 /* Hebrew headings read better slightly tighter than the Latin default */
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
   line-height: 1.12;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -261,3 +271,182 @@ a, p, li, h1, h2, h3 {
     background: linear-gradient(0deg, rgb(11 52 54 / 0.42), transparent 45%);
   }
 }
+
+/* ---------------------------------------------------------------
+   Per-section design overrides — see src/components/design.tsx.
+   A block only gets a .eu-block wrapper when Eitan has set something
+   in its design panel; these rules apply the parts that CSS
+   variables alone cannot reach.
+   --------------------------------------------------------------- */
+.eu-block { position: relative; }
+.eu-block[data-bg] { background: var(--eu-bg); }
+.eu-block[data-bg] > :is(section, article, div) { background: transparent !important; }
+.eu-block[data-overlay]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--eu-overlay);
+  pointer-events: none;
+}
+.eu-block[data-overlay] > * { position: relative; z-index: 1; }
+.eu-block[data-pt] { padding-top: var(--eu-pt); }
+.eu-block[data-pt] > * { padding-top: 0 !important; }
+.eu-block[data-pb] { padding-bottom: var(--eu-pb); }
+.eu-block[data-pb] > * { padding-bottom: 0 !important; }
+.eu-block[data-text] :is(p, li, dd, dt, blockquote, figcaption, small) { color: var(--eu-text) !important; }
+.eu-block[data-heading] :is(h1, h2, h3, h4, h5, h6) { color: var(--eu-heading) !important; }
+.eu-block[data-align] :is(h1, h2, h3, h4, h5, h6, p, blockquote, li) { text-align: var(--eu-align) !important; }
+
+/* ---------------------------------------------------------------
+   Page documents (Lexical) — shared by the editor and the public
+   renderer (src/lexical/Render.tsx), so text looks the same in both.
+   Designed sections (.eu-block-node) run full width; text and
+   inserted elements sit in a readable column.
+   --------------------------------------------------------------- */
+.eu-doc { --rt-width: 52rem; }
+:is(.eu-doc, .eu-panel) > :is(.eu-p, .eu-h1, .eu-h2, .eu-h3, .eu-h4, .eu-h5, .eu-h6, .eu-ul, .eu-ol, .eu-quote, .eu-hr) {
+  width: 100%;
+  max-width: var(--rt-width);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+:is(.eu-doc, .eu-panel) > .eu-columns {
+  width: 100%;
+  max-width: var(--container-content);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+@media (min-width: 1024px) {
+  :is(.eu-doc, .eu-panel) > :is(.eu-p, .eu-h1, .eu-h2, .eu-h3, .eu-h4, .eu-h5, .eu-h6, .eu-ul, .eu-ol, .eu-quote, .eu-hr, .eu-columns) { padding-inline: 2rem; }
+}
+.eu-doc > :not(.eu-block-node):first-child { margin-top: calc(3.5rem * var(--space-scale)); }
+.eu-doc > :not(.eu-block-node):last-child { margin-bottom: calc(4rem * var(--space-scale)); }
+.eu-doc > .eu-block-node + :not(.eu-block-node, .eu-panel) { margin-top: calc(3.5rem * var(--space-scale)); }
+.eu-doc > :not(.eu-block-node, .eu-panel) + :is(.eu-block-node, .eu-panel) { margin-top: calc(3rem * var(--space-scale)); }
+
+.eu-p { margin-block: 0 1.1rem; font-size: 1.05rem; line-height: 1.9; color: var(--color-ink); }
+.eu-h1, .eu-h2, .eu-h3, .eu-h4, .eu-h5, .eu-h6 { color: var(--color-ink); margin-block: 1.6rem 1rem; }
+.eu-h1 { font-size: clamp(2.2rem, 5vw, 3.75rem); }
+.eu-h2 { font-size: clamp(1.85rem, 3.6vw, 2.65rem); }
+.eu-h3 { font-size: clamp(1.45rem, 2.6vw, 1.9rem); }
+.eu-h4 { font-size: 1.35rem; }
+.eu-h5 { font-size: 1.15rem; }
+.eu-h6 { font-size: 1rem; }
+.eu-quote {
+  margin-block: 1.5rem;
+  border-inline-start: 3px solid var(--color-accent);
+  padding-inline-start: 1.25rem;
+  font-size: 1.3rem;
+  line-height: 1.7;
+  color: var(--color-ink-soft);
+}
+:is(.eu-doc, .eu-panel) > .eu-quote { padding-inline-start: calc(1.25rem + 1.25rem); }
+.eu-ul, .eu-ol { margin-block: 0 1.1rem; padding-inline-start: 1.5rem; font-size: 1.05rem; line-height: 1.9; color: var(--color-ink); }
+:is(.eu-doc, .eu-panel) > :is(.eu-ul, .eu-ol) { padding-inline-start: calc(1.25rem + 1.5rem); }
+.eu-ul { list-style: disc; }
+.eu-ol { list-style: decimal; }
+.eu-li-nested { list-style: none; }
+.eu-li > :is(.eu-ul, .eu-ol) { margin-block: 0.3rem 0; }
+.eu-link { color: var(--color-brand-600); text-decoration: underline; text-underline-offset: 3px; }
+.eu-link:hover { color: var(--color-brand-800); }
+.eu-b { font-weight: 700; }
+.eu-i { font-style: italic; }
+.eu-u { text-decoration: underline; }
+.eu-s { text-decoration: line-through; }
+.eu-us { text-decoration: underline line-through; }
+.eu-code { font-family: ui-monospace, monospace; font-size: 0.92em; background: var(--color-surface-alt); border-radius: 4px; padding: 0.1em 0.3em; }
+.eu-mark { background: var(--color-accent-soft); color: inherit; border-radius: 3px; padding-inline: 0.1em; }
+.eu-sub { font-size: 0.75em; vertical-align: sub; }
+.eu-sup { font-size: 0.75em; vertical-align: super; }
+.eu-hr { border: 0; border-top: 1px solid var(--color-hairline); margin-block: 2.5rem; }
+:is(.eu-doc, .eu-panel) > .eu-hr { max-width: calc(var(--rt-width) - 2.5rem); }
+
+/* Coloured panel: a full-width band around text and elements. */
+.eu-panel {
+  position: relative;
+  background: var(--panel-bg, var(--color-surface-alt));
+  padding-block: var(--panel-py, 4.5rem);
+  text-align: var(--panel-align, start);
+}
+.eu-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--panel-overlay, transparent);
+  pointer-events: none;
+}
+.eu-panel > * { position: relative; }
+.eu-panel > :first-child { margin-top: 0; }
+.eu-panel > :last-child { margin-bottom: 0; }
+
+/* Columns: stacked on phones, side by side from tablet up. */
+.eu-columns { display: grid; gap: var(--cols-gap, 32px); grid-template-columns: 1fr; margin-block: 1.5rem; }
+@media (min-width: 768px) { .eu-columns { grid-template-columns: var(--cols); } }
+.eu-column { min-width: 0; }
+.eu-column > :first-child { margin-top: 0; }
+.eu-column > :is(.eu-ul, .eu-ol) { padding-inline-start: 1.5rem; }
+
+/* Inserted elements sit in the content column; nested ones fill their parent. */
+.eu-contain {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--rt-width, var(--container-content));
+  padding-inline: 1.25rem;
+}
+@media (min-width: 1024px) { .eu-contain { padding-inline: 2rem; } }
+.eu-column .eu-contain { max-width: none; padding-inline: 0; }
+.eu-doc > .eu-block-node:has(> .eu-contain, > .eu-block > .eu-contain) { margin-block: 1.5rem; }
+
+/* Scroll-in animations. Off for anyone who has asked for less motion, and a
+   no-op in browsers without scroll timelines — the content is simply there. */
+@keyframes eu-reveal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes eu-reveal-up { from { opacity: 0; transform: translateY(3rem); } to { opacity: 1; transform: none; } }
+@keyframes eu-reveal-zoom { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+@keyframes eu-reveal-side { from { opacity: 0; transform: translateX(3rem); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .eu-anim {
+      animation: eu-reveal-fade linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 28%;
+    }
+    .eu-anim--up { animation-name: eu-reveal-up; }
+    .eu-anim--zoom { animation-name: eu-reveal-zoom; }
+    .eu-anim--side { animation-name: eu-reveal-side; }
+  }
+}
+
+/* ---------------------------------------------------------------
+   Editor-only chrome around sections (src/lexical/nodes.tsx).
+   --------------------------------------------------------------- */
+.eu-editing { outline: none; min-height: 60vh; }
+.eu-editing .eu-block-edit { position: relative; cursor: pointer; }
+.eu-editing .eu-block-edit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  outline: 2px dashed transparent;
+  outline-offset: -2px;
+  transition: outline-color 150ms;
+}
+.eu-editing .eu-block-edit:hover::after { outline-color: rgb(14 106 105 / 0.45); }
+.eu-editing .eu-block-edit[data-selected]::after { outline: 3px solid #0e6a69; }
+.eu-block-bar {
+  position: absolute;
+  z-index: 30;
+  top: 8px;
+  inset-inline-start: 8px;
+  display: none;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.eu-editing .eu-block-edit:hover > .eu-block-bar,
+.eu-editing .eu-block-edit[data-selected] > .eu-block-bar { display: flex; }
+/* Embedded players and maps would swallow the click that selects a section. */
+.eu-editing .eu-block-edit iframe { pointer-events: none; }
+.eu-editing .eu-panel, .eu-editing .eu-column { outline: 1px dashed rgb(14 106 105 / 0.25); outline-offset: -1px; }
+.eu-editing .eu-column { min-height: 3rem; }
+.eu-frame-fab > a { position: absolute; bottom: 1.25rem; }

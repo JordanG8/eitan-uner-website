@@ -16,7 +16,7 @@ const toneClass: Record<CtaTone, string> = {
 export function Button({ cta }: { cta: Cta }) {
   const tone = cta.tone ?? "solid";
   const external = /^https?:\/\//.test(cta.href);
-  const className = `inline-flex min-h-12 items-center justify-center rounded-full px-6 py-2.5 text-[15px] font-semibold transition-all duration-300 ${toneClass[tone]}`;
+  const className = `inline-flex min-h-12 items-center justify-center rounded-(--radius-button) px-6 py-2.5 text-[15px] font-semibold transition-all duration-300 ${toneClass[tone]}`;
 
   if (external) {
     return (
@@ -146,7 +146,7 @@ export function Section({
         ? "bg-surface-alt"
         : "bg-surface";
   return (
-    <section id={id} className={`${bg} ${padded ? "py-20 sm:py-28" : ""}`}>
+    <section id={id} className={`${bg} ${padded ? "py-[calc(5rem*var(--space-scale))] sm:py-[calc(7rem*var(--space-scale))]" : ""}`}>
       <div className="mx-auto max-w-(--container-content) px-5 lg:px-8">{children}</div>
     </section>
   );

@@ -1,9 +1,7 @@
 import Image from "next/image";
 import { ImageGallery } from "./ImageGallery";
 import Link from "next/link";
-import { site } from "@/lib/content";
 import type {
-  Block,
   CardGridBlock,
   ContactBlock,
   GalleryBlock,
@@ -11,14 +9,11 @@ import type {
   LogosBlock,
   QuoteBlock,
   RichTextBlock,
-  ScrollStoryBlock,
-  TestimonialsBlock,
+  SiteSettings,
   TextImageBlock,
   VideoBlock,
 } from "@/lib/types";
 import { CtaRow, Inline, Rule, Section, SectionHeading } from "./ui";
-import { Testimonials } from "./Testimonials";
-import { ScrollStory } from "./ScrollStory";
 
 /* -------------------------------------------------------------------- hero */
 
@@ -29,7 +24,7 @@ export function Hero({ block }: { block: HeroBlock }) {
   const imageLast = (block.imageSide ?? "end") === "end";
   return (
     <section className="bg-surface px-0 pb-8 pt-0 sm:px-5 sm:pb-12 sm:pt-5 lg:px-8">
-      <div className="hero-shell mx-auto grid min-h-[38rem] max-w-[1480px] items-stretch sm:rounded-[2rem] lg:min-h-[42rem] lg:grid-cols-[1.08fr_.92fr]">
+      <div className="hero-shell mx-auto grid min-h-[38rem] max-w-[1480px] items-stretch sm:rounded-[calc(2rem*var(--radius-scale))] lg:min-h-[42rem] lg:grid-cols-[1.08fr_.92fr]">
         <div
           className={`hero-media relative min-h-[24rem] lg:min-h-[42rem] ${
             imageLast ? "lg:order-last" : ""
@@ -46,7 +41,7 @@ export function Hero({ block }: { block: HeroBlock }) {
         </div>
 
         <div className="relative flex flex-col justify-center px-7 py-14 text-start sm:px-12 lg:px-16 lg:py-20">
-          <p className="eyebrow-label">איתן אונר · צלם ופוטודוקותרפיסט</p>
+          {block.eyebrow && <p className="eyebrow-label">{block.eyebrow}</p>}
           <h1
             className={`mt-6 max-w-[9ch] text-[3.25rem] font-bold sm:text-6xl lg:text-[5.4rem] ${
               onBrand ? "text-white" : "text-ink"
@@ -62,9 +57,11 @@ export function Hero({ block }: { block: HeroBlock }) {
             </p>
           )}
           <CtaRow ctas={block.ctas} />
-          <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[13px] font-semibold text-white/60">
-            <span>סדנאות</span><span>הרצאות</span><span>צילום חברתי</span>
-          </div>
+          {block.tags?.length ? (
+            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-[13px] font-semibold text-white/60">
+              {block.tags.map((tag) => <span key={tag}>{tag}</span>)}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
@@ -80,7 +77,7 @@ export function TextImage({ block }: { block: TextImageBlock }) {
     <Section background={bg}>
       <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-24">
         <div className={(block.imageSide ?? "end") === "end" ? "lg:order-last" : ""}>
-          <div className="photo-frame relative aspect-4/3 w-full overflow-hidden rounded-[1.75rem] bg-brand-100">
+          <div className="photo-frame relative aspect-4/3 w-full overflow-hidden rounded-[calc(1.75rem*var(--radius-scale))] bg-brand-100">
             <Image
               src={block.image.src}
               alt={block.image.alt}
@@ -240,8 +237,8 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
 
           const shell = `group flex flex-col overflow-hidden ${
             block.variant === "overlay"
-              ? "rounded-[1.5rem] shadow-[0_16px_45px_rgb(18_42_43_/_0.14)]"
-              : "rounded-[1.5rem] border border-hairline/80 bg-white shadow-[0_10px_35px_rgb(18_42_43_/_0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgb(18_42_43_/_0.12)]"
+              ? "rounded-[calc(1.5rem*var(--radius-scale))] shadow-[0_16px_45px_rgb(18_42_43_/_0.14)]"
+              : "rounded-[calc(1.5rem*var(--radius-scale))] border border-hairline/80 bg-white shadow-[0_10px_35px_rgb(18_42_43_/_0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgb(18_42_43_/_0.12)]"
           }`;
 
           return card.href ? (
@@ -261,7 +258,7 @@ export function CardGrid({ block }: { block: CardGridBlock }) {
 
 /* ----------------------------------------------------------------- gallery */
 
-export function Gallery({ block }: { block: GalleryBlock }) {
+export function Gallery({ block, site }: { block: GalleryBlock; site: SiteSettings }) {
   return (
     <Section background={block.background ?? "white"}>
       {block.title && (
@@ -277,15 +274,6 @@ export function Gallery({ block }: { block: GalleryBlock }) {
 /* ------------------------------------------------------------------- logos */
 
 export function Logos({ block }: { block: LogosBlock }) {
-  const projects: Record<string, string> = {
-    "/images/clients/akim.webp": "/סיפורים-מאחורי-המצלמה/מעש-אקים",
-    "/images/clients/beit-ekstein.webp": "/סיפורים-מאחורי-המצלמה/בית-אקשטיין",
-    "/images/clients/photo-israel.webp": "/סיפורים-מאחורי-המצלמה/photo-is-rael-photo-salam",
-    "/images/clients/nof-yam.webp": "/תערוכות",
-    "/images/clients/edut-710.webp": "/עדות-710",
-    "/images/clients/kehilat-or.webp": "/קהילת-אור",
-    "/images/clients/nataraj.webp": "/סיפורים-מאחורי-המצלמה/פסטיבל-נאטראז",
-  };
   return (
     <Section background="white">
       {block.title && (
@@ -299,7 +287,8 @@ export function Logos({ block }: { block: LogosBlock }) {
             key={i}
             className="flex w-full max-w-[13rem] flex-col items-center rounded-2xl border border-hairline bg-white p-3 text-center shadow-[0_8px_25px_rgb(18_42_43_/_0.06)] sm:p-4"
           >
-            <div className="flex aspect-square w-full max-w-36 items-center justify-center overflow-hidden rounded-lg bg-[#15888d] p-2">
+            <div className={`flex aspect-square w-full max-w-36 items-center justify-center overflow-hidden rounded-lg ${block.tileColor ? "" : "bg-[#15888d] "}p-2`}
+              style={block.tileColor ? { background: block.tileColor } : undefined}>
             <Image
               src={logo.src}
               alt=""
@@ -310,7 +299,7 @@ export function Logos({ block }: { block: LogosBlock }) {
             />
             </div>
             <p className="mt-4 text-sm font-semibold leading-snug text-ink">{logo.alt}</p>
-            {projects[logo.src] && <Link href={projects[logo.src]} className="mt-auto inline-flex min-h-11 items-center pt-3 text-sm font-semibold text-brand-700 underline underline-offset-4">לסיפור ולפרטים ←</Link>}
+            {logo.href && <Link href={logo.href} className="mt-auto inline-flex min-h-11 items-center pt-3 text-sm font-semibold text-brand-700 underline underline-offset-4">{logo.linkLabel || "לסיפור ולפרטים ←"}</Link>}
           </li>
         ))}
       </ul>
@@ -323,7 +312,7 @@ export function Logos({ block }: { block: LogosBlock }) {
 export function Quote({ block }: { block: QuoteBlock }) {
   return (
     <Section background="brand">
-      <div className="lens-field mx-auto max-w-5xl rounded-[2rem] border border-white/10 bg-white/5 px-7 py-14 text-center sm:px-14 sm:py-20">
+      <div className="lens-field mx-auto max-w-5xl rounded-[calc(2rem*var(--radius-scale))] border border-white/10 bg-white/5 px-7 py-14 text-center sm:px-14 sm:py-20">
         <blockquote className="relative text-3xl font-bold leading-snug text-white sm:text-5xl">
           {block.quote}
         </blockquote>
@@ -388,7 +377,7 @@ function extractYouTubeId(url: string): string | null {
 
 /* ----------------------------------------------------------------- contact */
 
-export function Contact({ block }: { block: ContactBlock }) {
+export function Contact({ block, site }: { block: ContactBlock; site: SiteSettings }) {
   const Heading = block.headingLevel === 1 ? "h1" : "h2";
   const mapQuery = encodeURIComponent(site.location);
   return (
@@ -396,63 +385,28 @@ export function Contact({ block }: { block: ContactBlock }) {
       <div className="py-10 sm:py-16">
         <div className="mb-7 text-center">
           <Heading className="text-4xl text-ink sm:text-5xl">{block.title ?? "צרו קשר"}</Heading>
-          <p className="mt-4 text-lg text-ink-soft">לתיאום סדנה, הרצאה או צילום — בואו נדבר.</p>
+          {(block.subtitle ?? "לתיאום סדנה, הרצאה או צילום — בואו נדבר.") && <p className="mt-4 text-lg text-ink-soft">{block.subtitle ?? "לתיאום סדנה, הרצאה או צילום — בואו נדבר."}</p>}
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className={`grid gap-6 ${block.showMap !== false ? "lg:grid-cols-2" : "mx-auto max-w-2xl"}`}>
           <div className="rounded-3xl border border-hairline bg-white p-5 shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] sm:p-9">
             <div className="grid gap-3">
-              <a href={`tel:${site.phone}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-full bg-brand-700 px-4 py-3 font-semibold text-white">שיחה עם איתן <bdi>{site.phoneDisplay}</bdi></a>
-              <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center justify-center rounded-full border border-brand-300 px-4 py-3 font-semibold text-brand-700">הודעה ב־WhatsApp</a>
-              <a href={`mailto:${site.email}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-full border border-brand-300 px-4 py-3 font-semibold text-brand-700">מייל <bdi className="break-all">{site.email}</bdi></a>
+              <a href={`tel:${site.phone}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-(--radius-button) bg-brand-700 px-4 py-3 font-semibold text-white">שיחה עם איתן <bdi>{site.phoneDisplay}</bdi></a>
+              <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center justify-center rounded-(--radius-button) border border-brand-300 px-4 py-3 font-semibold text-brand-700">הודעה ב־WhatsApp</a>
+              <a href={`mailto:${site.email}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-(--radius-button) border border-brand-300 px-4 py-3 font-semibold text-brand-700">מייל <bdi className="break-all">{site.email}</bdi></a>
             </div>
             <div className="mt-7 border-t border-hairline pt-5">
               <p className="font-semibold text-ink">{site.location}</p>
-              <p className="mt-3 font-semibold text-ink">שעות מענה</p>
-              <ul className="mt-1 text-ink-soft">{site.hours.map((hours) => <li key={hours}>{hours}</li>)}</ul>
+              {site.hours.length > 0 && <>
+                <p className="mt-3 font-semibold text-ink">שעות מענה</p>
+                <ul className="mt-1 text-ink-soft">{site.hours.map((hours) => <li key={hours}>{hours}</li>)}</ul>
+              </>}
             </div>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)]">
-            <iframe title="מפה — תל יוסף" src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`} className="h-72 w-full lg:h-full lg:min-h-80" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-          </div>
+          {block.showMap !== false && <div className="overflow-hidden rounded-3xl border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)]">
+            <iframe title={`מפה — ${site.location.split(",")[0]}`} src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`} className="h-72 w-full lg:h-full lg:min-h-80" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          </div>}
         </div>
       </div>
     </Section>
-  );
-}
-
-/* ------------------------------------------------------------------ router */
-
-export function Blocks({ blocks }: { blocks: Block[] }) {
-  return (
-    <>
-      {blocks.map((block, i) => {
-        switch (block._type) {
-          case "scrollStory":
-            return <ScrollStory key={i} block={block as ScrollStoryBlock} />;
-          case "hero":
-            return <Hero key={i} block={block} />;
-          case "textImage":
-            return <TextImage key={i} block={block} />;
-          case "richText":
-            return <RichText key={i} block={block} />;
-          case "cardGrid":
-            return <CardGrid key={i} block={block} />;
-          case "gallery":
-            return <Gallery key={i} block={block} />;
-          case "testimonials":
-            return <Testimonials key={i} block={block as TestimonialsBlock} />;
-          case "logos":
-            return <Logos key={i} block={block} />;
-          case "quote":
-            return <Quote key={i} block={block} />;
-          case "video":
-            return <Video key={i} block={block} />;
-          case "contact":
-            return <Contact key={i} block={block} />;
-          default:
-            return null;
-        }
-      })}
-    </>
   );
 }

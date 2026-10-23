@@ -1,25 +1,49 @@
 # פוטודוקותרפיה איתן אונר — eitanuner.co.il
 
 Replacement for Eitan Uner's site123 site. Next.js 16 (App Router) + Tailwind 4,
-with a self-hosted [Puck](https://puckeditor.com) visual editor at `/editor`.
-Hebrew, RTL throughout. No third-party CMS.
+with a [Lexical](https://lexical.dev) editor at `/editor` and content stored in
+Vercel Blob. Hebrew, RTL throughout. No third-party CMS.
 
-## Why it is built this way
+## How it is built
 
-Eitan is a working photographer, not a web person, and he came from a visual
-page builder. Two decisions follow from that:
+**Eitan has full control of the design.** Every page is a Lexical document he
+edits in place, inside the site's real header and footer:
 
-**Blocks, not a canvas.** The whole site is a small vocabulary of designed
-section types (`hero`, `textImage`, `cardGrid`, `gallery`, `testimonials`,
-`logos`, `quote`, `video`, `contact`). Pages are ordered lists of those blocks.
-He picks blocks and fills in fields — he never positions or styles anything.
-There is deliberately no spacing, colour or font control in the CMS, because the
-polish is the product and a freeform canvas is exactly what would destroy it.
+- **Text** is typed straight onto the page and styled from the toolbar:
+  headings, lists, quotes, links, bold/italic/underline, font (19 Hebrew
+  Google Fonts), size, text and highlight colour, alignment.
+- **Layout**: coloured panels (background colour or photo, text colour,
+  width, padding) and 2–4 column grids, both holding ordinary text.
+- **Sections**: the site's designed sections — scroll story, hero, text +
+  image, cards, gallery, testimonials, logos, quote, video, contact, story
+  article — are Lexical decorator nodes. Selecting one opens its fields in the
+  side panel, plus a design panel (background colour/photo, text, heading and
+  brand colours, spacing, width, fonts, corner rounding, scroll animation,
+  hide on phone/desktop).
+- **Elements**: image, buttons, embed (YouTube, Vimeo, Maps, or pasted HTML),
+  divider, spacer.
+- **Site design** (`/editor/site`): palette, fonts, base size, spacing, corner
+  rounding, button shape, header layout (full-screen menu or link bar), logo,
+  menu links, footer, contact details, custom CSS — with a live preview of the
+  homepage.
+- **Pages**: create (blank or as a copy), duplicate, rename/move (menu links
+  follow), reorder, delete, and restore any of the last 30 published versions.
 
-**Nobody else holds the content.** `src/lib/content.ts` in this repo is the
-system of record. Puck is an MIT-licensed React component embedded in this app —
-not a service — and it emits plain JSON we store ourselves. There is no vendor to
-rate-limit us, take the content down, or start charging per seat.
+**The default design is the original, exactly.** The seed in
+`src/lib/seed.ts` turns the transcribed content (`src/lib/content.ts`) into
+Lexical documents with one section node per original section. Rendered, all
+26 routes are pixel-identical to the pre-Lexical site at desktop and phone
+widths; theme values only emit CSS once they differ from the defaults.
+
+**Same components in the editor and on the site.** `src/blocks/render.tsx` is
+the single map from section type to component. The editor's decorator nodes
+render through it, and so does the public renderer — so what Eitan edits is
+literally the page.
+
+**Visitors never download the editor.** `src/lexical/Render.tsx` walks the
+saved Lexical JSON and produces the same markup Lexical does (same tags, same
+theme classes from `src/lexical/doc.ts`) as a server component. Lexical itself
+only loads on `/editor`.
 
 ## Running locally
 
@@ -28,25 +52,28 @@ npm install
 npm run dev
 ```
 
-Node 20+ required (built against 24). The public site needs no env vars; `/editor`
-requires the two auth values below.
+Node 20+ required (built against 24). The public site needs no env vars;
+`/editor` requires the two auth values below. Without `BLOB_READ_WRITE_TOKEN`,
+saves go to `./.data/` on the local disk.
 
-## The editor
+## Code map
 
-`/editor` is the Puck canvas: drag-and-drop composition, a Hebrew component
-palette, an outline of the page, per-block fields, viewport previews, and undo.
+| Path | What |
+| --- | --- |
+| `src/app/[[...slug]]/page.tsx` | every public page, at any depth |
+| `src/lexical/doc.ts` | saved-page types, theme class names, builders |
+| `src/lexical/Render.tsx` | saved JSON → React (public site) |
+| `src/lexical/nodes.tsx` | editor nodes: section, panel, columns |
+| `src/blocks/render.tsx` / `fields.tsx` | each section's render / editable fields |
+| `src/editor/*` | page editor, toolbar, side panel, site-design editor, field controls |
+| `src/lib/site.ts`, `src/components/ThemeStyle.tsx` | site design document → CSS variables |
+| `src/lib/store.ts`, `src/lib/cms.ts`, `src/lib/pages.ts` | storage, cached reads, page operations |
+| `src/app/editor/*`, `src/app/api/editor/*` | dashboard and editing APIs |
 
-The key property is in `src/puck/config.tsx`: each component's `render`
-delegates to the **same** component the live site uses. There is no parallel
-"editor version" of a section that can drift from production — what Eitan drags
-around is literally the page.
+## Auth
 
-Field sets are deliberately narrow. Puck can expose arbitrary style controls; we
-expose none, so a broken layout is not reachable.
-
-### Auth
-
-`/editor` and the editing APIs are gated by `src/middleware.ts`.
+`/editor` and the editing APIs are gated by `src/proxy.ts`, and each write
+route checks the session again (`src/lib/session.ts`).
 
 ```bash
 npx tsx scripts/set-password.mts "a-long-password"
@@ -64,65 +91,38 @@ Note the hash is colon-separated, not the conventional `$`-separated: Next.js
 performs `$VAR` expansion when parsing `.env` files, which silently mangles a
 `$`-delimited hash and presents as "correct password rejected".
 
-### Media
+## Storage
 
-The picker (`src/puck/MediaField.tsx`) is a thumbnail grid with upload, and it
-owns the `{src, alt}` pair together so an image without alt text is awkward to
-create. `/api/media` validates MIME type and a 25MB ceiling, and sniffs PNG /
-JPEG / WebP dimensions on upload — the gallery lays out with CSS columns using
-each image's intrinsic ratio, so unknown dimensions would visibly break it.
+Everything Eitan edits lives in **Vercel Blob**, a store inside the same Vercel
+project (`eitan-uner-content`, region fra1, connected to production, preview
+and development). Connecting it sets `BLOB_READ_WRITE_TOKEN`; nothing else is
+configured. With no token, writes go to `./.data/` (development or any server
+with a disk); on Vercel without one, the editor says storage is missing
+instead of failing silently.
 
-`src/lib/storage.ts` has one seam, `putObject`. The local driver writes to
-`public/uploads` and works in development and on any server with a disk.
+Documents (`src/lib/store.ts`):
 
-## Storage: the repo is the database
+```
+content/site/<version>.json        site design
+content/pages/<version>.json       page list: id, slug, title
+content/page-<id>/<version>.json   one page: settings + Lexical JSON
+media/<name>-<stamp>_<w>x<h>.webp  uploads (dimensions in the name)
+```
 
-Publishing commits `content/pages/<slug>.json`; uploads commit into
-`public/uploads/`. Both trigger a Vercel rebuild, so a change is live in about a
-minute and every edit is an ordinary commit — diffable, revertible, attributable.
+Every save writes a **new** immutable file and the newest wins, so there is
+version history for free (the last 30 are kept and restorable from the
+editor), and a CDN-cached blob URL can never serve a stale version. Anything
+never saved falls back to the seed.
 
-That choice follows from the ownership constraint. A database and a media bucket
-would each be another account and another bill in Eitan's name; the repo he
-already owns costs nothing extra to hand over.
+Public reads are cached with a tag; every write expires it, so a publish is
+live on the next request — no commit, no rebuild.
 
-Configure with `GITHUB_TOKEN` (fine-grained PAT, Contents: read and write, this
-repo only), `GITHUB_REPO`, `GITHUB_BRANCH`. With them unset, writes go to the
-local filesystem — which is what development uses, and what a VPS would use.
+Uploads are downscaled in the browser first (Vercel caps request bodies at
+4.5MB; camera files are 6–15MB), then re-encoded to WebP with sharp, which also
+normalises EXIF rotation.
 
-Reads never touch the GitHub API: a committed file is just a file by the time it
-is deployed. Only writing needs the token, so serving the site cannot be broken
-by a network problem or an expired credential.
-
-### Images are re-encoded twice, on purpose
-
-**In the browser, before upload.** Not an optimisation — Vercel caps a function
-request body at 4.5MB as an infrastructure limit that cannot be raised in
-config, and Eitan's camera files run 6–15MB. Without the client-side downscale
-in `MediaField.tsx`, his photos simply cannot be uploaded in production.
-
-**On the server, with sharp.** Defence in depth for anything that skipped the
-first pass, and it normalises EXIF rotation. Measured on his own files: 6MB
-JPEGs land at ~790KB, an 8× reduction, at 2400px on the long edge.
-
-Both matter because git keeps every version of every binary forever. Compression
-is what makes repo-as-storage viable rather than a slow-motion mistake.
-
-### When to move to R2
-
-Watch for: publishes consistently taking several minutes, uploads failing
-repeatedly, roughly 1,500+ images accumulated, or a shift to video. GitHub
-recommends staying under 1GB per repo (5GB is the outer threshold), and the
-site's images are currently ~3.3MB.
-
-Migrating means implementing one function — `putObject` in `src/lib/storage.ts`
-— against S3/R2 and rewriting the stored URLs. Hours, not a rebuild. **Do not
-reach for Git LFS**: its objects transfer awkwardly between accounts and the
-free tier bills past 1GB, reintroducing exactly the account-to-hand-over problem
-this design avoids.
-
-Eitan has a plain-language version of all of this in
-[EITAN-README.md](EITAN-README.md), including the symptoms that should prompt him
-to call.
+**Preview and production share the store.** Publishing from a preview
+deployment's editor changes the content production serves.
 
 ## Deploying
 

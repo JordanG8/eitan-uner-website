@@ -1,10 +1,11 @@
-export function WhatsAppFab({ url }: { url: string }) {
+export function WhatsAppFab({ url, color }: { url: string; color?: string }) {
   return (
     <a
       href={url}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="שליחת הודעה בוואטסאפ"
+      style={color && color.toLowerCase() !== "#1fae5b" ? { backgroundColor: color } : undefined}
       className="fixed bottom-5 end-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border-4 border-surface bg-[#1fae5b] text-white shadow-[0_12px_30px_rgb(18_42_43_/_0.22)] transition-transform hover:-translate-y-1 focus-visible:-translate-y-1"
     >
       <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor" aria-hidden="true">

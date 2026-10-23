@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 /**
  * The camera mark, rebuilt as vector.
  *
@@ -5,13 +7,14 @@
  * from a screenshot would have shipped a blurry ~70px bitmap. This traces the same
  * silhouette so it stays sharp at any size and weighs ~1KB.
  */
-export function CameraMark({ className = "" }: { className?: string }) {
+export function CameraMark({ className = "", style }: { className?: string; style?: CSSProperties }) {
   return (
     <svg
       viewBox="0 0 640 420"
       role="img"
       aria-label="פוטודוקותרפיה איתן אונר"
       className={className}
+      style={style}
       fill="currentColor"
     >
       {/* viewfinder hump */}
@@ -55,17 +58,51 @@ export function CameraMark({ className = "" }: { className?: string }) {
   );
 }
 
-export function Logo({ compact = false }: { compact?: boolean }) {
+export interface LogoOptions {
+  text?: string;
+  showMark?: boolean;
+  image?: { src: string; alt: string; width?: number; height?: number };
+  /** Height of the mark in px; the compact variant scales it down. */
+  height?: number;
+}
+
+export function Logo({
+  compact = false,
+  text = "פוטודוקותרפיה איתן אונר",
+  showMark = true,
+  image,
+  height = 36,
+}: { compact?: boolean } & LogoOptions) {
+  const h = Math.round(compact ? height * 0.78 : height);
+  if (image?.src) {
+    return (
+      <span className="flex flex-col items-center leading-none text-brand-600">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={image.src} alt={image.alt || text} style={{ height: h * 1.4 }} className="w-auto" />
+        {text && showMark && (
+          <span className={`mt-1 font-bold tracking-tight ${compact ? "text-[13px]" : "text-[15px]"}`}>{text}</span>
+        )}
+      </span>
+    );
+  }
   return (
     <span className="flex flex-col items-center leading-none text-brand-600">
-      <CameraMark className={compact ? "h-7 w-auto" : "h-9 w-auto"} />
-      <span
-        className={`mt-1 font-bold tracking-tight ${
-          compact ? "text-[13px]" : "text-[15px]"
-        }`}
-      >
-        פוטודוקותרפיה איתן אונר
-      </span>
+      {showMark &&
+        (height === 36 ? (
+          // The original sizes, as classes, so the default renders exactly as before.
+          <CameraMark className={compact ? "h-7 w-auto" : "h-9 w-auto"} />
+        ) : (
+          <CameraMark className="w-auto" style={{ height: h }} />
+        ))}
+      {text && (
+        <span
+          className={`mt-1 font-bold tracking-tight ${
+            compact ? "text-[13px]" : "text-[15px]"
+          }`}
+        >
+          {text}
+        </span>
+      )}
     </span>
   );
 }
