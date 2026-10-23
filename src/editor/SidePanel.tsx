@@ -1,8 +1,12 @@
 "use client";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from "@lexical/rich-text";
 import {
+  $createParagraphNode,
   $getNodeByKey,
+  $isElementNode,
+  getStyleObjectFromCSS,
   $getSelection,
   $getState,
   $isNodeSelection,
@@ -20,7 +24,8 @@ import type { BlockDesign } from "@/components/design";
 import { COLUMN_LAYOUTS, type PageMeta, type PanelSettings } from "@/lexical/doc";
 import { $isBlockNode, $isColumnsNode, $isPanelNode, blockAction, spacingState, type BlockNode, type ColumnsNode, type PanelNode } from "@/lexical/nodes";
 import type { Spacing } from "@/lexical/spacing";
-import { colorField, DesignPanel, imageField, rangeField, SpacingControls } from "./fields";
+import { colorField, DesignPanel, fontField, imageField, rangeField, SpacingControls } from "./fields";
+import { FONTS, fontStack } from "@/lib/fonts";
 import { FieldsForm } from "./Form";
 import type { Fields } from "./schema";
 
@@ -38,7 +43,17 @@ type Target =
   | { kind: "block"; key: NodeKey; type: string; props: Record<string, unknown> }
   | { kind: "panel"; key: NodeKey; settings: PanelSettings; spacing?: Spacing }
   | { kind: "columns"; key: NodeKey; layout: string; gap: number; spacing?: Spacing }
-  | { kind: "element"; key: NodeKey; label: string; spacing?: Spacing };
+  | { kind: "element"; key: NodeKey; label: string; spacing?: Spacing; text: TextProps };
+
+/** A text element's look, as the inspector shows and edits it. */
+interface TextProps {
+  kind: string;
+  align: string;
+  font: string;
+  size: string;
+  color: string;
+  highlight: string;
+}
 
 const ELEMENT_LABEL: Record<string, string> = { paragraph: "פסקה", heading: "כותרת", quote: "ציטוט", list: "רשימה" };
 
@@ -89,6 +104,62 @@ function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange
   );
 }
 
+/** Sets (or, with null, removes) inline styles on every piece of text in an element. */
+function $styleAllText(node: LexicalNode, patch: Record<string, string | null>) {
+  if (!$isElementNode(node)) return;
+  for (const t of node.getAllTextNodes()) {
+    const style: Record<string, string> = { ...getStyleObjectFromCSS(t.getStyle()) };
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === null) delete style[k];
+      else style[k] = v;
+    }
+    t.setStyle(Object.entries(style).map(([k, v]) => `${k}: ${v};`).join(" "));
+  }
+}
+
+function $textProps(node: LexicalNode): TextProps {
+  // The first piece of text speaks for the element, as in a word processor.
+  const first = $isElementNode(node) ? node.getAllTextNodes()[0] : undefined;
+  const css = first ? getStyleObjectFromCSS(first.getStyle()) : {};
+  const style = (prop: string) => css[prop] ?? "";
+  const font = style("font-family");
+  const type = node.getType();
+  return {
+    kind: type === "heading" ? (node as any).getTag() : type,
+    align: $isElementNode(node) ? node.getFormatType() : "",
+    font: FONTS.find((f) => fontStack(f.name) === font)?.name ?? "",
+    size: style("font-size"),
+    color: style("color"),
+    highlight: style("background-color"),
+  };
+}
+
+const SIZES = ["", "12px", "14px", "16px", "17px", "18px", "20px", "24px", "28px", "32px", "40px", "48px", "56px", "64px", "80px"];
+
+const textFields = (isList: boolean): Fields => ({
+  ...(isList
+    ? {}
+    : {
+        kind: {
+          type: "select",
+          label: "סוג",
+          options: [
+            { value: "paragraph", label: "טקסט רגיל" },
+            { value: "h1", label: "כותרת ראשית" },
+            { value: "h2", label: "כותרת 2" },
+            { value: "h3", label: "כותרת 3" },
+            { value: "h4", label: "כותרת 4" },
+            { value: "quote", label: "ציטוט" },
+          ],
+        } as const,
+      }),
+  align: { type: "radio", label: "יישור", options: [{ label: "ימין", value: "right" }, { label: "מרכז", value: "center" }, { label: "שמאל", value: "left" }, { label: "מיושר", value: "justify" }] },
+  font: fontField("גופן"),
+  size: { type: "select", label: "גודל", options: SIZES.map((v) => ({ value: v, label: v ? v.replace("px", "") : "כמו באתר" })) },
+  color: colorField("צבע טקסט"),
+  highlight: colorField("צבע רקע לטקסט"),
+});
+
 /** Selected thing first, then each container around it, then the page. */
 function $chain(): Target[] {
   const s = $getSelection();
@@ -99,7 +170,7 @@ function $chain(): Target[] {
       else if ($isPanelNode(node)) out.push({ kind: "panel", key: node.getKey(), settings: node.getSettings(), spacing: $getState(node, spacingState) });
       else if ($isColumnsNode(node)) out.push({ kind: "columns", key: node.getKey(), ...node.getLayout(), spacing: $getState(node, spacingState) });
       else if (ELEMENT_LABEL[node.getType()] && node.getParent() && $isRootOrShadowRoot(node.getParent()!))
-        out.push({ kind: "element", key: node.getKey(), label: ELEMENT_LABEL[node.getType()], spacing: $getState(node, spacingState) });
+        out.push({ kind: "element", key: node.getKey(), label: ELEMENT_LABEL[node.getType()], spacing: $getState(node, spacingState), text: $textProps(node) });
     }
   };
   if ($isNodeSelection(s)) add(s.getNodes()[0] ?? null);
@@ -137,6 +208,25 @@ export function SidePanel({ meta, onMeta, isHome }: { meta: PageMeta; onMeta: (m
     update(() => {
       const node = $getNodeByKey(key);
       if (node) $setState(node, spacingState, sp.margin || sp.padding ? sp : undefined);
+    });
+  /** Applies whichever text property changed to the whole element. */
+  const setText = (key: NodeKey, prev: TextProps, next: TextProps) =>
+    update(() => {
+      let node = $getNodeByKey(key);
+      if (!$isElementNode(node)) return;
+      if (next.kind !== prev.kind) {
+        const repl =
+          next.kind === "paragraph" ? $createParagraphNode() : next.kind === "quote" ? $createQuoteNode() : $createHeadingNode(next.kind as HeadingTagType);
+        repl.setFormat(node.getFormatType());
+        node = node.replace(repl, true);
+      }
+      if (next.align !== prev.align && $isElementNode(node)) node.setFormat((next.align || "") as any);
+      const patch: Record<string, string | null> = {};
+      if (next.font !== prev.font) patch["font-family"] = next.font ? fontStack(next.font) : null;
+      if (next.size !== prev.size) patch["font-size"] = next.size || null;
+      if (next.color !== prev.color) patch.color = next.color || null;
+      if (next.highlight !== prev.highlight) patch["background-color"] = next.highlight || null;
+      if (Object.keys(patch).length) $styleAllText(node, patch);
     });
   const show = chain[Math.min(level, chain.length - 1)] ?? { kind: "page" };
 
@@ -234,8 +324,18 @@ export function SidePanel({ meta, onMeta, isHome }: { meta: PageMeta; onMeta: (m
       {show.kind === "element" && (
         <>
           <div style={head}>{show.label}</div>
-          <p style={hint}>צבע, גופן, גודל ויישור — מהסרגל למעלה. כאן: ריווח מסביב לטקסט.</p>
-          <SpacingControls key={show.key} value={show.spacing} onChange={(sp) => setSpacing(show.key, sp)} />
+          <p style={hint}>ההגדרות חלות על כל ה{show.label}. לעיצוב חלק מהטקסט — סמנו אותו והשתמשו בסרגל למעלה.</p>
+          <Tabs value={boxTab} onChange={setBoxTab} items={[["style", "עיצוב"], ["advanced", "מתקדם"]]} />
+          {boxTab === "style" ? (
+            <FieldsForm
+              key={show.key}
+              fields={textFields(show.kind === "element" && show.text.kind === "list")}
+              value={show.text as any}
+              onChange={(v) => setText(show.key, show.text, v as TextProps)}
+            />
+          ) : (
+            <SpacingControls key={show.key} value={show.spacing} onChange={(sp) => setSpacing(show.key, sp)} />
+          )}
         </>
       )}
     </aside>
