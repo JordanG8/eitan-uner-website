@@ -5,6 +5,7 @@ import { ListItemNode, ListNode } from "@lexical/list";
 import { LexicalComposer, type InitialConfigType } from "@lexical/react/LexicalComposer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { DraggableBlockPlugin_EXPERIMENTAL } from "@lexical/react/LexicalDraggableBlockPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
@@ -14,7 +15,7 @@ import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { mergeRegister } from "@lexical/utils";
-import { $createParagraphNode, $getRoot, $isParagraphNode, HISTORY_MERGE_TAG, type LexicalEditor } from "lexical";
+import { $createParagraphNode, $getNodeByKey, $getRoot, $getState, $isParagraphNode, HISTORY_MERGE_TAG, ParagraphNode, type LexicalEditor } from "lexical";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { btn, EditorFrame, HistoryDialog, StatusToast, StorageBanner, type Status } from "@/app/editor/shared";
@@ -24,8 +25,10 @@ import type { PageEntry } from "@/lib/cms";
 import { FONTS } from "@/lib/fonts";
 import { siteSettings, type SiteDoc } from "@/lib/site";
 import { THEME, type LexicalState, type PageData, type PageMeta, type SElement } from "@/lexical/doc";
-import { $createColumnNode, $createParagraphNodeIfEmpty, BlockNode, ColumnNode, ColumnsNode, EditorSiteContext, PanelNode, $isColumnNode } from "@/lexical/nodes";
+import { $createColumnNode, $createParagraphNodeIfEmpty, BlockNode, ColumnNode, ColumnsNode, EditorSiteContext, PanelNode, $isColumnNode, spacingState } from "@/lexical/nodes";
+import { applySpacing } from "@/lexical/spacing";
 import { EditorContext } from "./fields";
+import { Outline } from "./Outline";
 import { SidePanel } from "./SidePanel";
 import { Toolbar } from "./Toolbar";
 
@@ -78,6 +81,53 @@ function StructurePlugin() {
     );
   }, [editor]);
   return null;
+}
+
+/** Shows each node's saved margin/padding on the live page, as the public renderer will. */
+function SpacingPlugin() {
+  const [editor] = useLexicalComposerContext();
+  useEffect(() => {
+    const klasses = [ParagraphNode, HeadingNode, QuoteNode, ListNode, PanelNode, ColumnsNode];
+    return mergeRegister(
+      ...klasses.map((klass) =>
+        editor.registerMutationListener(klass, (mutations) => {
+          editor.getEditorState().read(() => {
+            for (const [key, kind] of mutations) {
+              if (kind === "destroyed") continue;
+              const node = $getNodeByKey(key);
+              const dom = editor.getElementByKey(key);
+              if (node && dom) applySpacing(dom, $getState(node, spacingState));
+            }
+          });
+        })
+      )
+    );
+  }, [editor]);
+  return null;
+}
+
+/**
+ * Drag handles beside each top-level block, from Lexical's own
+ * DraggableBlockPlugin: grab ⋮⋮ and drop where the line shows.
+ */
+function DragHandles({ anchor }: { anchor: HTMLElement | null }) {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
+  if (!anchor) return null;
+  return (
+    <DraggableBlockPlugin_EXPERIMENTAL
+      anchorElem={anchor}
+      menuRef={menuRef}
+      targetLineRef={lineRef}
+      menuComponent={
+        <div ref={menuRef} className="eu-drag-handle" title="גרירה לשינוי מיקום" aria-hidden="true">
+          ⋮⋮
+        </div>
+      }
+      targetLineComponent={<div ref={lineRef} className="eu-drag-line" />}
+      isOnMenu={(el) => Boolean(el.closest(".eu-drag-handle"))}
+    />
+  );
 }
 
 /** Loads any Google font used in the text, as the public page will. */
@@ -139,6 +189,8 @@ export function PageEditor({
   const [meta, setMeta] = useState<PageMeta>(data.meta);
   const [status, setStatus] = useState<Status>(null);
   const [history, setHistory] = useState(false);
+  const [outline, setOutline] = useState(true);
+  const [canvas, setCanvas] = useState<HTMLDivElement | null>(null);
   const [dirty, setDirty] = useState(false);
   const [slug, setSlug] = useState(entry.slug);
   const editorRef = useRef<LexicalEditor | null>(null);
@@ -214,6 +266,7 @@ export function PageEditor({
               <strong style={{ fontSize: 15, flex: 1, minWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {meta.title} <span dir="ltr" style={{ fontWeight: 400, color: "#6b7785", fontSize: 12 }}>{decodeURIComponent(href)}</span>
               </strong>
+              <button type="button" onClick={() => setOutline(!outline)} aria-pressed={outline} style={{ ...btn(), ...(outline ? { background: "#e6f2f1", borderColor: "#0e6a69" } : {}) }}>🧭 מבנה העמוד</button>
               <Link href="/editor/site" style={btn()}>🎨 עיצוב האתר</Link>
               <button type="button" onClick={() => setHistory(true)} style={btn()}>היסטוריה</button>
               <a href={href} target="_blank" rel="noopener noreferrer" style={btn()}>צפייה באתר ↗</a>
@@ -223,7 +276,8 @@ export function PageEditor({
             </header>
             <Toolbar />
             <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-              <div style={{ flex: 1, minWidth: 0, overflowY: "auto" }} className="eu-editor-canvas">
+              {outline && <Outline onClose={() => setOutline(false)} />}
+              <div ref={setCanvas} style={{ flex: 1, minWidth: 0, overflowY: "auto", position: "relative" }} className="eu-editor-canvas">
                 <EditorFrame site={site} background={meta.background}>
                   <RichTextPlugin
                     contentEditable={<ContentEditable className="eu-doc eu-editing" aria-label="תוכן העמוד" />}
@@ -239,6 +293,8 @@ export function PageEditor({
           <LinkPlugin validateUrl={(u) => Boolean(safeHref(u))} />
           <HorizontalRulePlugin />
           <StructurePlugin />
+          <SpacingPlugin />
+          <DragHandles anchor={canvas} />
           <FontsPlugin />
           <LinkClickPlugin />
           <EditorRef onReady={onReady} />

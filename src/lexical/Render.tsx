@@ -16,6 +16,7 @@ import {
   type SPanel,
   type SText,
 } from "./doc";
+import { spacingStyle, type Spacing } from "./spacing";
 
 /**
  * Saved Lexical JSON → the page's React tree.
@@ -83,8 +84,14 @@ function parseStyle(style: string | undefined, fonts: Set<string>): CSSPropertie
   return Object.keys(out).length ? (out as CSSProperties) : undefined;
 }
 
+/** Margin/padding saved through the editor's NodeState ("$": { spacing }). */
+function nodeSpacing(node: SNode): CSSProperties | undefined {
+  const state = node.$ as { spacing?: Spacing } | undefined;
+  return spacingStyle(state?.spacing);
+}
+
 function blockStyle(node: SElement): CSSProperties | undefined {
-  const style: CSSProperties = {};
+  const style: CSSProperties = { ...nodeSpacing(node) };
   if (typeof node.format === "string" && node.format) style.textAlign = node.format as CSSProperties["textAlign"];
   if (node.indent) style.paddingInlineStart = `calc(${node.indent} * 40px)`;
   return Object.keys(style).length ? style : undefined;
@@ -163,7 +170,7 @@ function renderNode(node: SNode, key: number, ctx: RenderContext, fonts: Set<str
       const ordered = node.listType === "number";
       const Tag = ordered ? "ol" : "ul";
       return (
-        <Tag key={key} className={ordered ? THEME.list.ol : THEME.list.ul} dir={dir} start={ordered && Number(node.start) > 1 ? Number(node.start) : undefined}>
+        <Tag key={key} className={ordered ? THEME.list.ol : THEME.list.ul} dir={dir} style={nodeSpacing(node)} start={ordered && Number(node.start) > 1 ? Number(node.start) : undefined}>
           {children(el, ctx, fonts)}
         </Tag>
       );
@@ -199,7 +206,7 @@ function renderNode(node: SNode, key: number, ctx: RenderContext, fonts: Set<str
     case "eu-columns": {
       const c = node as SColumns;
       return (
-        <div key={key} className="eu-columns" style={columnsVars(c.layout, c.gap) as Vars}>
+        <div key={key} className="eu-columns" style={{ ...columnsVars(c.layout, c.gap), ...nodeSpacing(c) } as Vars}>
           {children(el, ctx, fonts)}
         </div>
       );
@@ -213,7 +220,7 @@ function renderNode(node: SNode, key: number, ctx: RenderContext, fonts: Set<str
     case "eu-panel": {
       const p = node as SPanel;
       return (
-        <section key={key} className="eu-panel" style={panelVars(p.settings) as Vars}>
+        <section key={key} className="eu-panel" style={{ ...panelVars(p.settings), ...nodeSpacing(p) } as Vars}>
           {children(el, ctx, fonts)}
         </section>
       );

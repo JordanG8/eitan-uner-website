@@ -5,18 +5,21 @@ import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import {
   $createParagraphNode,
   $getNodeByKey,
+  createState,
   DecoratorNode,
   ElementNode,
   type LexicalEditor,
   type LexicalNode,
   type NodeKey,
 } from "lexical";
-import { createContext, useContext, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { BLOCK_DEFS } from "@/blocks/fields";
 import { renderBlock, type BlockType } from "@/blocks/render";
+import { candidatesFor, editInPlace, editingText, getIn, nextValue, occurrence, setIn, textElementAt } from "@/editor/inline-edit";
 import type { SiteSettings } from "@/lib/types";
 import { COLUMN_LAYOUTS, type PanelSettings, type SBlock } from "./doc";
 import { columnsVars, panelVars } from "./Render";
+import type { Spacing } from "./spacing";
 
 /**
  * The editor's custom Lexical nodes.
@@ -32,6 +35,15 @@ import { columnsVars, panelVars } from "./Render";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const EditorSiteContext = createContext<SiteSettings | null>(null);
+
+/**
+ * Margin/padding on any node — paragraphs and headings included — stored with
+ * Lexical's NodeState, which serializes it under the node's "$" key. The
+ * public renderer reads it from there (src/lexical/Render.tsx).
+ */
+export const spacingState = createState("spacing", {
+  parse: (v: unknown): Spacing | undefined => (v && typeof v === "object" ? (v as Spacing) : undefined),
+});
 
 function applyVars(dom: HTMLElement, vars: Record<string, string>, previous?: Record<string, string>) {
   for (const k of Object.keys(previous ?? {})) if (!(k in vars)) dom.style.removeProperty(k);
@@ -152,19 +164,59 @@ function BlockView({ nodeKey, blockType, props }: { nodeKey: NodeKey; blockType:
   const [selected, setSelected, clear] = useLexicalNodeSelection(nodeKey);
   const site = useContext(EditorSiteContext);
   const label = BLOCK_DEFS[blockType as BlockType]?.label ?? blockType;
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // Bumped after an inline edit, so React rebuilds the section's DOM from the
+  // new props instead of reconciling against nodes the browser edited.
+  const [rev, setRev] = useState(0);
 
-  // In the editor a click selects the block; links, buttons and dialogs
-  // inside it must not fire.
+  const match = (el: HTMLElement) => {
+    const body = bodyRef.current;
+    if (!body) return null;
+    const found = candidatesFor(props, el.textContent ?? "");
+    if (!found.length) return null;
+    return found[Math.min(occurrence(el, body), found.length - 1)];
+  };
+
+  // A click selects the section; on text it also starts editing that text in
+  // place. Links, buttons and dialogs inside the section must not fire.
   const onClickCapture = (e: MouseEvent) => {
-    if ((e.target as HTMLElement).closest("[data-eu-handle]")) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("[data-eu-handle]") || target.closest(".eu-inline-editing")) return;
     e.preventDefault();
     e.stopPropagation();
     if (!e.shiftKey) clear();
     setSelected(true);
+
+    const body = bodyRef.current;
+    const el = body ? textElementAt(target, body) : null;
+    const c = el ? match(el) : null;
+    if (!el || !c) return;
+    editInPlace(el, editingText(c), { x: e.clientX, y: e.clientY }, (text) => {
+      if (text !== null) {
+        const value = nextValue(c, text);
+        if (value !== getIn(props, c.path)) {
+          editor.update(() => {
+            const node = $getNodeByKey(nodeKey);
+            if ($isBlockNode(node)) node.setProps(setIn(node.getProps(), c.path, value));
+          });
+        }
+      }
+      setRev((r) => r + 1);
+    });
   };
 
+  // Show which text can be edited by clicking it.
+  const onMouseOver = (e: MouseEvent) => {
+    const body = bodyRef.current;
+    if (!body) return;
+    body.querySelector(".eu-inline-hover")?.classList.remove("eu-inline-hover");
+    const el = textElementAt(e.target, body);
+    if (el && !el.classList.contains("eu-inline-editing") && match(el)) el.classList.add("eu-inline-hover");
+  };
+  const onMouseLeave = () => bodyRef.current?.querySelector(".eu-inline-hover")?.classList.remove("eu-inline-hover");
+
   return (
-    <div className="eu-block-edit" data-selected={selected ? "" : undefined} onClickCapture={onClickCapture}>
+    <div className="eu-block-edit" data-selected={selected ? "" : undefined} onClickCapture={onClickCapture} onMouseOver={onMouseOver} onMouseLeave={onMouseLeave}>
       <div className="eu-block-bar" data-eu-handle="">
         <span style={{ ...handle, background: "#1f2328", cursor: "default" }}>{label}</span>
         <button type="button" style={handle} title="טקסט מעל" onClick={() => blockAction(editor, nodeKey, "textBefore")}>+ טקסט מעל</button>
@@ -174,7 +226,9 @@ function BlockView({ nodeKey, blockType, props }: { nodeKey: NodeKey; blockType:
         <button type="button" style={handle} aria-label="שכפול" onClick={() => blockAction(editor, nodeKey, "copy")}>⧉</button>
         <button type="button" style={{ ...handle, background: "#b42318" }} aria-label="מחיקה" onClick={() => blockAction(editor, nodeKey, "delete")}>✕</button>
       </div>
-      {site ? renderBlock(blockType, props, { site }) : null}
+      <div ref={bodyRef} key={rev}>
+        {site ? renderBlock(blockType, props, { site }) : null}
+      </div>
     </div>
   );
 }

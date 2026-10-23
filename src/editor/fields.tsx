@@ -3,6 +3,7 @@
 import { createContext, useContext, useId, useState, type CSSProperties, type ReactNode } from "react";
 import type { CustomField } from "./schema";
 import type { BlockDesign } from "@/components/design";
+import type { Box, Spacing } from "@/lexical/spacing";
 import { FONTS } from "@/lib/fonts";
 import { MediaField, type MediaValue } from "./MediaField";
 
@@ -215,11 +216,177 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function DesignPanel({ value, onChange }: { value?: BlockDesign; onChange: (v: BlockDesign) => void }) {
+/* -------------------------------------------------------------- spacing */
+
+const SIDE_LABELS = [
+  ["top", "למעלה"],
+  ["right", "ימין"],
+  ["bottom", "למטה"],
+  ["left", "שמאל"],
+] as const;
+
+/**
+ * Elementor's four-sides box: top, right, bottom, left and a unit, with a
+ * link toggle that keeps all four equal. Empty = the design's own spacing.
+ */
+export function SpacingInput({ value, onChange }: { value?: Box; onChange: (v: Box | undefined) => void }) {
+  const v = value ?? {};
+  const filled = SIDE_LABELS.map(([k]) => v[k]).filter((x) => x !== "" && x !== undefined);
+  const [linked, setLinked] = useState(filled.length === 4 && new Set(filled).size === 1);
+  const set = (side: (typeof SIDE_LABELS)[number][0], raw: string) => {
+    const n: number | "" = raw === "" ? "" : Number(raw);
+    const next: Box = linked ? { ...v, top: n, right: n, bottom: n, left: n } : { ...v, [side]: n };
+    onChange(SIDE_LABELS.every(([k]) => next[k] === "" || next[k] === undefined) ? undefined : next);
+  };
+  return (
+    <div dir="rtl">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr) auto", gap: 4, alignItems: "end" }}>
+        {SIDE_LABELS.map(([k, label]) => (
+          <label key={k} style={{ display: "grid", gap: 2, fontSize: 10, color: "#6b7785", textAlign: "center" }}>
+            <input
+              type="number"
+              inputMode="numeric"
+              aria-label={label}
+              value={v[k] ?? ""}
+              onChange={(e) => set(k, e.target.value)}
+              style={{ ...ui.input, padding: "5px 4px", textAlign: "center" }}
+            />
+            {label}
+          </label>
+        ))}
+        <button
+          type="button"
+          aria-pressed={linked}
+          title={linked ? "ביטול קישור הצדדים" : "קישור כל הצדדים"}
+          onClick={() => setLinked(!linked)}
+          style={{ height: 30, marginBottom: 16, border: "1px solid " + (linked ? "#0e6a69" : "#d0d7de"), background: linked ? "#e6f2f1" : "#fff", borderRadius: 6, cursor: "pointer", padding: "0 6px" }}
+        >
+          🔗
+        </button>
+      </div>
+      <div style={{ display: "flex", gap: 4, marginTop: 2 }}>
+        {(["px", "rem", "%"] as const).map((u) => (
+          <button
+            key={u}
+            type="button"
+            onClick={() => onChange({ ...v, unit: u })}
+            style={{ padding: "2px 8px", fontSize: 11, borderRadius: 5, cursor: "pointer", border: "1px solid " + ((v.unit ?? "px") === u ? "#0e6a69" : "#d0d7de"), background: (v.unit ?? "px") === u ? "#0e6a69" : "#fff", color: (v.unit ?? "px") === u ? "#fff" : "#1f2328" }}
+          >
+            {u}
+          </button>
+        ))}
+        {value && (
+          <button type="button" onClick={() => onChange(undefined)} style={{ marginInlineStart: "auto", fontSize: 11, border: 0, background: "none", color: "#cf222e", cursor: "pointer" }}>
+            איפוס
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Margin + padding together, as Elementor's Advanced tab shows them. */
+export function SpacingControls({ value, onChange }: { value?: Spacing; onChange: (v: Spacing) => void }) {
+  const sp = value ?? {};
+  return (
+    <>
+      <Row label="שוליים חיצוניים (Margin)">
+        <SpacingInput value={sp.margin} onChange={(m) => onChange({ ...sp, margin: m })} />
+      </Row>
+      <Row label="ריווח פנימי (Padding)">
+        <SpacingInput value={sp.padding} onChange={(p) => onChange({ ...sp, padding: p })} />
+      </Row>
+    </>
+  );
+}
+
+/* --------------------------------------------------------------- design */
+
+/**
+ * A section's design settings, split as Elementor splits them: "style"
+ * (colours, background, fonts, corners) and "advanced" (margin, padding,
+ * width, animation, visibility, anchor, CSS class).
+ */
+export function DesignPanel({ value, onChange, part }: { value?: BlockDesign; onChange: (v: BlockDesign) => void; part?: "style" | "advanced" }) {
   const d = value ?? {};
   const [open, setOpen] = useState(false);
   const set = <K extends keyof BlockDesign>(key: K, v: BlockDesign[K]) => onChange({ ...d, [key]: v });
   const count = Object.entries(d).filter(([k, v]) => (k === "backgroundImage" ? (v as MediaValue)?.src : v !== "" && v !== undefined && v !== 0)).length;
+
+  const style = (
+    <>
+      <Row label="צבע רקע">
+        <ColorInput value={d.background} onChange={(v) => set("background", v)} />
+      </Row>
+      <Row label="תמונת רקע">
+        <MediaField value={d.backgroundImage} onChange={(v) => set("backgroundImage", v as BlockDesign["backgroundImage"])} />
+        {d.backgroundImage?.src && (
+          <button type="button" onClick={() => set("backgroundImage", undefined)} style={{ marginTop: 6, fontSize: 12, border: 0, background: "none", color: "#cf222e", cursor: "pointer" }}>
+            הסרת תמונת הרקע
+          </button>
+        )}
+      </Row>
+      {d.backgroundImage?.src && (
+        <>
+          <Row label="הכהיית תמונת הרקע">
+            <RangeInput value={d.overlay} onChange={(v) => set("overlay", v === "" ? undefined : v)} min={0} max={90} fallback={0} unit="%" />
+          </Row>
+          <Row label="צבע ההכהיה">
+            <ColorInput value={d.overlayColor} onChange={(v) => set("overlayColor", v)} placeholder="שחור" />
+          </Row>
+        </>
+      )}
+      <Row label="צבע טקסט">
+        <ColorInput value={d.textColor} onChange={(v) => set("textColor", v)} />
+      </Row>
+      <Row label="צבע כותרות">
+        <ColorInput value={d.headingColor} onChange={(v) => set("headingColor", v)} />
+      </Row>
+      <Row label="צבע מותג (כפתורים, קישורים, הדגשות)">
+        <ColorInput value={d.accentColor} onChange={(v) => set("accentColor", v)} />
+      </Row>
+      <Row label="גופן טקסט">
+        <Select value={d.font} onChange={(v) => set("font", v)} options={fontOptions} />
+      </Row>
+      <Row label="גופן כותרות">
+        <Select value={d.headingFont} onChange={(v) => set("headingFont", v)} options={fontOptions} />
+      </Row>
+      <Row label="עיגול פינות">
+        <RangeInput value={d.radius} onChange={(v) => set("radius", v)} min={0} max={300} step={10} fallback={100} unit="%" />
+      </Row>
+      <Row label={SELECTS.align.label}>
+        <Select value={d.align as string} onChange={(v) => set("align", v as never)} options={SELECTS.align.options} />
+      </Row>
+    </>
+  );
+
+  const advanced = (
+    <>
+      <SpacingControls value={{ margin: d.margin, padding: d.padding }} onChange={(sp) => onChange({ ...d, margin: sp.margin, padding: sp.padding })} />
+      <Row label={SELECTS.width.label}>
+        <Select value={d.width as string} onChange={(v) => set("width", v as never)} options={SELECTS.width.options} />
+      </Row>
+      {(["animation", "hide"] as const).map((k) => (
+        <Row key={k} label={SELECTS[k].label}>
+          <Select value={d[k] as string} onChange={(v) => set(k, v as never)} options={SELECTS[k].options} />
+        </Row>
+      ))}
+      <Row label="עוגן (לקישור ישיר: #שם)">
+        <input type="text" dir="auto" value={d.anchor ?? ""} onChange={(e) => set("anchor", e.target.value.replace(/\s+/g, "-"))} style={ui.input} />
+      </Row>
+      <Row label="מחלקת CSS (מתקדם)">
+        <input type="text" dir="ltr" value={d.className ?? ""} onChange={(e) => set("className", e.target.value)} style={ui.input} />
+      </Row>
+    </>
+  );
+
+  const reset = count > 0 && (
+    <button type="button" onClick={() => onChange({})} style={{ width: "100%", padding: "7px", border: "1px solid #cf222e", color: "#cf222e", background: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>
+      איפוס כל העיצוב של הקטע
+    </button>
+  );
+
+  if (part) return <div dir="rtl">{part === "style" ? style : advanced}{part === "advanced" && reset}</div>;
 
   return (
     <div dir="rtl" style={{ border: "1px solid #d0d7de", borderRadius: 8, background: "#f6f8fa" }}>
@@ -234,66 +401,9 @@ export function DesignPanel({ value, onChange }: { value?: BlockDesign; onChange
       </button>
       {open && (
         <div style={{ padding: "4px 12px 12px" }}>
-          <Row label="צבע רקע">
-            <ColorInput value={d.background} onChange={(v) => set("background", v)} />
-          </Row>
-          <Row label="תמונת רקע">
-            <MediaField value={d.backgroundImage} onChange={(v) => set("backgroundImage", v as BlockDesign["backgroundImage"])} />
-            {d.backgroundImage?.src && (
-              <button type="button" onClick={() => set("backgroundImage", undefined)} style={{ marginTop: 6, fontSize: 12, border: 0, background: "none", color: "#cf222e", cursor: "pointer" }}>
-                הסרת תמונת הרקע
-              </button>
-            )}
-          </Row>
-          {d.backgroundImage?.src && (
-            <>
-              <Row label="הכהיית תמונת הרקע">
-                <RangeInput value={d.overlay} onChange={(v) => set("overlay", v === "" ? undefined : v)} min={0} max={90} fallback={0} unit="%" />
-              </Row>
-              <Row label="צבע ההכהיה">
-                <ColorInput value={d.overlayColor} onChange={(v) => set("overlayColor", v)} placeholder="שחור" />
-              </Row>
-            </>
-          )}
-          <Row label="צבע טקסט">
-            <ColorInput value={d.textColor} onChange={(v) => set("textColor", v)} />
-          </Row>
-          <Row label="צבע כותרות">
-            <ColorInput value={d.headingColor} onChange={(v) => set("headingColor", v)} />
-          </Row>
-          <Row label="צבע מותג (כפתורים, קישורים, הדגשות)">
-            <ColorInput value={d.accentColor} onChange={(v) => set("accentColor", v)} />
-          </Row>
-          {(["paddingTop", "paddingBottom", "width", "align"] as const).map((k) => (
-            <Row key={k} label={SELECTS[k].label}>
-              <Select value={d[k] as string} onChange={(v) => set(k, v as never)} options={SELECTS[k].options} />
-            </Row>
-          ))}
-          <Row label="גופן טקסט">
-            <Select value={d.font} onChange={(v) => set("font", v)} options={fontOptions} />
-          </Row>
-          <Row label="גופן כותרות">
-            <Select value={d.headingFont} onChange={(v) => set("headingFont", v)} options={fontOptions} />
-          </Row>
-          <Row label="עיגול פינות">
-            <RangeInput value={d.radius} onChange={(v) => set("radius", v)} min={0} max={300} step={10} fallback={100} unit="%" />
-          </Row>
-          {(["animation", "hide"] as const).map((k) => (
-            <Row key={k} label={SELECTS[k].label}>
-              <Select value={d[k] as string} onChange={(v) => set(k, v as never)} options={SELECTS[k].options} />
-            </Row>
-          ))}
-          <Row label="עוגן (לקישור ישיר: #שם)">
-            <input type="text" dir="auto" value={d.anchor ?? ""} onChange={(e) => set("anchor", e.target.value.replace(/\s+/g, "-"))} style={ui.input} />
-          </Row>
-          <Row label="מחלקת CSS (מתקדם)">
-            <input type="text" dir="ltr" value={d.className ?? ""} onChange={(e) => set("className", e.target.value)} style={ui.input} />
-          </Row>
-          {count > 0 && (
-            <button type="button" onClick={() => onChange({})} style={{ width: "100%", padding: "7px", border: "1px solid #cf222e", color: "#cf222e", background: "#fff", borderRadius: 6, cursor: "pointer", fontSize: 12 }}>
-              איפוס כל העיצוב של הקטע
-            </button>
-          )}
+          {style}
+          {advanced}
+          {reset}
         </div>
       )}
     </div>

@@ -7,7 +7,23 @@ Vercel Blob. Hebrew, RTL throughout. No third-party CMS.
 ## How it is built
 
 **Eitan has full control of the design.** Every page is a Lexical document he
-edits in place, inside the site's real header and footer:
+edits in place, inside the site's real header and footer, with an
+Elementor-style layout: an outline of the page on one side, settings on the
+other, and the page itself in between:
+
+- **Click any text to edit it** — inside the designed sections too. The
+  clicked text becomes editable in place and is written back to the section's
+  field (`src/editor/inline-edit.ts`); Enter or clicking away saves, Escape
+  cancels. The section components are untouched, so the public markup is too.
+- **Outline** (`src/editor/Outline.tsx`): the page as a tree. Click to select
+  and scroll to an item; drag to reorder (dnd-kit); copy or delete per row.
+  Blocks can also be dragged on the canvas (Lexical's `DraggableBlockPlugin`).
+- **Margin and padding**, four sides with a link toggle and px/rem/%, on
+  sections (Advanced tab), paragraphs, headings, lists, panels and columns.
+  Text nodes store it with Lexical's NodeState (`src/lexical/spacing.ts`).
+- **Settings panel**: Content / Style / Advanced tabs for sections, and a
+  breadcrumb (paragraph → panel → page) to reach whatever contains the
+  selection.
 
 - **Text** is typed straight onto the page and styled from the toolbar:
   headings, lists, quotes, links, bold/italic/underline, font (19 Hebrew
@@ -65,7 +81,8 @@ saves go to `./.data/` on the local disk.
 | `src/lexical/Render.tsx` | saved JSON → React (public site) |
 | `src/lexical/nodes.tsx` | editor nodes: section, panel, columns |
 | `src/blocks/render.tsx` / `fields.tsx` | each section's render / editable fields |
-| `src/editor/*` | page editor, toolbar, side panel, site-design editor, field controls |
+| `src/editor/*` | page editor, toolbar, side panel, outline, inline text editing, site-design editor, field controls |
+| `src/lexical/spacing.ts` | margin/padding model, shared by editor and renderer |
 | `src/lib/site.ts`, `src/components/ThemeStyle.tsx` | site design document → CSS variables |
 | `src/lib/store.ts`, `src/lib/cms.ts`, `src/lib/pages.ts` | storage, cached reads, page operations |
 | `src/app/editor/*`, `src/app/api/editor/*` | dashboard and editing APIs |

@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { fontHref, fontStack } from "@/lib/fonts";
+import { hasSpacing, spacingStyle, type Box } from "@/lexical/spacing";
 import type { ImageRef } from "@/lib/types";
 
 /**
@@ -27,8 +28,11 @@ export interface BlockDesign {
   textColor?: string;
   headingColor?: string;
   accentColor?: string;
+  /** Legacy presets; the four-sides boxes below supersede them. */
   paddingTop?: string;
   paddingBottom?: string;
+  margin?: Box;
+  padding?: Box;
   width?: "" | "narrow" | "normal" | "wide" | "full";
   align?: "" | "start" | "center" | "end";
   font?: string;
@@ -91,7 +95,13 @@ const has = (v: unknown) => v !== undefined && v !== null && v !== "";
 export function hasDesign(d?: BlockDesign | null): d is BlockDesign {
   if (!d || typeof d !== "object") return false;
   return Object.entries(d).some(([k, v]) =>
-    k === "backgroundImage" ? Boolean((v as ImageRef | undefined)?.src) : k === "overlay" ? Number(v) > 0 : has(v)
+    k === "backgroundImage"
+      ? Boolean((v as ImageRef | undefined)?.src)
+      : k === "overlay"
+        ? Number(v) > 0
+        : k === "margin" || k === "padding"
+          ? hasSpacing({ [k]: v as Box })
+          : has(v)
   );
 }
 
@@ -141,6 +151,23 @@ export function designProps(d: BlockDesign): {
     data["data-pb"] = "";
     style["--eu-pb"] = SPACING[d.paddingBottom!];
   }
+  // Four-sides margin goes on the wrapper as is. Padding replaces the
+  // section's own vertical padding on the sides that are set (the section's
+  // padding on those sides is zeroed by the data-pt/data-pb rules), and adds
+  // to it horizontally, where sections pad their content column themselves.
+  const margin = spacingStyle({ margin: d.margin });
+  if (margin) Object.assign(style, margin);
+  const pad = spacingStyle({ padding: d.padding }) as Record<string, string> | undefined;
+  if (pad?.paddingTop) {
+    data["data-pt"] = "";
+    style["--eu-pt"] = pad.paddingTop;
+  }
+  if (pad?.paddingBottom) {
+    data["data-pb"] = "";
+    style["--eu-pb"] = pad.paddingBottom;
+  }
+  if (pad?.paddingRight) style.paddingRight = pad.paddingRight;
+  if (pad?.paddingLeft) style.paddingLeft = pad.paddingLeft;
   if (d.width && WIDTHS[d.width]) style["--container-content"] = WIDTHS[d.width];
   if (has(d.align)) {
     data["data-align"] = "";
