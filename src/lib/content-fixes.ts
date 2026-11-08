@@ -1,5 +1,4 @@
-import { block, type LexicalState, type PageMeta, type SBlock, type SNode } from "@/lexical/doc";
-import { PRO_WORK_DEFAULTS } from "@/blocks/defaults";
+import type { LexicalState, PageMeta, SBlock, SNode } from "@/lexical/doc";
 
 /**
  * One-off corrections to content saved through the editor.
@@ -7,15 +6,14 @@ import { PRO_WORK_DEFAULTS } from "@/blocks/defaults";
  * The homepage's top buttons "צילום מקצועי" and "הרצאות" were saved pointing
  * at the contact page. They are corrected here on read, and only while they
  * still point at one of the old targets, so any other link Eitan sets in the
- * editor afterwards wins. "צילום מקצועי" lands on the professional-photography
- * section of the portfolio page, not just the top of the page.
+ * editor afterwards wins. "צילום מקצועי" leads to its own page.
  * The fix becomes permanent the next time the homepage is saved.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const HOME_BUTTONS: Record<string, { from: string[]; to: string }> = {
-  "צילום מקצועי": { from: ["/צרו-קשר", "/תיק-עבודות"], to: "/תיק-עבודות#צילום-מקצועי" },
+  "צילום מקצועי": { from: ["/צרו-קשר", "/תיק-עבודות", "/תיק-עבודות#צילום-מקצועי"], to: "/צילום-מקצועי" },
   "הרצאות": { from: ["/צרו-קשר"], to: "/הרצאות" },
 };
 
@@ -56,28 +54,11 @@ function walk(nodes: SNode[]): { nodes: SNode[]; changed: boolean } {
   return { nodes: out, changed };
 }
 
-/**
- * The portfolio page gets the professional-photography section (three videos,
- * three photos) under its title banner. Added once: the page is marked in
- * meta.fixes, which the editor saves back, so if Eitan deletes the section
- * it stays deleted.
- */
-function addProWork(meta: PageMeta, content: LexicalState): { meta: PageMeta; content: LexicalState } {
-  if (meta.slug !== "תיק-עבודות" || meta.fixes?.includes("proWork")) return { meta, content };
-  const marked = { ...meta, fixes: [...(meta.fixes ?? []), "proWork"] };
-  const children = content.root.children;
-  if (children.some((n) => n.type === "eu-block" && (n as SBlock).blockType === "ProWork")) return { meta: marked, content };
-  const banner = children.findIndex((n) => n.type === "eu-block" && (n as SBlock).blockType === "PageBanner");
-  const at = banner >= 0 ? banner + 1 : 0;
-  const next = [...children.slice(0, at), block("ProWork", { ...structuredClone(PRO_WORK_DEFAULTS), design: {} }), ...children.slice(at)];
-  return { meta: marked, content: { root: { ...content.root, children: next } } };
-}
-
 export function fixContent(meta: PageMeta, content: LexicalState): { meta: PageMeta; content: LexicalState } {
   let out = content;
   if (meta.slug === "/") {
     const { nodes, changed } = walk(content.root.children);
     if (changed) out = { root: { ...content.root, children: nodes } };
   }
-  return addProWork(meta, out);
+  return { meta, content: out };
 }

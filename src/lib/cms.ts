@@ -2,7 +2,7 @@ import { migrateStory } from "@/lexical/split-story";
 import { fixContent } from "./content-fixes";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import type { PageData } from "@/lexical/doc";
-import { seedIndex, seedPage } from "./seed";
+import { ADDED_PAGES, seedIndex, seedPage } from "./seed";
 import { normalizeSite, type SiteDoc } from "./site";
 import { readDoc, writeDoc, deleteDoc, type Version } from "./store";
 
@@ -71,8 +71,12 @@ export async function loadSite(): Promise<SiteDoc> {
 }
 
 export async function loadIndex(): Promise<PageEntry[]> {
-  const stored = await readDoc<{ pages?: PageEntry[] }>("pages");
-  return Array.isArray(stored?.pages) ? stored.pages : seedIndex();
+  const stored = await readDoc<{ pages?: PageEntry[]; seeded?: string[] }>("pages");
+  if (!Array.isArray(stored?.pages)) return seedIndex();
+  const pages = stored.pages;
+  const known = new Set(stored.seeded ?? []);
+  const added = seedIndex().filter((e) => ADDED_PAGES.includes(e.slug) && !known.has(e.slug) && !pages.some((p) => p.slug === e.slug));
+  return [...pages, ...added];
 }
 
 export async function loadPage(id: string): Promise<PageData | null> {
@@ -112,7 +116,7 @@ export async function saveSite(doc: SiteDoc): Promise<Version> {
 }
 
 export async function saveIndex(pages: PageEntry[]): Promise<Version> {
-  const v = await writeDoc("pages", { pages });
+  const v = await writeDoc("pages", { pages, seeded: ADDED_PAGES });
   invalidate();
   return v;
 }

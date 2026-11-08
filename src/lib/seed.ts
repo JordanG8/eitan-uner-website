@@ -1,7 +1,6 @@
 import { block, rootState, type PageData, type SBlock } from "@/lexical/doc";
 import { pages, stories } from "./content";
 import { splitStory } from "@/lexical/split-story";
-import { PRO_WORK_DEFAULTS } from "@/blocks/defaults";
 import type { Block, Page, ScrollStoryBlock, Story, StoryPanel } from "./types";
 
 /**
@@ -33,6 +32,16 @@ function seedId(slug: string): string {
 }
 
 const storySlug = (s: Story) => `${STORIES_SLUG}/${s.slug}`;
+
+/** The professional-photography page; the homepage's צילום מקצועי button leads here. */
+export const PRO_PAGE = "צילום-מקצועי";
+
+/**
+ * Pages added to the code after the page list was first saved in the editor.
+ * A saved list does not know about them, so loadIndex adds each once; the
+ * list records them in `seeded` when saved, so deleting one sticks.
+ */
+export const ADDED_PAGES = [PRO_PAGE];
 
 export function seedIndex(): SeedEntry[] {
   return [
@@ -140,7 +149,20 @@ function pageDoc(page: Page): PageData {
     content.push(block("PageBanner", { kicker: "איתן אונר · פוטודוקותרפיה", title: page.title, headingLevel: 1 }));
   }
 
-  if (page.slug === "תיק-עבודות") content.push(block("ProWork", structuredClone(PRO_WORK_DEFAULTS)));
+  if (page.slug === PRO_PAGE) {
+    content.push(
+      block("ProWork", {
+        title: "", // the page banner already says צילום מקצועי
+        intro: "",
+        videos: [{ url: "https://www.youtube.com/watch?v=6qY1sUxQMFI", title: "" }, { url: "", title: "" }, { url: "", title: "" }],
+        photos: [
+          { image: { src: "/images/eitan-hero.webp", alt: "איתן אונר", width: 675, height: 657 } },
+          { image: { src: "/images/hands-circle.webp", alt: "ידיים במעגל" } },
+          { image: { src: "/images/cameras-flatlay.webp", alt: "מצלמות על שולחן עץ" } },
+        ],
+      })
+    );
+  }
 
   for (const b of page.blocks) {
     const props = blockProps(b);

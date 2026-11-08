@@ -473,6 +473,17 @@ export const pages: Page[] = [
     ],
   },
 
+  /* ------------------------------------------------- professional photo */
+  {
+    slug: "צילום-מקצועי",
+    title: "צילום מקצועי",
+    showTitleBanner: true,
+    seoDescription: "צילום מקצועי עם איתן אונר — סרטונים ותמונות מתוך העבודה.",
+    // The videos-and-photos section is added in seed.ts (it is an editor
+    // block, not one of the original site's section types).
+    blocks: [{ _type: "contact", title: "צרו קשר" }],
+  },
+
   /* --------------------------------------------------------------- about */
   {
     slug: "אודות",
