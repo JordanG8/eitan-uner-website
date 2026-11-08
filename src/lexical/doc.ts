@@ -106,8 +106,6 @@ export interface PageMeta {
   seoDescription?: string;
   noIndex?: boolean;
   background?: string;
-  /** One-off content fixes already applied to this page (see lib/content-fixes). */
-  fixes?: string[];
 }
 
 export interface PageData {
