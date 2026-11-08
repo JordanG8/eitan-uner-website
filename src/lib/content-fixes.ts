@@ -6,26 +6,27 @@ import { PRO_WORK_DEFAULTS } from "@/blocks/defaults";
  *
  * The homepage's top buttons "צילום מקצועי" and "הרצאות" were saved pointing
  * at the contact page. They are corrected here on read, and only while they
- * still point there, so any link Eitan sets in the editor afterwards wins.
+ * still point at one of the old targets, so any other link Eitan sets in the
+ * editor afterwards wins. "צילום מקצועי" lands on the professional-photography
+ * section of the portfolio page, not just the top of the page.
  * The fix becomes permanent the next time the homepage is saved.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const CONTACT = "/צרו-קשר";
-const HOME_BUTTONS: Record<string, string> = {
-  "צילום מקצועי": "/תיק-עבודות",
-  "הרצאות": "/הרצאות",
+const HOME_BUTTONS: Record<string, { from: string[]; to: string }> = {
+  "צילום מקצועי": { from: ["/צרו-קשר", "/תיק-עבודות"], to: "/תיק-עבודות#צילום-מקצועי" },
+  "הרצאות": { from: ["/צרו-קשר"], to: "/הרצאות" },
 };
 
 function fixCtas(ctas: unknown): { ctas: unknown; changed: boolean } {
   if (!Array.isArray(ctas)) return { ctas, changed: false };
   let changed = false;
   const next = ctas.map((c: any) => {
-    const to = HOME_BUTTONS[String(c?.label ?? "").trim()];
-    if (to && String(c?.href ?? "").trim() === CONTACT) {
+    const fix = HOME_BUTTONS[String(c?.label ?? "").trim()];
+    if (fix && fix.from.includes(String(c?.href ?? "").trim())) {
       changed = true;
-      return { ...c, href: to };
+      return { ...c, href: fix.to };
     }
     return c;
   });
