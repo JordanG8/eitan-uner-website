@@ -256,12 +256,15 @@ a, p, li, h1, h2, h3 {
 .prose-he > * + * { margin-top: 1.15rem; }
 .prose-he { font-size: 1.05rem; line-height: 1.9; }
 .prose-he strong { font-weight: 700; }
-.prose-he a {
+/* Buttons (.eu-btn) carry their own colours; this is for text links only.
+   Without the :not() a solid button inside rich text got brand text on a
+   brand fill and became unreadable. */
+.prose-he a:not(.eu-btn) {
   color: var(--color-brand-600);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.prose-he a:hover { color: var(--color-brand-800); }
+.prose-he a:not(.eu-btn):hover { color: var(--color-brand-800); }
 .prose-he ul { padding-inline-start: 1.4rem; list-style: disc; }
 .prose-he ol { padding-inline-start: 1.4rem; list-style: decimal; }
 .prose-he li + li { margin-top: 0.35rem; }

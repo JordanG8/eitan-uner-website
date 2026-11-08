@@ -1,3 +1,4 @@
+import { migrateStory } from "@/lexical/split-story";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import type { PageData } from "@/lexical/doc";
 import { seedIndex, seedPage } from "./seed";
@@ -76,7 +77,7 @@ export async function loadIndex(): Promise<PageEntry[]> {
 export async function loadPage(id: string): Promise<PageData | null> {
   if (!/^[a-z0-9]+$/.test(id)) return null;
   const stored = await readDoc<Partial<PageData>>(`page-${id}`);
-  return stored?.meta && stored?.content?.root ? { meta: stored.meta, content: stored.content } : seedPage(id);
+  return stored?.meta && stored?.content?.root ? { meta: stored.meta, content: migrateStory(stored.content) } : seedPage(id);
 }
 
 const cacheOptions = { tags: [CMS_TAG], revalidate: 60 * 60 * 24 };

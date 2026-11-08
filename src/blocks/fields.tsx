@@ -116,25 +116,37 @@ const defs: Record<BlockType, BlockDef> = {
     fields: { kicker: text("שורה קטנה מעל"), title: text("כותרת"), subtitle: textarea("טקסט מתחת (לא חובה)"), headingLevel: headingLevelField },
     defaultProps: { kicker: "איתן אונר · פוטודוקותרפיה", title: "כותרת העמוד", headingLevel: 1 },
   },
-  ScrollStory: {
-    label: "סיפור בגלילה (דף הבית)",
+  StoryMemory: {
+    label: "סיפור 1 · התמונה המשפחתית",
+    fields: { image: imageField("תמונה"), panels: panelsField("קטעי טקסט") },
+  },
+  StoryVista: {
+    label: "סיפור 2 · הנוף",
+    fields: { image: imageField("תמונה"), cold: panelsField("לפני המפנה"), warm: panelsField("אחרי המפנה") },
+  },
+  StoryDefine: {
+    label: "סיפור 3 · ההגדרה",
+    fields: { image: imageField("תמונה"), term: text("המילה הגדולה"), panels: panelsField("קטעי טקסט") },
+  },
+  StoryRoom: {
+    label: "סיפור 4 · השולחן",
+    fields: { image: imageField("תמונה"), panels: panelsField("קטעי טקסט") },
+  },
+  StoryFeelings: {
+    label: "סיפור 5 · הרגשות",
     fields: {
-      memory: { type: "object", label: "1. התמונה המשפחתית", objectFields: { image: imageField("תמונה"), panels: panelsField("קטעי טקסט") } } as any,
-      vista: { type: "object", label: "2. הנוף", objectFields: { image: imageField("תמונה"), cold: panelsField("לפני המפנה"), warm: panelsField("אחרי המפנה") } } as any,
-      define: { type: "object", label: "3. ההגדרה", objectFields: { image: imageField("תמונה"), term: text("המילה הגדולה"), panels: panelsField("קטעי טקסט") } } as any,
-      room: { type: "object", label: "4. השולחן", objectFields: { image: imageField("תמונה"), inset: imageField("תמונה קטנה"), panels: panelsField("קטעי טקסט") } } as any,
-      feelings: {
-        type: "object",
-        label: "5. הרגשות",
-        objectFields: {
-          kicker: text("שורה קטנה"),
-          title: text("כותרת"),
-          items: { type: "array", label: "רגשות", getItemSummary: (i: any) => i?.word || "רגש", arrayFields: { image: imageField("תמונה"), word: text("מילה") } },
-        },
-      } as any,
-      host: { type: "object", label: "6. המנחה", objectFields: { image: imageField("תמונה"), name: text("שם"), role: text("שורה מעל השם"), panels: panelsField("קטעי טקסט") } } as any,
-      ask: { type: "object", label: "7. הקריאה לפעולה", objectFields: { kicker: text("שורה קטנה"), title: text("כותרת"), body: paragraphsField, ctas: ctasField } } as any,
+      kicker: text("שורה קטנה"),
+      title: text("כותרת"),
+      items: { type: "array", label: "רגשות", getItemSummary: (i: any) => i?.word || "רגש", arrayFields: { image: imageField("תמונה"), word: text("מילה") } } as any,
     },
+  },
+  StoryHost: {
+    label: "סיפור 6 · המנחה",
+    fields: { image: imageField("תמונה"), name: text("שם"), role: text("שורה מעל השם"), panels: panelsField("קטעי טקסט") },
+  },
+  StoryAsk: {
+    label: "סיפור 7 · הקריאה לפעולה",
+    fields: { kicker: text("שורה קטנה"), title: text("כותרת"), body: paragraphsField, ctas: ctasField },
   },
   Hero: {
     label: "כותרת ראשית עם תמונה",
@@ -308,9 +320,11 @@ const defs: Record<BlockType, BlockDef> = {
       title: text("כותרת הקטע"),
       subtitle: text("שורה מתחת לכותרת"),
       headingLevel: headingLevelField,
-      showMap: yesNo("להציג מפה"),
+      showMap: yesNo("להציג כותרת אזור"),
+      areaKicker: text("שורה קטנה מעל כותרת האזור (ברירת מחדל: רגע, איפה אתה עובד?)"),
+      areaTitle: text("כותרת אזור (ברירת מחדל: מדן ועד אילת)"),
     },
-    defaultProps: { title: "צרו קשר", subtitle: "לתיאום סדנה, הרצאה או צילום — בואו נדבר.", headingLevel: 2, showMap: true },
+    defaultProps: { title: "צרו קשר", subtitle: "לתיאום סדנה, הרצאה או צילום — בואו נדבר.", headingLevel: 2, showMap: true, areaKicker: "רגע, איפה אתה עובד?", areaTitle: "מדן ועד אילת" },
   },
   Article: {
     label: "כתבה / סיפור",
@@ -436,6 +450,10 @@ export const BLOCK_GROUPS: { title: string; types: BlockType[] }[] = [
   { title: "רכיבים", types: ["Image", "Buttons", "Embed", "Divider", "Spacer"] },
   {
     title: "קטעים מעוצבים",
-    types: ["Intro", "PageBanner", "Hero", "TextImage", "RichText", "CardGrid", "Gallery", "Testimonials", "Logos", "Quote", "Video", "Contact", "Article", "ScrollStory"],
+    types: ["Intro", "PageBanner", "Hero", "TextImage", "RichText", "CardGrid", "Gallery", "Testimonials", "Logos", "Quote", "Video", "Contact", "Article"],
+  },
+  {
+    title: "סיפור בגלילה (דף הבית)",
+    types: ["StoryMemory", "StoryVista", "StoryDefine", "StoryRoom", "StoryFeelings", "StoryHost", "StoryAsk"],
   },
 ];

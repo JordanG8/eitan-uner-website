@@ -379,7 +379,10 @@ function extractYouTubeId(url: string): string | null {
 
 export function Contact({ block, site }: { block: ContactBlock; site: SiteSettings }) {
   const Heading = block.headingLevel === 1 ? "h1" : "h2";
-  const mapQuery = encodeURIComponent(site.location);
+  /* `showMap` is the saved name of the toggle for the panel beside the
+     details; it used to hold a Google map and now holds the area title. */
+  const areaTitle = block.areaTitle?.trim() || "מדן ועד אילת";
+  const areaKicker = block.areaKicker?.trim() || "רגע, איפה אתה עובד?";
   return (
     <Section background="alt" id="צרו-קשר" padded={false}>
       <div className="py-10 sm:py-16">
@@ -394,16 +397,14 @@ export function Contact({ block, site }: { block: ContactBlock; site: SiteSettin
               <a href={site.whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex min-h-12 items-center justify-center rounded-(--radius-button) border border-brand-300 px-4 py-3 font-semibold text-brand-700">הודעה ב־WhatsApp</a>
               <a href={`mailto:${site.email}`} className="flex min-h-12 flex-wrap items-center justify-center gap-2 rounded-(--radius-button) border border-brand-300 px-4 py-3 font-semibold text-brand-700">מייל <bdi className="break-all">{site.email}</bdi></a>
             </div>
-            <div className="mt-7 border-t border-hairline pt-5">
-              <p className="font-semibold text-ink">{site.location}</p>
-              {site.hours.length > 0 && <>
-                <p className="mt-3 font-semibold text-ink">שעות מענה</p>
-                <ul className="mt-1 text-ink-soft">{site.hours.map((hours) => <li key={hours}>{hours}</li>)}</ul>
-              </>}
-            </div>
+            {site.hours.length > 0 && <div className="mt-7 border-t border-hairline pt-5">
+              <p className="font-semibold text-ink">שעות מענה</p>
+              <ul className="mt-1 text-ink-soft">{site.hours.map((hours) => <li key={hours}>{hours}</li>)}</ul>
+            </div>}
           </div>
-          {block.showMap !== false && <div className="overflow-hidden rounded-3xl border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)]">
-            <iframe title={`מפה — ${site.location.split(",")[0]}`} src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`} className="h-72 w-full lg:h-full lg:min-h-80" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          {block.showMap !== false && <div className="grid content-center justify-items-center gap-3 px-4 py-8 text-center lg:py-0">
+            <p className="text-lg font-semibold text-brand-600 sm:text-xl">{areaKicker}</p>
+            <p className="text-4xl font-semibold leading-tight text-ink sm:text-5xl lg:text-6xl">{areaTitle}</p>
           </div>}
         </div>
       </div>
