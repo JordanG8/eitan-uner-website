@@ -382,6 +382,7 @@ export function Contact({ block, site }: { block: ContactBlock; site: SiteSettin
   /* `showMap` is the saved name of the toggle for the panel beside the
      details; it used to hold a Google map and now holds the area title. */
   const areaTitle = block.areaTitle?.trim() || "מדן ועד אילת";
+  const areaKicker = block.areaKicker?.trim() || "רגע, איפה אתה עובד?";
   return (
     <Section background="alt" id="צרו-קשר" padded={false}>
       <div className="py-10 sm:py-16">
@@ -404,8 +405,9 @@ export function Contact({ block, site }: { block: ContactBlock; site: SiteSettin
               </>}
             </div>
           </div>
-          {block.showMap !== false && <div className="grid min-h-56 place-items-center rounded-3xl bg-brand-700 p-8 text-center shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] lg:min-h-80">
-            <p className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{areaTitle}</p>
+          {block.showMap !== false && <div className="grid content-center justify-items-center gap-3 px-4 py-8 text-center lg:py-0">
+            <p className="text-lg font-semibold text-brand-600 sm:text-xl">{areaKicker}</p>
+            <p className="text-4xl font-semibold leading-tight text-ink sm:text-5xl lg:text-6xl">{areaTitle}</p>
           </div>}
         </div>
       </div>

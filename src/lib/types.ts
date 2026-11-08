@@ -140,6 +140,8 @@ export interface ContactBlock {
   showMap?: boolean;
   /** Large title in the panel beside the details. */
   areaTitle?: string;
+  /** Small line above the area title. */
+  areaKicker?: string;
 }
 
 export interface StoryPanel {
