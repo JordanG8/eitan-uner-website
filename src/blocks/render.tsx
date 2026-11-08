@@ -15,6 +15,7 @@ import { Article, Intro, PageBanner } from "@/components/page-blocks";
 import { Buttons, Divider, Embed, ImageBlock, Spacer } from "@/components/primitives";
 import { StoryAsk, StoryDefine, StoryFeelings, StoryHost, StoryMemory, StoryRoom, StoryVista } from "@/components/ScrollStory";
 import { Testimonials } from "@/components/Testimonials";
+import { ProWork } from "@/components/ProWork";
 import type { ImageRef, SiteSettings, StoryPanel } from "@/lib/types";
 
 /**
@@ -35,6 +36,8 @@ import type { ImageRef, SiteSettings, StoryPanel } from "@/lib/types";
 
 export interface RenderContext {
   site: SiteSettings;
+  /** True inside the editor, where empty slots show as placeholders. */
+  editing?: boolean;
 }
 
 /** Lists of strings are stored as [{text}] rows. */
@@ -106,6 +109,15 @@ export const BLOCKS = {
     />
   ),
   Quote: (p) => <Quote block={{ _type: "quote", ...p }} />,
+  ProWork: (p, ctx) => (
+    <ProWork
+      title={p.title}
+      intro={p.intro}
+      videos={(Array.isArray(p.videos) ? p.videos : []).slice(0, 3).map((v: any) => ({ url: v?.url ?? "", title: v?.title || undefined }))}
+      photos={(Array.isArray(p.photos) ? p.photos : []).slice(0, 3).map((r: any) => (r?.image?.src ? r.image : undefined))}
+      editing={ctx.editing}
+    />
+  ),
   Video: (p) => <Video block={{ _type: "video", ...p, youtubeUrl: p.youtubeUrl ?? "", body: texts(p.body) }} />,
   Contact: (p, ctx) => <Contact site={ctx.site} block={{ _type: "contact", ...p, headingLevel: Number(p.headingLevel) === 1 ? 1 : 2 }} />,
   Article: (p) => (

@@ -227,7 +227,7 @@ function BlockView({ nodeKey, blockType, props }: { nodeKey: NodeKey; blockType:
         <button type="button" style={{ ...handle, background: "#b42318" }} aria-label="מחיקה" onClick={() => blockAction(editor, nodeKey, "delete")}>✕</button>
       </div>
       <div ref={bodyRef} key={rev}>
-        {site ? renderBlock(blockType, props, { site }) : null}
+        {site ? renderBlock(blockType, props, { site, editing: true }) : null}
       </div>
     </div>
   );

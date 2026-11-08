@@ -1,4 +1,5 @@
-import type { LexicalState, SBlock, SNode } from "@/lexical/doc";
+import { block, type LexicalState, type PageMeta, type SBlock, type SNode } from "@/lexical/doc";
+import { PRO_WORK_DEFAULTS } from "@/blocks/defaults";
 
 /**
  * One-off corrections to content saved through the editor.
@@ -54,8 +55,28 @@ function walk(nodes: SNode[]): { nodes: SNode[]; changed: boolean } {
   return { nodes: out, changed };
 }
 
-export function fixContent(slug: string, content: LexicalState): LexicalState {
-  if (slug !== "/") return content;
-  const { nodes, changed } = walk(content.root.children);
-  return changed ? { root: { ...content.root, children: nodes } } : content;
+/**
+ * The portfolio page gets the professional-photography section (three videos,
+ * three photos) under its title banner. Added once: the page is marked in
+ * meta.fixes, which the editor saves back, so if Eitan deletes the section
+ * it stays deleted.
+ */
+function addProWork(meta: PageMeta, content: LexicalState): { meta: PageMeta; content: LexicalState } {
+  if (meta.slug !== "תיק-עבודות" || meta.fixes?.includes("proWork")) return { meta, content };
+  const marked = { ...meta, fixes: [...(meta.fixes ?? []), "proWork"] };
+  const children = content.root.children;
+  if (children.some((n) => n.type === "eu-block" && (n as SBlock).blockType === "ProWork")) return { meta: marked, content };
+  const banner = children.findIndex((n) => n.type === "eu-block" && (n as SBlock).blockType === "PageBanner");
+  const at = banner >= 0 ? banner + 1 : 0;
+  const next = [...children.slice(0, at), block("ProWork", { ...structuredClone(PRO_WORK_DEFAULTS), design: {} }), ...children.slice(at)];
+  return { meta: marked, content: { root: { ...content.root, children: next } } };
+}
+
+export function fixContent(meta: PageMeta, content: LexicalState): { meta: PageMeta; content: LexicalState } {
+  let out = content;
+  if (meta.slug === "/") {
+    const { nodes, changed } = walk(content.root.children);
+    if (changed) out = { root: { ...content.root, children: nodes } };
+  }
+  return addProWork(meta, out);
 }
