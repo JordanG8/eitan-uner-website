@@ -320,9 +320,10 @@ const defs: Record<BlockType, BlockDef> = {
       title: text("כותרת הקטע"),
       subtitle: text("שורה מתחת לכותרת"),
       headingLevel: headingLevelField,
-      showMap: yesNo("להציג מפה"),
+      showMap: yesNo("להציג כותרת אזור"),
+      areaTitle: text("כותרת אזור (ברירת מחדל: מדן ועד אילת)"),
     },
-    defaultProps: { title: "צרו קשר", subtitle: "לתיאום סדנה, הרצאה או צילום — בואו נדבר.", headingLevel: 2, showMap: true },
+    defaultProps: { title: "צרו קשר", subtitle: "לתיאום סדנה, הרצאה או צילום — בואו נדבר.", headingLevel: 2, showMap: true, areaTitle: "מדן ועד אילת" },
   },
   Article: {
     label: "כתבה / סיפור",

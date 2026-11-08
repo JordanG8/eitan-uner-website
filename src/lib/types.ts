@@ -138,6 +138,8 @@ export interface ContactBlock {
   subtitle?: string;
   headingLevel?: 1 | 2;
   showMap?: boolean;
+  /** Large title in the panel beside the details. */
+  areaTitle?: string;
 }
 
 export interface StoryPanel {

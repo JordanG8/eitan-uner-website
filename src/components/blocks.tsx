@@ -379,7 +379,9 @@ function extractYouTubeId(url: string): string | null {
 
 export function Contact({ block, site }: { block: ContactBlock; site: SiteSettings }) {
   const Heading = block.headingLevel === 1 ? "h1" : "h2";
-  const mapQuery = encodeURIComponent(site.location);
+  /* `showMap` is the saved name of the toggle for the panel beside the
+     details; it used to hold a Google map and now holds the area title. */
+  const areaTitle = block.areaTitle?.trim() || "מדן ועד אילת";
   return (
     <Section background="alt" id="צרו-קשר" padded={false}>
       <div className="py-10 sm:py-16">
@@ -402,8 +404,8 @@ export function Contact({ block, site }: { block: ContactBlock; site: SiteSettin
               </>}
             </div>
           </div>
-          {block.showMap !== false && <div className="overflow-hidden rounded-3xl border border-hairline bg-white shadow-[0_16px_45px_rgb(18_42_43_/_0.09)]">
-            <iframe title={`מפה — ${site.location.split(",")[0]}`} src={`https://www.google.com/maps?q=${mapQuery}&output=embed&hl=iw`} className="h-72 w-full lg:h-full lg:min-h-80" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          {block.showMap !== false && <div className="grid min-h-56 place-items-center rounded-3xl bg-brand-700 p-8 text-center shadow-[0_16px_45px_rgb(18_42_43_/_0.09)] lg:min-h-80">
+            <p className="text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">{areaTitle}</p>
           </div>}
         </div>
       </div>
