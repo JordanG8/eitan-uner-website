@@ -1,6 +1,8 @@
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 import type { ImageRef, ScrollStoryBlock, StoryPanel } from "@/lib/types";
+
+type Part<K extends keyof Omit<ScrollStoryBlock, "_type">> = ScrollStoryBlock[K];
 import { CtaRow } from "./ui";
 
 /**
@@ -196,184 +198,194 @@ function Act({
 
 /* ------------------------------------------------------------------ story */
 
-export function ScrollStory({ block }: { block: ScrollStoryBlock }) {
-  const { memory, vista, define, room, feelings, host, ask } = block;
-
-  /** The turn is one continuous shot; see the note at the vista act below. */
-  const vistaPanels = [...vista.cold, ...vista.warm];
-  /* Where in the act the grade begins to turn — the boundary between the two
-     authored runs, handed to CSS so the bloom is timed to the words rather
-     than to a number someone has to remember to keep in step. */
-  const turn = vista.cold.length / Math.max(vistaPanels.length, 1);
-  const turnEnd = Math.min(turn + 0.22, 1);
-
+/**
+ * The story is seven separate blocks, one per part, so Eitan can select,
+ * move, hide or delete each part on its own in the editor rather than
+ * editing one huge section.
+ *
+ * Each dark part carries its own `.pdt` + `.pdt-dark` wrapper (the tokens and
+ * the rail's timeline live there), so every part renders correctly on its
+ * own and in any order. The rail therefore measures each part rather than
+ * the whole story — a progress line per chapter.
+ */
+function Dark({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <div className="pdt" id="הסיפור">
-      {/*
-        The header watches for this attribute to invert itself over a dark
-        fold. It wraps only the dark acts, so the header returns to ink on
-        paper exactly when the page does — at the ask.
-      */}
+    <div className="pdt" id={id}>
       <div className="pdt-dark" data-hero-dark="">
-        {/* The turquoise through-line. One accent, drawn once, the whole way
-            down — the only chrome the narrative has. */}
         <div className="pdt-rail" aria-hidden="true">
           <span className="pdt-rail-fill" />
         </div>
-
-        {/* ─────────────────────────────────── I. the print you already own */}
-        <Act name="memory" beats={memory.panels.length} band>
-          <div className="pdt-memory-field" aria-hidden="true" />
-          <Print
-            image={memory.image}
-            priority
-            sizes="(max-width: 640px) 78vw, (max-width: 1024px) 52vw, 40vw"
-            className="pdt-print--memory"
-          />
-          <div className="pdt-copy pdt-copy--memory">
-            {memory.panels.map((p, i) => (
-              <Panel
-                key={i}
-                panel={p}
-                index={i}
-                count={memory.panels.length}
-                first={i === 0}
-              />
-            ))}
-          </div>
-        </Act>
-
-        {/* ───────────────────── II. one photograph, and the turn inside it */}
-        {/*
-          `cold` and `warm` are two runs of copy over ONE act and ONE
-          <Bleed>, not two acts. They were two for one build, and the seam
-          between them was fatal to the argument: at the boundary a reader saw
-          the vista slide up, a band of black, and the vista arrive again —
-          which says "here is a second photograph" at exactly the moment the
-          page is claiming nothing about the photograph has changed. The
-          content model keeps them as two lists because they are two halves of
-          a turn and Eitan edits them as such; the page never cuts.
-        */}
-        <Act
-          name="vista"
-          beats={vistaPanels.length}
-          vars={{
-            "--turn-start": `${(turn * 100).toFixed(3)}%`,
-            "--turn-end": `${(turnEnd * 100).toFixed(3)}%`,
-          }}
-        >
-          <Bleed image={vista.image} className="pdt-bleed--vista" />
-          <div className="pdt-copy">
-            {vistaPanels.map((p, i) => (
-              <Panel key={i} panel={p} index={i} count={vistaPanels.length} />
-            ))}
-          </div>
-        </Act>
-
-        {/* ───────────────────────────────────────────── IV. the word for it */}
-        <Act name="define" beats={define.panels.length} band>
-          <Bleed image={define.image} className="pdt-bleed--define" />
-          <h2 className="pdt-term">{define.term}</h2>
-          <div className="pdt-copy pdt-copy--define">
-            {define.panels.map((p, i) => (
-              <Panel key={i} panel={p} index={i} count={define.panels.length} />
-            ))}
-          </div>
-        </Act>
-
-        {/* ────────────────────────────────── V. the table. one print, many */}
-        <Act name="room" beats={room.panels.length} band>
-          <div className="pdt-scatter">
-            <Print
-              image={room.image}
-              sizes="(max-width: 768px) 84vw, 48vw"
-              className="pdt-print--room-a"
-            />
-            <Print
-              image={room.inset}
-              sizes="(max-width: 768px) 40vw, 22vw"
-              className="pdt-print--room-b"
-            />
-          </div>
-          <div className="pdt-copy pdt-copy--room">
-            {room.panels.map((p, i) => (
-              <Panel
-                key={i}
-                panel={p}
-                index={i}
-                count={room.panels.length}
-                align="start"
-              />
-            ))}
-          </div>
-        </Act>
-
-        {/* ──────────────────────────────────────────── VI. the river of words */}
-        <section
-          className="pdt-act pdt-act--river"
-          style={{ "--cards": feelings.items.length } as Vars}
-        >
-          <div className="pdt-stage pdt-stage--river">
-            <header className="pdt-river-head">
-              {feelings.kicker ? (
-                <p className="pdt-kicker">{feelings.kicker}</p>
-              ) : null}
-              <h2 className="pdt-river-title">{feelings.title}</h2>
-            </header>
-            {/*
-              Horizontal travel driven by vertical scroll. The sign is flipped
-              through --dir (globals.css) because the track is laid out RTL:
-              in Hebrew the next card is to the *left*, so "forward" is the
-              opposite translation from the LTR version of this effect.
-            */}
-            <ul className="pdt-river" tabIndex={0} aria-label="גלריית רגשות — אפשר לגלול לצדדים">
-              {feelings.items.map((f, i) => (
-                <li key={i} className="pdt-river-item">
-                  <Print
-                    image={f.image}
-                    sizes="(max-width: 768px) 62vw, 26vw"
-                    className="pdt-print--river"
-                  >
-                    <figcaption className="pdt-word">{f.word}</figcaption>
-                  </Print>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* ─────────────────────────────────────────────── VII. who runs it */}
-        <Act name="host" beats={host.panels.length}>
-          <div className="pdt-host">
-            <div className="pdt-host-figure">
-              <Image
-                src={host.image.src}
-                alt={host.image.alt}
-                fill
-                sizes="(max-width: 768px) 68vw, 34vw"
-                className="pdt-host-img"
-              />
-            </div>
-            <div className="pdt-host-copy">
-              <p className="pdt-kicker">{host.role}</p>
-              <h2 className="pdt-host-name">{host.name}</h2>
-              <div className="pdt-copy pdt-copy--host">
-                {host.panels.map((p, i) => (
-                  <Panel
-                    key={i}
-                    panel={p}
-                    index={i}
-                    count={host.panels.length}
-                    align="start"
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </Act>
+        {children}
       </div>
+    </div>
+  );
+}
 
-      {/* ───────────────────────────────────────────────── VIII. the ask */}
+/** I. The print you already own. Carries the "#הסיפור" anchor. */
+export function StoryMemory({ memory }: { memory: Part<"memory"> }) {
+  return (
+    <Dark id="הסיפור">
+      <Act name="memory" beats={memory.panels.length} band>
+        <div className="pdt-memory-field" aria-hidden="true" />
+        <Print
+          image={memory.image}
+          priority
+          sizes="(max-width: 640px) 78vw, (max-width: 1024px) 52vw, 40vw"
+          className="pdt-print--memory"
+        />
+        <div className="pdt-copy pdt-copy--memory">
+          {memory.panels.map((p, i) => (
+            <Panel key={i} panel={p} index={i} count={memory.panels.length} first={i === 0} />
+          ))}
+        </div>
+      </Act>
+    </Dark>
+  );
+}
+
+/**
+ * II. One photograph, and the turn inside it.
+ *
+ * `cold` and `warm` are two runs of copy over ONE act and ONE <Bleed>, not
+ * two acts: a seam between them would say "here is a second photograph" at
+ * exactly the moment the page claims nothing about the photograph changed.
+ */
+export function StoryVista({ vista }: { vista: Part<"vista"> }) {
+  const panels = [...vista.cold, ...vista.warm];
+  /* Where the grade begins to turn — the boundary between the two runs. */
+  const turn = vista.cold.length / Math.max(panels.length, 1);
+  const turnEnd = Math.min(turn + 0.22, 1);
+  return (
+    <Dark>
+      <Act
+        name="vista"
+        beats={panels.length}
+        vars={{
+          "--turn-start": `${(turn * 100).toFixed(3)}%`,
+          "--turn-end": `${(turnEnd * 100).toFixed(3)}%`,
+        }}
+      >
+        <Bleed image={vista.image} className="pdt-bleed--vista" />
+        <div className="pdt-copy">
+          {panels.map((p, i) => (
+            <Panel key={i} panel={p} index={i} count={panels.length} />
+          ))}
+        </div>
+      </Act>
+    </Dark>
+  );
+}
+
+/** III. The word for it. */
+export function StoryDefine({ define }: { define: Part<"define"> }) {
+  return (
+    <Dark>
+      <Act name="define" beats={define.panels.length} band>
+        <Bleed image={define.image} className="pdt-bleed--define" />
+        <h2 className="pdt-term">{define.term}</h2>
+        <div className="pdt-copy pdt-copy--define">
+          {define.panels.map((p, i) => (
+            <Panel key={i} panel={p} index={i} count={define.panels.length} />
+          ))}
+        </div>
+      </Act>
+    </Dark>
+  );
+}
+
+/** IV. The table. One large print. */
+export function StoryRoom({ room }: { room: Part<"room"> }) {
+  return (
+    <Dark>
+      <Act name="room" beats={room.panels.length} band>
+        <div className="pdt-scatter">
+          <Print
+            image={room.image}
+            sizes="(max-width: 768px) 90vw, 60vw"
+            className="pdt-print--room-a"
+          />
+        </div>
+        <div className="pdt-copy pdt-copy--room">
+          {room.panels.map((p, i) => (
+            <Panel key={i} panel={p} index={i} count={room.panels.length} align="start" />
+          ))}
+        </div>
+      </Act>
+    </Dark>
+  );
+}
+
+/** V. The river of words. */
+export function StoryFeelings({ feelings }: { feelings: Part<"feelings"> }) {
+  return (
+    <Dark>
+      <section
+        className="pdt-act pdt-act--river"
+        style={{ "--cards": feelings.items.length } as Vars}
+      >
+        <div className="pdt-stage pdt-stage--river">
+          <header className="pdt-river-head">
+            {feelings.kicker ? <p className="pdt-kicker">{feelings.kicker}</p> : null}
+            <h2 className="pdt-river-title">{feelings.title}</h2>
+          </header>
+          {/*
+            Horizontal travel driven by vertical scroll. The sign is flipped
+            through --dir because the track is laid out RTL: in Hebrew the
+            next card is to the *left*.
+          */}
+          <ul className="pdt-river" tabIndex={0} aria-label="גלריית רגשות — אפשר לגלול לצדדים">
+            {feelings.items.map((f, i) => (
+              <li key={i} className="pdt-river-item">
+                <Print
+                  image={f.image}
+                  sizes="(max-width: 768px) 62vw, 26vw"
+                  className="pdt-print--river"
+                >
+                  <figcaption className="pdt-word">{f.word}</figcaption>
+                </Print>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    </Dark>
+  );
+}
+
+/** VI. Who runs it. */
+export function StoryHost({ host }: { host: Part<"host"> }) {
+  return (
+    <Dark>
+      <Act name="host" beats={host.panels.length}>
+        <div className="pdt-host">
+          <div className="pdt-host-figure">
+            <Image
+              src={host.image.src}
+              alt={host.image.alt}
+              fill
+              sizes="(max-width: 768px) 68vw, 34vw"
+              className="pdt-host-img"
+            />
+          </div>
+          <div className="pdt-host-copy">
+            <p className="pdt-kicker">{host.role}</p>
+            <h2 className="pdt-host-name">{host.name}</h2>
+            <div className="pdt-copy pdt-copy--host">
+              {host.panels.map((p, i) => (
+                <Panel key={i} panel={p} index={i} count={host.panels.length} align="start" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </Act>
+    </Dark>
+  );
+}
+
+/** VII. The ask. Back to ink on paper. */
+export function StoryAsk({ ask }: { ask: Part<"ask"> }) {
+  return (
+    <div className="pdt">
       <section className="pdt-ask" id="סדנאות">
         <div className="pdt-ask-inner">
           {ask.kicker ? <p className="pdt-kicker pdt-kicker--ink">{ask.kicker}</p> : null}

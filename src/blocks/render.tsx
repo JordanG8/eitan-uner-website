@@ -13,9 +13,9 @@ import {
 import { Designed, type BlockDesign } from "@/components/design";
 import { Article, Intro, PageBanner } from "@/components/page-blocks";
 import { Buttons, Divider, Embed, ImageBlock, Spacer } from "@/components/primitives";
-import { ScrollStory } from "@/components/ScrollStory";
+import { StoryAsk, StoryDefine, StoryFeelings, StoryHost, StoryMemory, StoryRoom, StoryVista } from "@/components/ScrollStory";
 import { Testimonials } from "@/components/Testimonials";
-import type { ImageRef, ScrollStoryBlock, SiteSettings, StoryPanel } from "@/lib/types";
+import type { ImageRef, SiteSettings, StoryPanel } from "@/lib/types";
 
 /**
  * How each block renders.
@@ -52,22 +52,21 @@ const panels = (rows?: { kicker?: string; text?: string }[]): StoryPanel[] =>
 
 const img = (i?: ImageRef): ImageRef => (i?.src ? i : { src: "/images/cameras-flatlay.webp", alt: "" });
 
-export function toScrollStory(p: any): ScrollStoryBlock {
-  return {
-    _type: "scrollStory",
-    memory: { image: img(p.memory?.image), panels: panels(p.memory?.panels) },
-    vista: { image: img(p.vista?.image), cold: panels(p.vista?.cold), warm: panels(p.vista?.warm) },
-    define: { image: img(p.define?.image), term: p.define?.term ?? "", panels: panels(p.define?.panels) },
-    room: { image: img(p.room?.image), inset: img(p.room?.inset), panels: panels(p.room?.panels) },
-    feelings: {
-      kicker: p.feelings?.kicker,
-      title: p.feelings?.title ?? "",
-      items: (p.feelings?.items ?? []).filter((i: any) => i?.image?.src).map((i: any) => ({ image: i.image, word: i.word ?? "" })),
-    },
-    host: { image: img(p.host?.image), name: p.host?.name ?? "", role: p.host?.role ?? "", panels: panels(p.host?.panels) },
-    ask: { kicker: p.ask?.kicker, title: p.ask?.title ?? "", body: texts(p.ask?.body), ctas: p.ask?.ctas },
-  };
-}
+/* The homepage scroll story: seven blocks, one per part. Each stores its
+   part's fields flat in its own props. */
+const story = {
+  memory: (p: any) => ({ image: img(p.image), panels: panels(p.panels) }),
+  vista: (p: any) => ({ image: img(p.image), cold: panels(p.cold), warm: panels(p.warm) }),
+  define: (p: any) => ({ image: img(p.image), term: p.term ?? "", panels: panels(p.panels) }),
+  room: (p: any) => ({ image: img(p.image), panels: panels(p.panels) }),
+  feelings: (p: any) => ({
+    kicker: p.kicker,
+    title: p.title ?? "",
+    items: (p.items ?? []).filter((i: any) => i?.image?.src).map((i: any) => ({ image: i.image, word: i.word ?? "" })),
+  }),
+  host: (p: any) => ({ image: img(p.image), name: p.name ?? "", role: p.role ?? "", panels: panels(p.panels) }),
+  ask: (p: any) => ({ kicker: p.kicker, title: p.title ?? "", body: texts(p.body), ctas: p.ctas }),
+};
 
 type Render = (p: any, ctx: RenderContext) => ReactNode;
 
@@ -84,7 +83,13 @@ export const BLOCKS = {
   /* designed sections */
   Intro: (p) => <Intro {...p} />,
   PageBanner: (p) => <PageBanner {...p} />,
-  ScrollStory: (p) => <ScrollStory block={toScrollStory(p)} />,
+  StoryMemory: (p) => <StoryMemory memory={story.memory(p)} />,
+  StoryVista: (p) => <StoryVista vista={story.vista(p)} />,
+  StoryDefine: (p) => <StoryDefine define={story.define(p)} />,
+  StoryRoom: (p) => <StoryRoom room={story.room(p)} />,
+  StoryFeelings: (p) => <StoryFeelings feelings={story.feelings(p)} />,
+  StoryHost: (p) => <StoryHost host={story.host(p)} />,
+  StoryAsk: (p) => <StoryAsk ask={story.ask(p)} />,
   Hero: (p) => <Hero block={{ _type: "hero", ...p, image: img(p.image), tags: texts(p.tags) }} />,
   TextImage: (p) => <TextImage block={{ _type: "textImage", ...p, image: img(p.image), body: texts(p.body) }} />,
   RichText: (p) => <RichText block={{ _type: "richText", ...p, body: texts(p.body) }} />,

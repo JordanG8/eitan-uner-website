@@ -1,5 +1,6 @@
 import { block, rootState, type PageData, type SBlock } from "@/lexical/doc";
 import { pages, stories } from "./content";
+import { splitStory } from "@/lexical/split-story";
 import type { Block, Page, ScrollStoryBlock, Story, StoryPanel } from "./types";
 
 /**
@@ -81,7 +82,7 @@ function blockProps(block: Block): Record<string, unknown> {
         memory: { image: s.memory.image, panels: panels(s.memory.panels) },
         vista: { image: s.vista.image, cold: panels(s.vista.cold), warm: panels(s.vista.warm) },
         define: { image: s.define.image, term: s.define.term, panels: panels(s.define.panels) },
-        room: { image: s.room.image, inset: s.room.inset, panels: panels(s.room.panels) },
+        room: { image: s.room.image, panels: panels(s.room.panels) },
         feelings: { kicker: s.feelings.kicker ?? "", title: s.feelings.title, items: s.feelings.items },
         host: { image: s.host.image, name: s.host.name, role: s.host.role, panels: panels(s.host.panels) },
         ask: { kicker: s.ask.kicker ?? "", title: s.ask.title, body: wrap(s.ask.body), ctas: s.ask.ctas ?? [] },
@@ -141,7 +142,8 @@ function pageDoc(page: Page): PageData {
   for (const b of page.blocks) {
     const props = blockProps(b);
     if (b._type === "contact" && isContact) props.headingLevel = 1;
-    content.push(block(TYPE[b._type], props));
+    if (b._type === "scrollStory") content.push(...splitStory(props));
+    else content.push(block(TYPE[b._type], props));
   }
 
   return {

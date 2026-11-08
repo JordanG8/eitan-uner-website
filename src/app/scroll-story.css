@@ -454,7 +454,7 @@
   z-index: 1;
   justify-self: center;
   align-self: center;
-  inline-size: min(38rem, 100%);
+  inline-size: min(48rem, 100%);
   /* Belt and braces with the vh caps above: whatever the prints compute to,
      the scatter may not exceed the row it was given. */
   max-block-size: 100%;
@@ -465,23 +465,12 @@
  *
  * The upper row of a banded stage is `1fr`, and a print sized only in rem
  * grows straight through it and back over the words on any viewport shorter
- * than about 900px — which is most laptops. The scatter is *two* prints deep
- * once the small one is tucked under the large one, so the cap has to leave
- * room for both: at 40vh this print is ~30vh tall with its foot, the small
- * one adds ~11vh past it, and the pair clears a 900px stage with the band
- * still at its designed size.
+ * than about 900px — which is most laptops. The table is a single, large
+ * print, so the vh cap is what keeps it clear of the band of words beneath.
  */
 .pdt-print--room-a {
-  --pdt-print-w: min(26rem, 40vh);
+  --pdt-print-w: min(44rem, 56vh);
   rotate: 1.4deg;
-}
-
-.pdt-print--room-b {
-  --pdt-print-w: min(9rem, 14vh);
-  rotate: -5.5deg;
-  margin-block-start: -14%;
-  margin-inline-start: auto;
-  margin-inline-end: -4%;
 }
 
 /* ------------------------------------------------------- VI. the river */
@@ -918,7 +907,7 @@
     .pdt-scatter {
       justify-self: center;
       align-self: center;
-      inline-size: min(38rem, 84vw);
+      inline-size: min(48rem, 92vw);
       max-block-size: none;
       display: flex;
       align-items: center;
@@ -926,29 +915,17 @@
       gap: clamp(2rem, 4vw, 4rem);
     }
 
-    .pdt-print--room-a,
-    .pdt-print--room-b {
+    .pdt-print--room-a {
       /* These explicit zero-percent values are present before the view
          timeline is resolved. Without them, the static finished composition
          can paint for one frame before the animation snaps back to its start. */
       animation: linear both;
       animation-timeline: --act;
       animation-range: contain 5% contain 88%;
-    }
-
-    .pdt-print--room-a {
       rotate: 0deg;
       translate: 0 4vh;
       scale: 0.94;
       animation-name: pdt-fan-a;
-    }
-    .pdt-print--room-b {
-      margin: 0;
-      rotate: 0deg;
-      translate: 12% 6vh;
-      scale: 0.8;
-      opacity: 0;
-      animation-name: pdt-fan-b;
     }
 
     @keyframes pdt-fan-a {
@@ -961,24 +938,6 @@
         rotate: 2.6deg;
         translate: -3% -1vh;
         scale: 1;
-      }
-    }
-
-    @keyframes pdt-fan-b {
-      from {
-        rotate: 0deg;
-        translate: 12% 6vh;
-        scale: 0.8;
-        opacity: 0;
-      }
-      35% {
-        opacity: 1;
-      }
-      to {
-        rotate: -7deg;
-        translate: 0 0;
-        scale: 1;
-        opacity: 1;
       }
     }
 
@@ -1139,11 +1098,7 @@
      which on a 375x667 screen is not much, and a print that does not fit is
      worse than a small one. */
   .pdt-print--room-a {
-    --pdt-print-w: min(17rem, 42vh);
-  }
-
-  .pdt-print--room-b {
-    --pdt-print-w: min(7rem, 17vh);
+    --pdt-print-w: min(22rem, 52vh);
   }
 
   /**
@@ -1165,11 +1120,7 @@
   }
 
   .pdt-print--room-a {
-    --pdt-print-w: 17rem;
-  }
-
-  .pdt-print--room-b {
-    --pdt-print-w: 7rem;
+    --pdt-print-w: 22rem;
   }
 
   .pdt {

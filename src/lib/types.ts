@@ -156,7 +156,7 @@ export interface ScrollStoryBlock {
   memory: { image: ImageRef; panels: StoryPanel[] };
   vista: { image: ImageRef; cold: StoryPanel[]; warm: StoryPanel[] };
   define: { image: ImageRef; term: string; panels: StoryPanel[] };
-  room: { image: ImageRef; inset: ImageRef; panels: StoryPanel[] };
+  room: { image: ImageRef; panels: StoryPanel[] };
   feelings: { kicker?: string; title: string; items: FeelingCard[] };
   host: { image: ImageRef; name: string; role: string; panels: StoryPanel[] };
   ask: { kicker?: string; title: string; body: string[]; ctas?: Cta[] };

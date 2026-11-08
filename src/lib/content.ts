@@ -410,7 +410,6 @@ export const scrollStory: ScrollStoryBlock = {
   },
   room: {
     image: pdt.tableKids,
-    inset: pdt.tableTeens,
     panels: [
       { kicker: "איך זה עובד בפועל", lines: ["מפזרים תמונות על שולחן.", "כל אחד בוחר אחת."] },
       { lines: ["ואז מסבירים למה דווקא אותה.", "זה החלק שבו מתחיל להיפתח משהו."] },
