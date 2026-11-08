@@ -1,6 +1,7 @@
 import { block, rootState, type PageData, type SBlock } from "@/lexical/doc";
 import { pages, stories } from "./content";
 import { splitStory } from "@/lexical/split-story";
+import { PRO_WORK_DEFAULTS } from "@/blocks/defaults";
 import type { Block, Page, ScrollStoryBlock, Story, StoryPanel } from "./types";
 
 /**
@@ -138,6 +139,8 @@ function pageDoc(page: Page): PageData {
   if (page.showTitleBanner && !isContact) {
     content.push(block("PageBanner", { kicker: "איתן אונר · פוטודוקותרפיה", title: page.title, headingLevel: 1 }));
   }
+
+  if (page.slug === "תיק-עבודות") content.push(block("ProWork", structuredClone(PRO_WORK_DEFAULTS)));
 
   for (const b of page.blocks) {
     const props = blockProps(b);

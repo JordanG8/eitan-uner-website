@@ -2,6 +2,7 @@ import { CLIENT_LOGOS } from "@/lib/assets";
 import { colorField, designField, imageField, linkField, rangeField } from "@/editor/fields";
 import type { Fields } from "@/editor/schema";
 import type { BlockType } from "./render";
+import { PRO_WORK_DEFAULTS } from "./defaults";
 
 /**
  * Editor fields and defaults for every block type.
@@ -303,6 +304,30 @@ const defs: Record<BlockType, BlockDef> = {
     fields: { quote: textarea("הציטוט"), attribution: text("מי אמר"), ctas: ctasField },
     defaultProps: { quote: "״אתה לא רק מצלם תמונה – אתה יוצר אותה״", attribution: "אנסל אדמס", ctas: [] },
   },
+  ProWork: {
+    label: "צילום מקצועי (3 סרטונים + 3 תמונות)",
+    fields: {
+      title: text("כותרת הקטע"),
+      intro: textarea("טקסט קצר (לא חובה)"),
+      videos: {
+        type: "array",
+        label: "סרטוני יוטיוב (עד 3)",
+        max: 3,
+        getItemSummary: (item: any, i?: number) => item?.title || (item?.url ? "סרטון" : `סרטון ${(i ?? 0) + 1} (ריק)`),
+        defaultItemProps: { url: "", title: "" },
+        arrayFields: { url: text("קישור יוטיוב"), title: text("כותרת מתחת לסרטון (לא חובה)") },
+      } as any,
+      photos: {
+        type: "array",
+        label: "תמונות מקצועיות (עד 3)",
+        max: 3,
+        getItemSummary: (item: any, i?: number) => item?.image?.alt || (item?.image?.src ? "תמונה" : `תמונה ${(i ?? 0) + 1} (ריקה)`),
+        defaultItemProps: {},
+        arrayFields: { image: imageField("תמונה") },
+      } as any,
+    },
+    defaultProps: PRO_WORK_DEFAULTS,
+  },
   Video: {
     label: "סרטון יוטיוב",
     fields: {
@@ -450,7 +475,7 @@ export const BLOCK_GROUPS: { title: string; types: BlockType[] }[] = [
   { title: "רכיבים", types: ["Image", "Buttons", "Embed", "Divider", "Spacer"] },
   {
     title: "קטעים מעוצבים",
-    types: ["Intro", "PageBanner", "Hero", "TextImage", "RichText", "CardGrid", "Gallery", "Testimonials", "Logos", "Quote", "Video", "Contact", "Article"],
+    types: ["Intro", "PageBanner", "Hero", "TextImage", "RichText", "CardGrid", "Gallery", "Testimonials", "Logos", "Quote", "Video", "ProWork", "Contact", "Article"],
   },
   {
     title: "סיפור בגלילה (דף הבית)",

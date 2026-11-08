@@ -78,7 +78,7 @@ export async function loadIndex(): Promise<PageEntry[]> {
 export async function loadPage(id: string): Promise<PageData | null> {
   if (!/^[a-z0-9]+$/.test(id)) return null;
   const stored = await readDoc<Partial<PageData>>(`page-${id}`);
-  return stored?.meta && stored?.content?.root ? { meta: stored.meta, content: fixContent(stored.meta.slug, migrateStory(stored.content)) } : seedPage(id);
+  return stored?.meta && stored?.content?.root ? fixContent(stored.meta, migrateStory(stored.content)) : seedPage(id);
 }
 
 const cacheOptions = { tags: [CMS_TAG], revalidate: 60 * 60 * 24 };
