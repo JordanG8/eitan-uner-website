@@ -32,7 +32,7 @@ export function ProWork({ title, intro, videos, photos, editing = false }: ProWo
   if (!editing && !shownVideos.length && !shownPhotos.length) return null;
 
   return (
-    <Section>
+    <Section id="צילום-מקצועי">
       {title && (
         <div className="mb-10">
           <SectionHeading>{title}</SectionHeading>
