@@ -140,7 +140,7 @@ export function Buttons(p: ButtonsProps) {
             href={href}
             newTab={b.newTab}
             style={style}
-            className={`inline-flex items-center justify-center font-semibold transition-all duration-300 ${tone === "link" ? "min-h-11" : `rounded-(--radius-button) py-2.5 ${BTN_SIZE[p.size ?? "m"]}`} ${BTN_TONE[tone]} ${p.fullWidth ? "w-full" : ""}`}
+            className={`eu-btn inline-flex items-center justify-center font-semibold transition-all duration-300 ${tone === "link" ? "min-h-11" : `rounded-(--radius-button) py-2.5 ${BTN_SIZE[p.size ?? "m"]}`} ${BTN_TONE[tone]} ${p.fullWidth ? "w-full" : ""}`}
           >
             {b.label}
           </SmartLink>

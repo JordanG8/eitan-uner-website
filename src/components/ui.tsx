@@ -16,7 +16,7 @@ const toneClass: Record<CtaTone, string> = {
 export function Button({ cta }: { cta: Cta }) {
   const tone = cta.tone ?? "solid";
   const external = /^https?:\/\//.test(cta.href);
-  const className = `inline-flex min-h-12 items-center justify-center rounded-(--radius-button) px-6 py-2.5 text-[15px] font-semibold transition-all duration-300 ${toneClass[tone]}`;
+  const className = `eu-btn inline-flex min-h-12 items-center justify-center rounded-(--radius-button) px-6 py-2.5 text-[15px] font-semibold transition-all duration-300 ${toneClass[tone]}`;
 
   if (external) {
     return (
